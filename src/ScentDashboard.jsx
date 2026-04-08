@@ -38,21 +38,6 @@ const YOUR_COLLECTION = {
   sonnetAnalysis: `Core identity is dark, woody, and earthy. Consistently reaches for sandalwood, vetiver, oud, patchouli, and resinous bases like labdanum and myrrh. Drawn to fragrances grounded in the natural world: petrichor, moss, sage, earth. Likes warmth but not sweetness for its own sake — tobacco, amber, and vanilla always anchored to something drier. Leather and suede appear subtly. Comfort is welcome, but must have texture and edge.`,
 };
 
-/* Short names for calendar display */
-const BOTTLE_NAMES = [
-  "Bonbon", "Infinitoud", "Tornado", "Nosferatu", "Santal", "Plum in Cognac",
-  "de la Tierra", "34 Blvd SG", "Santal Greenery", "En Afrique",
-  "Rock the Myrrh", "Flowers&Flames", "Libre Berry", "Corail Oscuro",
-  "Beach Blossom", "Cult Gaia Mast",
-];
-
-/* Color per bottle for calendar dots */
-const BOTTLE_COLORS = [
-  "#c5a46d","#b5546a","#8a7e6b","#6b3a2a","#d4b896","#7a5073",
-  "#7a927a","#c98a3e","#a36b4f","#5e7a6e","#b5546a","#c5a46d",
-  "#7a5073","#c98a3e","#7a927a","#8a7e6b",
-];
-
 const STATUSES = ["owned", "had", "want", "want to try"];
 const STATUS_COLORS = { "owned": "#7a927a", "had": "#8a7e6b", "want": "#c5a46d", "want to try": "#7a5073" };
 
@@ -697,12 +682,22 @@ const DiscoverTab = ({ bottles, setBottles }) => {
    WEAR CALENDAR COMPONENT
    ═══════════════════════════════════════════════════════════ */
 
-const WearCalendar = ({ wearLog, setWearLog }) => {
+const WearCalendar = ({ wearLog, setWearLog, bottles }) => {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  /* Only show owned bottles in the picker */
+  const ownedBottles = useMemo(() => bottles.filter(b => b.status === "owned"), [bottles]);
+
+  /* Generate a stable color for any bottle name */
+  const bottleColor = useCallback((name) => {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return NOTE_COLORS[Math.abs(hash) % NOTE_COLORS.length];
+  }, []);
 
   const daysInMonth = getDaysInMonth(viewYear, viewMonth);
   const firstDay = getFirstDayOfWeek(viewYear, viewMonth);
@@ -723,11 +718,11 @@ const WearCalendar = ({ wearLog, setWearLog }) => {
     setPickerOpen(true);
   };
 
-  const toggleFragrance = (bottleIdx) => {
+  const toggleFragrance = (bottleName) => {
     setWearLog(prev => {
       const current = prev[selectedDay] || [];
-      const exists = current.includes(bottleIdx);
-      const updated = exists ? current.filter(i => i !== bottleIdx) : [...current, bottleIdx];
+      const exists = current.includes(bottleName);
+      const updated = exists ? current.filter(n => n !== bottleName) : [...current, bottleName];
       if (updated.length === 0) { const n = { ...prev }; delete n[selectedDay]; return n; }
       return { ...prev, [selectedDay]: updated };
     });
@@ -750,7 +745,7 @@ const WearCalendar = ({ wearLog, setWearLog }) => {
         position: "relative", aspectRatio: "1", display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center", borderRadius: 10, cursor: "pointer",
         border: isToday ? `1.5px solid ${PAL.gold}66` : `1px solid ${PAL.border}`,
-        background: hasWear ? `${BOTTLE_COLORS[worn[0] % BOTTLE_COLORS.length]}12` : "transparent",
+        background: hasWear ? `${bottleColor(worn[0])}12` : "transparent",
         transition: "all .2s",
       }}>
         <span style={{ fontFamily: ff.body, fontSize: 12, color: isToday ? PAL.gold : PAL.cream, fontWeight: isToday ? 600 : 400 }}>{d}</span>
@@ -759,11 +754,11 @@ const WearCalendar = ({ wearLog, setWearLog }) => {
             position: "absolute", bottom: 2, left: "50%", transform: "translateX(-50%)",
             display: "flex", gap: 2,
           }}>
-            {worn.slice(0, 4).map((idx, i) => (
+            {worn.slice(0, 4).map((name, i) => (
               <div key={i} style={{
                 width: 5, height: 5, borderRadius: "50%",
-                background: BOTTLE_COLORS[idx % BOTTLE_COLORS.length],
-                boxShadow: `0 0 4px ${BOTTLE_COLORS[idx % BOTTLE_COLORS.length]}88`,
+                background: bottleColor(name),
+                boxShadow: `0 0 4px ${bottleColor(name)}88`,
               }} />
             ))}
             {worn.length > 4 && (
@@ -796,21 +791,21 @@ const WearCalendar = ({ wearLog, setWearLog }) => {
         {cells}
       </div>
 
-      {/* Legend — which fragrances have been logged this month */}
+      {/* Legend */}
       {(() => {
         const monthEntries = Object.entries(wearLog).filter(([k]) => k.startsWith(`${viewYear}-${String(viewMonth+1).padStart(2,"0")}`));
-        const uniqueBottles = [...new Set(monthEntries.flatMap(([,v]) => v))];
-        if (uniqueBottles.length === 0) return (
+        const uniqueNames = [...new Set(monthEntries.flatMap(([,v]) => v))];
+        if (uniqueNames.length === 0) return (
           <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, textAlign: "center", marginTop: 14 }}>
             Tap a day to log what you wore
           </p>
         );
         return (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14, justifyContent: "center" }}>
-            {uniqueBottles.map(idx => (
-              <div key={idx} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: BOTTLE_COLORS[idx % BOTTLE_COLORS.length], flexShrink: 0 }} />
-                <span style={{ fontFamily: ff.body, fontSize: 11, color: PAL.cream }}>{BOTTLE_NAMES[idx]}</span>
+            {uniqueNames.map(name => (
+              <div key={name} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: bottleColor(name), flexShrink: 0 }} />
+                <span style={{ fontFamily: ff.body, fontSize: 11, color: PAL.cream }}>{name}</span>
               </div>
             ))}
           </div>
@@ -836,33 +831,43 @@ const WearCalendar = ({ wearLog, setWearLog }) => {
               </div>
               <button onClick={() => setPickerOpen(false)} style={{ background: "none", border: "none", color: PAL.muted, fontSize: 20, cursor: "pointer" }}>✕</button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {BOTTLE_NAMES.map((name, idx) => {
-                const dayArr = wearLog[selectedDay] || [];
-                const isActive = dayArr.includes(idx);
-                return (
-                  <button key={idx} onClick={() => toggleFragrance(idx)} style={{
-                    display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
-                    borderRadius: 10, cursor: "pointer", transition: "all .2s",
-                    background: isActive ? `${BOTTLE_COLORS[idx]}22` : "transparent",
-                    border: isActive ? `1px solid ${BOTTLE_COLORS[idx]}55` : `1px solid ${PAL.border}`,
-                    textAlign: "left",
-                  }}>
-                    <span style={{
-                      width: 18, height: 18, borderRadius: 5, flexShrink: 0,
-                      border: isActive ? `2px solid ${BOTTLE_COLORS[idx % BOTTLE_COLORS.length]}` : `1.5px solid ${PAL.border}`,
-                      background: isActive ? `${BOTTLE_COLORS[idx % BOTTLE_COLORS.length]}` : "transparent",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      transition: "all .2s",
+            {ownedBottles.length === 0 ? (
+              <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, textAlign: "center", padding: "20px 0", lineHeight: 1.6 }}>
+                No owned fragrances yet. Add bottles to your collection and set their status to "owned" to start logging wears.
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {ownedBottles.map((b) => {
+                  const dayArr = wearLog[selectedDay] || [];
+                  const isActive = dayArr.includes(b.name);
+                  const color = bottleColor(b.name);
+                  return (
+                    <button key={b.name} onClick={() => toggleFragrance(b.name)} style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
+                      borderRadius: 10, cursor: "pointer", transition: "all .2s",
+                      background: isActive ? `${color}22` : "transparent",
+                      border: isActive ? `1px solid ${color}55` : `1px solid ${PAL.border}`,
+                      textAlign: "left",
                     }}>
-                      {isActive && <span style={{ color: "#fff", fontSize: 11, fontWeight: 700, lineHeight: 1 }}>✓</span>}
-                    </span>
-                    <span style={{ fontFamily: ff.body, fontSize: 13, color: PAL.cream, flex: 1 }}>{name}</span>
-                    {isActive && <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.gold, letterSpacing: 1 }}>WORN</span>}
-                  </button>
-                );
-              })}
-            </div>
+                      <span style={{
+                        width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+                        border: isActive ? `2px solid ${color}` : `1.5px solid ${PAL.border}`,
+                        background: isActive ? color : "transparent",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "all .2s",
+                      }}>
+                        {isActive && <span style={{ color: "#fff", fontSize: 11, fontWeight: 700, lineHeight: 1 }}>✓</span>}
+                      </span>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontFamily: ff.body, fontSize: 13, color: PAL.cream, display: "block" }}>{b.name}</span>
+                        {b.house && <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.muted }}>{b.house}</span>}
+                      </div>
+                      {isActive && <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.gold, letterSpacing: 1 }}>WORN</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
               <button onClick={() => setPickerOpen(false)} style={{
                 flex: 1, padding: "11px",
@@ -1390,7 +1395,7 @@ export default function ScentDashboard() {
               </div>
 
               {trendView === "calendar" && (
-                <WearCalendar wearLog={wearLog} setWearLog={setWearLog} />
+                <WearCalendar wearLog={wearLog} setWearLog={setWearLog} bottles={bottles} />
               )}
 
               {trendView === "chart" && (
