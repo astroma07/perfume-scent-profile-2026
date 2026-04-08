@@ -233,6 +233,98 @@ function getFirstDayOfWeek(year, month) { return new Date(year, month, 1).getDay
 function dateKey(y, m, d) { return `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`; }
 
 /* ═══════════════════════════════════════════════════════════
+   FRAGRANCE FIT SCORING
+   ═══════════════════════════════════════════════════════════ */
+
+/*
+ * Scores how well a want/want-to-try fragrance fits your collection.
+ * Uses three signals:
+ *   1. Note overlap with your scent profile (from the doughnut chart)
+ *   2. Note overlap with your owned bottles' known notes (from NOTE_TO_FRAGRANCES)
+ *   3. House familiarity — bonus if you already own from the same house
+ * Returns { score: 0-100, matchedNotes: [...], reason: "..." }
+ */
+function scoreFragranceFit(bottle, ownedBottles, notesProfile) {
+  let score = 0;
+  const matchedNotes = [];
+  const reasons = [];
+
+  /* Build a set of all notes present in owned collection */
+  const ownedNoteSet = new Set();
+  Object.entries(NOTE_TO_FRAGRANCES).forEach(([note, frags]) => {
+    frags.forEach(f => {
+      if (ownedBottles.some(ob => {
+        const fn = (ob.fullName || ob.name).toLowerCase();
+        const ff2 = f.toLowerCase();
+        return fn.includes(ff2.split(" — ")[0].toLowerCase()) || ff2.includes(fn.split(" — ")[0].toLowerCase());
+      })) {
+        ownedNoteSet.add(note);
+      }
+    });
+  });
+
+  /* Build a weighted note map from the doughnut profile */
+  const profileNotes = {};
+  (notesProfile || []).forEach(n => {
+    profileNotes[n.name.toLowerCase()] = n.pct;
+  });
+
+  /* Get the candidate fragrance's notes from NOTE_TO_FRAGRANCES */
+  const candidateName = (bottle.fullName || bottle.name).toLowerCase();
+  const candidateNotes = new Set();
+  Object.entries(NOTE_TO_FRAGRANCES).forEach(([note, frags]) => {
+    frags.forEach(f => {
+      if (candidateName.includes(f.split(" — ")[0].toLowerCase()) || f.toLowerCase().includes(candidateName.split(" — ")[0].toLowerCase())) {
+        candidateNotes.add(note);
+      }
+    });
+  });
+
+  /* Signal 1: Profile note match (up to 50 points) */
+  let profileScore = 0;
+  candidateNotes.forEach(note => {
+    if (profileNotes[note]) {
+      profileScore += profileNotes[note];
+      matchedNotes.push(note);
+    }
+  });
+  /* Also check note names in bottle name/fullName for common notes */
+  Object.keys(profileNotes).forEach(pn => {
+    if (candidateName.includes(pn) && !matchedNotes.includes(pn)) {
+      profileScore += profileNotes[pn] * 0.5;
+      matchedNotes.push(pn);
+    }
+  });
+  score += Math.min(50, profileScore * 0.8);
+  if (matchedNotes.length > 0) reasons.push(`Matches your top notes: ${matchedNotes.slice(0, 3).join(", ")}`);
+
+  /* Signal 2: Owned note overlap (up to 30 points) */
+  let overlapCount = 0;
+  candidateNotes.forEach(note => {
+    if (ownedNoteSet.has(note)) overlapCount++;
+  });
+  const overlapScore = candidateNotes.size > 0 ? (overlapCount / candidateNotes.size) * 30 : 0;
+  score += overlapScore;
+  if (overlapCount > 2) reasons.push(`${overlapCount} notes overlap with your collection`);
+
+  /* Signal 3: House familiarity (up to 15 points) */
+  if (bottle.house && ownedBottles.some(ob => ob.house && ob.house.toLowerCase() === bottle.house.toLowerCase())) {
+    score += 15;
+    reasons.push(`You already love ${bottle.house}`);
+  }
+
+  /* Signal 4: Small boost for bottles on want list vs want-to-try (up to 5 points) */
+  if (bottle.status === "want") score += 5;
+
+  return {
+    score: Math.min(100, Math.round(score)),
+    matchedNotes: [...new Set(matchedNotes)],
+    reason: reasons.length > 0 ? reasons[0] : "Expand your horizons",
+    isWildcard: score < 20,
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
    SHARED UI COMPONENTS
    ═══════════════════════════════════════════════════════════ */
 
@@ -1345,6 +1437,15 @@ export default function ScentDashboard() {
   const topNote = useMemo(() => [...notes].sort((a, b) => b.pct - a.pct)[0]?.name || "—", [notes]);
   const filteredBottles = useMemo(() => collectionFilter ? bottles.filter(b => b.status === collectionFilter) : bottles, [bottles, collectionFilter]);
 
+  /* Rank want/want-to-try bottles by fit score */
+  const rankedWishlist = useMemo(() => {
+    const ownedBottles = bottles.filter(b => b.status === "owned");
+    const wishlist = bottles.filter(b => b.status === "want" || b.status === "want to try");
+    return wishlist
+      .map(b => ({ ...b, fit: scoreFragranceFit(b, ownedBottles, notes) }))
+      .sort((a, b) => b.fit.score - a.fit.score);
+  }, [bottles, notes]);
+
   const tabs = [
     { icon: "❋", label: "Notes" },
     { icon: "〰", label: "Trends" },
@@ -1718,6 +1819,89 @@ export default function ScentDashboard() {
                   );
                 })}
               </div>
+
+              {/* ─── Recommended For You ────────────────── */}
+              {rankedWishlist.length > 0 && (
+                <div style={{ marginTop: 32 }}>
+                  <div style={{ marginBottom: 16 }}>
+                    <h3 style={{ fontFamily: ff.display, fontSize: 20, fontWeight: 400, color: PAL.cream, margin: 0 }}>Next Up For You</h3>
+                    <p style={{ fontFamily: ff.body, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "4px 0 0" }}>
+                      Your wishlist ranked by fit · {rankedWishlist.length} fragrance{rankedWishlist.length !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {rankedWishlist.map((b, i) => {
+                      const sc = STATUS_COLORS[b.status] || PAL.muted;
+                      const fitPct = b.fit.score;
+                      const barColor = fitPct >= 60 ? PAL.sage : fitPct >= 30 ? PAL.gold : PAL.plum;
+                      const label = b.fit.isWildcard ? "Wildcard" : fitPct >= 70 ? "Perfect Fit" : fitPct >= 50 ? "Strong Match" : fitPct >= 30 ? "Good Match" : "Discovery";
+                      return (
+                        <div key={b.name + b.house} style={{
+                          background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 12,
+                          padding: "14px 16px", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap",
+                        }}>
+                          {/* Rank number */}
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                            background: i < 3 ? `${PAL.gold}15` : `${PAL.cream}06`,
+                            border: `1px solid ${i < 3 ? PAL.gold + "33" : PAL.border}`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontFamily: ff.display, fontSize: 15, color: i < 3 ? PAL.gold : PAL.muted,
+                          }}>{i + 1}</div>
+
+                          {/* Info */}
+                          <div style={{ flex: 1, minWidth: 160 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                              <span style={{ fontFamily: ff.display, fontSize: 16, color: PAL.cream }}>{b.name}</span>
+                              {b.house && <span style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted }}>— {b.house}</span>}
+                              <span style={{
+                                fontSize: 8, color: sc, background: `${sc}15`, border: `1px solid ${sc}30`,
+                                borderRadius: 3, padding: "1px 6px", letterSpacing: 1, textTransform: "uppercase", fontFamily: ff.body,
+                              }}>{b.status}</span>
+                            </div>
+                            <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, margin: "4px 0 0" }}>{b.fit.reason}</p>
+                            {/* Matched note pills */}
+                            {b.fit.matchedNotes.length > 0 && (
+                              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
+                                {b.fit.matchedNotes.slice(0, 5).map((n, j) => (
+                                  <span key={j} style={{
+                                    fontFamily: ff.body, fontSize: 8, letterSpacing: 1, textTransform: "uppercase",
+                                    color: PAL.gold, background: `${PAL.gold}10`, border: `1px solid ${PAL.gold}20`,
+                                    borderRadius: 3, padding: "1px 6px",
+                                  }}>{n}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Score bar */}
+                          <div style={{ width: 100, flexShrink: 0 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                              <span style={{ fontFamily: ff.body, fontSize: 9, color: barColor, letterSpacing: 1, textTransform: "uppercase" }}>{label}</span>
+                              <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.cream, fontWeight: 500 }}>{fitPct}%</span>
+                            </div>
+                            <div style={{ width: "100%", height: 4, borderRadius: 2, background: PAL.border }}>
+                              <div style={{
+                                width: `${fitPct}%`, height: "100%", borderRadius: 2,
+                                background: `linear-gradient(90deg, ${barColor}88, ${barColor})`,
+                                transition: "width .5s ease",
+                              }} />
+                            </div>
+                          </div>
+
+                          {/* Price */}
+                          {b.cost > 0 && (
+                            <div style={{ textAlign: "right", flexShrink: 0, minWidth: 60 }}>
+                              <div style={{ fontFamily: ff.display, fontSize: 18, color: PAL.cream }}>${b.cost}</div>
+                              <div style={{ fontFamily: ff.body, fontSize: 9, color: PAL.muted }}>{b.ml}mL</div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
