@@ -325,6 +325,53 @@ function scoreFragranceFit(bottle, ownedBottles, notesProfile) {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   RATING SYSTEM
+   ═══════════════════════════════════════════════════════════ */
+
+const RATING_CATEGORIES = [
+  { key: "overall", label: "Overall", color: "#c5a46d" },
+  { key: "sillage", label: "Sillage", color: "#b5546a" },
+  { key: "longevity", label: "Longevity", color: "#7a927a" },
+  { key: "scent", label: "Scent", color: "#7a5073" },
+];
+
+const RatingSlider = ({ value, onChange, color, label, compact }) => {
+  const displayVal = value || 0;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: compact ? 8 : 10, flex: 1, minWidth: compact ? 0 : 180 }}>
+      {label && <span style={{ fontFamily: ff.body, fontSize: compact ? 9 : 10, color: PAL.muted, letterSpacing: 1.5, textTransform: "uppercase", minWidth: compact ? 50 : 65, flexShrink: 0 }}>{label}</span>}
+      <input
+        type="range" min="0" max="10" step="0.5" value={displayVal}
+        onChange={e => onChange(parseFloat(e.target.value))}
+        style={{
+          flex: 1, height: 4, appearance: "none", background: PAL.border, borderRadius: 2, outline: "none", cursor: "pointer",
+          accentColor: color || PAL.gold,
+        }}
+      />
+      <span style={{
+        fontFamily: ff.display, fontSize: compact ? 14 : 16, color: displayVal > 0 ? (color || PAL.gold) : PAL.muted,
+        minWidth: 28, textAlign: "right", fontWeight: 400,
+      }}>{displayVal > 0 ? displayVal.toFixed(1) : "—"}</span>
+    </div>
+  );
+};
+
+/* Compact rating display (read-only) */
+const RatingBadge = ({ ratings, size }) => {
+  const avg = ratings && ratings.overall > 0 ? ratings.overall : null;
+  if (!avg) return null;
+  const sz = size || 28;
+  return (
+    <div style={{
+      width: sz, height: sz, borderRadius: sz / 2, flexShrink: 0,
+      background: `${PAL.gold}18`, border: `1px solid ${PAL.gold}33`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontFamily: ff.display, fontSize: sz * 0.45, color: PAL.gold,
+    }}>{avg.toFixed(1)}</div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════
    SHARED UI COMPONENTS
    ═══════════════════════════════════════════════════════════ */
 
@@ -728,9 +775,46 @@ const FRAGRANCE_DB = [
   /* ═══════════════════════════════════════════════
      MEMO PARIS
      ═══════════════════════════════════════════════ */
-  { name: "African Leather", house: "Memo Paris", cost: 295, ml: 75, notes: ["leather","cardamom","saffron","oud","geranium"], description: "Spiced leather and oud — a journey through Saharan markets." },
-  { name: "Italian Leather", house: "Memo Paris", cost: 295, ml: 75, notes: ["leather","bergamot","iris","musk","tonka"], description: "Refined Italian leather — smoother and brighter." },
-  { name: "Marfa", house: "Memo Paris", cost: 295, ml: 75, notes: ["saffron","leather","sandalwood","cedar","musk"], description: "West Texas desert leather — dry, warm, open." },
+  /* ═══════════════════════════════════════════════
+     MEMO PARIS (full lineup)
+     ═══════════════════════════════════════════════ */
+  { name: "African Leather", house: "Memo Paris", cost: 295, ml: 75, notes: ["leather","cardamom","saffron","oud","geranium","cumin","patchouli"], description: "Spiced leather and oud — warm, arid, and exotic. Their most iconic." },
+  { name: "French Leather", house: "Memo Paris", cost: 295, ml: 75, notes: ["leather","rose","lime","suede","musk","cedar"], description: "A French rose wrapped in suede — sophisticated and soft." },
+  { name: "Italian Leather", house: "Memo Paris", cost: 295, ml: 75, notes: ["leather","bergamot","iris","clary sage","vanilla","rockrose"], description: "Herbaceous Italian leather — smooth with a resinous vanilla base." },
+  { name: "Irish Leather", house: "Memo Paris", cost: 295, ml: 75, notes: ["leather","juniper","mate","cedar","musk","vetiver"], description: "Windswept Irish moors — leather, juniper berries, and green mate." },
+  { name: "Russian Leather", house: "Memo Paris", cost: 295, ml: 75, notes: ["leather","birch","pepper","amber","styrax","labdanum"], description: "Smoky birch tar and dark leather — raw and commanding." },
+  { name: "Sicilian Leather", house: "Memo Paris", cost: 295, ml: 75, notes: ["leather","bergamot","neroli","cedar","musk","sea notes"], description: "Solar Mediterranean leather — volcanic, fresh, carried by sea winds." },
+  { name: "Iberian Leather", house: "Memo Paris", cost: 295, ml: 75, notes: ["leather","iris","rose","jasmine","cedar","geranium","osmanthus"], description: "Dense and smoky leather over an elaborate floral heart." },
+  { name: "Lalibela", house: "Memo Paris", cost: 295, ml: 75, notes: ["jasmine","rose","ylang-ylang","orange blossom","vanilla","patchouli","musk"], description: "Ethiopian temple florals — joyous, mystical, frankincense-tinged." },
+  { name: "Marfa", house: "Memo Paris", cost: 295, ml: 75, notes: ["tuberose","orange blossom","saffron","sandalwood","cedar","musk"], description: "West Texas desert tuberose — powerful, sun-drenched, magnetic." },
+  { name: "Inlé", house: "Memo Paris", cost: 295, ml: 75, notes: ["tea","neroli","bergamot","osmanthus","jasmine","fig","mate","cedar"], description: "Drifting on fragrant Burmese waters — osmanthus, tea, and green fig." },
+  { name: "Sintra", house: "Memo Paris", cost: 295, ml: 75, notes: ["orange blossom","petitgrain","vanilla","marshmallow","musk"], description: "Portuguese childhood nostalgia — marshmallow sweetness and orange blossom." },
+  { name: "Madurai", house: "Memo Paris", cost: 295, ml: 75, notes: ["jasmine sambac","sandalwood","cardamom","vanilla","musk","amber"], description: "Sacred Indian jasmine and creamy sandalwood — sensual and rich." },
+  { name: "Kedu", house: "Memo Paris", cost: 295, ml: 75, notes: ["sesame","grapefruit","coconut","sandalwood","vanilla","musk"], description: "Javanese fertile earth — sesame and tropical woods, utterly unique." },
+  { name: "Winter Palace", house: "Memo Paris", cost: 295, ml: 75, notes: ["cardamom","pink pepper","rose","incense","amber","musk"], description: "Russian winter contrast — fire and ice, spiced and crystalline." },
+  { name: "Granada", house: "Memo Paris", cost: 295, ml: 75, notes: ["neroli","orange blossom","rose","amber","musk","sandalwood"], description: "Andalusian orange groves — floral, warm, and sun-kissed." },
+  { name: "Luxor Oud", house: "Memo Paris", cost: 295, ml: 75, notes: ["oud","rose","patchouli","labdanum","fruit","saffron"], description: "Egyptian temple stones — roses and oud in splendor." },
+  { name: "Odéon", house: "Memo Paris", cost: 295, ml: 75, notes: ["rose","patchouli","tonka","vanilla","musk","sandalwood"], description: "Mythical Parisian district — rose, patchouli, and tonka enlivened." },
+  { name: "Palais Bourbon", house: "Memo Paris", cost: 295, ml: 75, notes: ["vanilla","sandalwood","cedar","amber","musk","benzoin"], description: "Majestic vanilla and sandalwood — persuasive, elegant, Parisian." },
+  { name: "Tiger's Nest", house: "Memo Paris", cost: 295, ml: 75, notes: ["bergamot","bitter orange","saffron","incense","cedar","amber","musk"], description: "Himalayan monastery — northern lights warmth and woody protection." },
+  { name: "Argentina", house: "Memo Paris", cost: 295, ml: 75, notes: ["mate","leather","vanilla","amber","musk","cedar"], description: "Passionate tango — mate, leather, and amber in a single movement." },
+  { name: "Inverness", house: "Memo Paris", cost: 295, ml: 75, notes: ["peat","heather","whiskey","amber","cedar","musk","vetiver"], description: "Scottish Highlands — peat, heather, and golden rain." },
+  { name: "Portobello Road", house: "Memo Paris", cost: 295, ml: 75, notes: ["lavender","incense","leather","amber","musk","cedar"], description: "London eccentricity — aromatic lavender and smoky incense." },
+  { name: "Eau de Memo", house: "Memo Paris", cost: 225, ml: 75, notes: ["bergamot","jasmine","leather","musk","cedar"], description: "The house signature — euphoric bergamot and buttery leather accord." },
+  { name: "Sherwood", house: "Memo Paris", cost: 295, ml: 75, notes: ["sandalwood","oakwood","blackcurrant","spices","musk","amber"], description: "Creamy red sandalwood enhanced by upcycled oakwood — warm and spiced." },
+  { name: "Cappadocia", house: "Memo Paris", cost: 295, ml: 75, notes: ["rose","saffron","oud","amber","leather","musk"], description: "Turkish fairy chimneys — rose-saffron warmth over smoky leather." },
+  { name: "Ithaque", house: "Memo Paris", cost: 295, ml: 75, notes: ["fig","bergamot","cedar","musk","amber","sea notes"], description: "Mythical Ionian island — sun-warmed fig and Mediterranean breeze." },
+  { name: "Flam", house: "Memo Paris", cost: 295, ml: 75, notes: ["bergamot","bitter orange","cedar","amber","musk","vetiver"], description: "Norwegian fjord warmth — citrus brightness and protective woods." },
+  { name: "Cap Camarat", house: "Memo Paris", cost: 295, ml: 75, notes: ["ylang-ylang","vanilla","amyris","pink pepper","musk"], description: "Provençal Riviera — sunny ylang, vanilla, and a smile in the sun." },
+  { name: "Abu Dhabi", house: "Memo Paris", cost: 295, ml: 75, notes: ["date","oud","saffron","amber","vanilla","musk"], description: "Emirati dates and golden oud — delicately generous and enveloping." },
+  { name: "Ilha do Mel", house: "Memo Paris", cost: 295, ml: 75, notes: ["coconut","honey","sandalwood","vanilla","musk","amber"], description: "Brazilian honey island — tropical sweetness and warm sand." },
+  { name: "Tamarindo", house: "Memo Paris", cost: 295, ml: 75, notes: ["tamarind","coconut","sandalwood","vanilla","musk"], description: "Costa Rican coast — exotic tamarind fruit and oceanic warmth." },
+  { name: "Siberian Golden Wood", house: "Memo Paris", cost: 295, ml: 75, notes: ["sesame","vetiver","sandalwood","amber","musk","cedar"], description: "Trans-Siberian journey — sesame, vetiver, and wild golden woods." },
+  { name: "Desert Orange Blossom", house: "Memo Paris", cost: 295, ml: 75, notes: ["orange blossom","cinnamon","almond","patchouli","amber","musk"], description: "Dubai at dusk — warm cinnamon currents and rippling orange flower." },
+  { name: "Rose Paris Rose", house: "Memo Paris", cost: 295, ml: 75, notes: ["rose","davana","guaiac wood","musk","amber"], description: "Parisian rooftop roses — ruffled, fruity, sophisticated." },
+  { name: "London Tweed", house: "Memo Paris", cost: 295, ml: 75, notes: ["bergamot","ginger","cardamom","musk","amber","sandalwood"], description: "Royal parks shimmer — bergamot, ginger, and golden spice." },
+  { name: "Kotor", house: "Memo Paris", cost: 295, ml: 75, notes: ["bergamot","pink pepper","rose","amber","musk","cedar"], description: "Montenegrin bay — sparkling citrus and Mediterranean warmth." },
+  { name: "French Leather Rose", house: "Memo Paris", cost: 295, ml: 75, notes: ["rose","pink pepper","suede","musk","leather"], description: "French rose with bare-shoulder sophistication — sueded and intimate." },
 
   /* ═══════════════════════════════════════════════
      XERJOFF
@@ -777,13 +861,187 @@ const FRAGRANCE_DB = [
   { name: "Floraiku One Umbrella for Two", house: "Floraiku", cost: 200, ml: 50, notes: ["incense","sandalwood","iris","amber","musk"], description: "Rainy-day incense and tender woods — poetic." },
   { name: "Woha Palermo", house: "Woha Parfums", cost: 160, ml: 50, notes: ["neroli","bergamot","cedar","musk","amber"], description: "Sicilian sun — bright citrus and warm wood." },
   { name: "Oddity Neon Church", house: "Oddity", cost: 150, ml: 50, notes: ["incense","neon","ozone","cedar","musk"], description: "Sacred meets synthetic — glowing incense in neon light." },
+
+  /* ═══════════════════════════════════════════════
+     SONNET CHAT RECOMMENDATIONS
+     ═══════════════════════════════════════════════ */
+  /* — Guerlain — */
+  { name: "Vétiver Fauve", house: "Guerlain", cost: 280, ml: 125, notes: ["vetiver","sandalwood","tonka","amber","musk"], description: "Untamed vetiver — smoky, animalic, and wildly elegant." },
+  { name: "Encens Mythique d'Orient", house: "Guerlain", cost: 280, ml: 125, notes: ["frankincense","oud","myrrh","amber","cedar"], description: "Sacred temple incense — profound, resinous, and lasting." },
+  { name: "Vétiver EDT", house: "Guerlain", cost: 90, ml: 100, notes: ["vetiver","tobacco","pepper","cedar","musk"], description: "The classic vetiver benchmark — green, earthy, timeless." },
+  { name: "Vétiver Parfum", house: "Guerlain", cost: 280, ml: 125, notes: ["vetiver","sandalwood","cedar","tonka","amber"], description: "The EDT elevated — richer, deeper, more resinous." },
+  { name: "Angélique Noire", house: "Guerlain", cost: 280, ml: 125, notes: ["angelica","vanilla","leather","tonka","amber","musk"], description: "Dark angelica root and vanilla — herbaceous warmth with bite." },
+  { name: "Herbes Troublantes", house: "Guerlain", cost: 280, ml: 125, notes: ["herbs","vetiver","cedar","musk","green notes"], description: "Wild aromatic herbs — troubling, green, and alive." },
+  { name: "Après l'Ondée", house: "Guerlain", cost: 130, ml: 100, notes: ["violet","iris","anise","vanilla","heliotrope","musk"], description: "After the rain — violet tears and soft anise. A poetic masterpiece." },
+  { name: "Herba Fresca", house: "Guerlain", cost: 90, ml: 75, notes: ["mint","green tea","lemon","cedar","musk"], description: "Fresh-cut herbs and morning dew — sparkling green simplicity." },
+  /* — Marc-Antoine Barrois — */
+  { name: "Ganymede", house: "Marc-Antoine Barrois", cost: 190, ml: 100, notes: ["mandarin","saffron","violet","osmanthus","immortelle","suede","akigalawood","musk"], description: "Mineral leather from Jupiter's moon — luminous, metallic, cult status." },
+  /* — Hermès — */
+  { name: "Un Jardin en Méditerranée", house: "Hermès", cost: 135, ml: 100, notes: ["fig","cedar","orange blossom","red pepper","cypress"], description: "Mediterranean fig garden — green, sun-warmed, and breezy." },
+  { name: "Terre d'Hermès", house: "Hermès", cost: 135, ml: 100, notes: ["orange","vetiver","cedar","pepper","flint"], description: "Mineral earth meets citrus — masculine, grounded, iconic." },
+  { name: "Un Jardin sur le Nil", house: "Hermès", cost: 135, ml: 100, notes: ["green mango","lotus","sycamore","incense","bulrush"], description: "Nile river garden — green mango and watery lotus." },
+  { name: "Eau de Gentiane Blanche", house: "Hermès", cost: 175, ml: 100, notes: ["gentian","iris","musk","white floral"], description: "Bitter gentian root — austere, herbal, and wildly refined." },
+  { name: "Vetiverio Hermès", house: "Hermès", cost: 175, ml: 100, notes: ["vetiver","grapefruit","basil","cedar","musk"], description: "Hermès vetiver — bright citrus opening into earthy depth." },
+  /* — BDK Parfums — */
+  { name: "Gris Charnel", house: "BDK Parfums", cost: 195, ml: 100, notes: ["fig","cardamom","iris","sandalwood","vetiver","musk"], description: "Fig and cardamom over carnal sandalwood — sophisticated and warm." },
+  /* — Ex Nihilo — */
+  { name: "Viper Green", house: "Ex Nihilo", cost: 250, ml: 100, notes: ["green notes","basil","vetiver","cedar","leather","musk"], description: "Venomous green — sharp basil and vetiver with a leather bite." },
+  { name: "Atlas Fever", house: "Ex Nihilo", cost: 250, ml: 100, notes: ["leather","saffron","cedar","amber","musk","oud"], description: "Moroccan Atlas mountains — spiced leather and desert warmth." },
+  { name: "Amber Sky", house: "Ex Nihilo", cost: 250, ml: 100, notes: ["amber","bergamot","vanilla","musk","tonka"], description: "Liquid amber sunset — warm, resinous, expansive." },
+  /* — Maison Crivelli — */
+  { name: "Iris Malikhân", house: "Maison Crivelli", cost: 195, ml: 100, notes: ["iris","leather","incense","amber","musk","vetiver"], description: "Iris rooted in leather and incense — dark, powdery, magnetic." },
+  { name: "Oud Cadenza", house: "Maison Crivelli", cost: 195, ml: 100, notes: ["oud","saffron","rose","cedar","amber","musk"], description: "Oud crescendo — saffron-rose opening into dark resinous woods." },
+  { name: "Patchouli Magnetik", house: "Maison Crivelli", cost: 195, ml: 100, notes: ["patchouli","ginger","vanilla","amber","musk"], description: "Magnetic patchouli pulled toward spiced vanilla." },
+  /* — Kerosene — */
+  { name: "Copper Skies", house: "Kerosene", cost: 115, ml: 100, notes: ["saffron","cardamom","leather","amber","cedar","musk"], description: "Saffron-spiced leather under copper-tinted twilight." },
+  { name: "Broken Theories", house: "Kerosene", cost: 115, ml: 100, notes: ["vetiver","incense","leather","cedar","smoke"], description: "Fractured incense and vetiver — intellectual and smoky." },
+  { name: "Sacred Memory", house: "Kerosene", cost: 115, ml: 100, notes: ["frankincense","myrrh","vanilla","amber","sandalwood"], description: "Cathedral resins and sacred vanilla — devotional warmth." },
+  { name: "Canfield Cedar", house: "Kerosene", cost: 115, ml: 100, notes: ["cedar","birch","smoke","vanilla","musk"], description: "Smoky cedar forest — rugged, campfire-adjacent, wearable." },
+  /* — Goldfield & Banks — */
+  { name: "Silky Woods", house: "Goldfield & Banks", cost: 195, ml: 100, notes: ["sandalwood","vanilla","musk","amber","cedar"], description: "Australian sandalwood silk — creamy, smooth, second-skin." },
+  { name: "Tales of Amber", house: "Goldfield & Banks", cost: 195, ml: 100, notes: ["amber","benzoin","labdanum","vanilla","musk"], description: "Deep amber storytelling — resinous warmth from Down Under." },
+  { name: "Desert Rosewood", house: "Goldfield & Banks", cost: 195, ml: 100, notes: ["rosewood","sandalwood","iris","cedar","musk"], description: "Outback rosewood — dry, creamy, beautifully balanced." },
+  { name: "Mystic Bliss", house: "Goldfield & Banks", cost: 195, ml: 100, notes: ["sandalwood","vanilla","amber","musk","tonka"], description: "Meditative bliss — sandalwood, vanilla, and cosmic calm." },
+  /* — J-Scent — */
+  { name: "Ippuku", house: "J-Scent", cost: 90, ml: 50, notes: ["tobacco","incense","hinoki","tea","cedar","musk"], description: "Japanese tobacco pause — incense, hinoki, and contemplation." },
+  /* — Le Labo — */
+  { name: "Patchouli 24", house: "Le Labo", cost: 310, ml: 100, notes: ["patchouli","birch tar","smoke","vanilla","styrax","leather"], description: "Smoky patchouli bonfire — dark, tarry, unforgettable." },
+  { name: "Vetiver 46", house: "Le Labo", cost: 310, ml: 100, notes: ["vetiver","cedar","labdanum","pepper","amber","musk"], description: "Labdanum-laced vetiver — earthy, resinous, deeply masculine." },
+  { name: "Violette 30", house: "Le Labo", cost: 310, ml: 100, notes: ["violet","earth","musk","sandalwood","amber"], description: "Violet ripped from the earth — raw, green, and grounding." },
+  /* — L'Artisan Parfumeur — */
+  { name: "Premier Figuier", house: "L'Artisan Parfumeur", cost: 170, ml: 100, notes: ["fig","coconut","cedar","musk","green notes"], description: "The original fig fragrance — milky, green, and sun-drenched." },
+  /* — Scents of Wood — */
+  { name: "Oud in Bourbon", house: "Scents of Wood", cost: 195, ml: 50, notes: ["oud","bourbon","vanilla","sandalwood","amber","musk"], description: "Oud aged in bourbon barrels — boozy, warm, and smooth." },
+  { name: "Oud in Calvados", house: "Scents of Wood", cost: 195, ml: 50, notes: ["oud","apple brandy","cedar","amber","musk"], description: "Oud meets Normandy apple brandy — fruity, oaky, refined." },
+  { name: "Mycelium in Chestnut", house: "Scents of Wood", cost: 195, ml: 50, notes: ["mushroom","chestnut","earth","cedar","musk","amber"], description: "Forest floor fungi and roasted chestnuts — earthy and unique." },
+  { name: "Vetiver in Chestnut", house: "Scents of Wood", cost: 195, ml: 50, notes: ["vetiver","chestnut","cedar","amber","musk"], description: "Earthy vetiver roasted with sweet chestnut warmth." },
+  { name: "Fig and Oud", house: "Scents of Wood", cost: 195, ml: 50, notes: ["fig","oud","cedar","musk","amber"], description: "Mediterranean fig wrapped in smoky oud." },
+  /* — Serge Lutens — */
+  { name: "Encens et Lavande", house: "Serge Lutens", cost: 170, ml: 50, notes: ["incense","lavender","cedar","amber","musk"], description: "Lavender smoke — aromatic incense meeting herbal calm." },
+  /* — Fueguia 1833 — */
+  { name: "Misiones", house: "Fueguia 1833", cost: 220, ml: 100, notes: ["mate","cedar","vetiver","tobacco","earth","musk"], description: "Argentine rainforest — maté, tobacco, and wild green earth." },
+  /* — Maison Margiela — */
+  { name: "From the Garden", house: "Maison Martin Margiela", cost: 140, ml: 100, notes: ["basil","tomato leaf","green pepper","earth","cedar"], description: "Fresh-picked herbs — tomato vine, basil, and garden soil." },
+  /* — Calahorra / Woha — */
+  { name: "Calahorra", house: "Woha Parfums", cost: 160, ml: 50, notes: ["leather","suede","fig","cedar","vetiver","musk"], description: "Spanish leather and sun-dried fig — warm, tactile, grounded." },
+  /* — Sisley — */
+  { name: "Eau de Campagne", house: "Sisley", cost: 150, ml: 100, notes: ["tomato leaf","herbs","patchouli","vetiver","oakmoss"], description: "Country garden classique — herbal, green, and earthy." },
+  /* — Profumum Roma — */
+  { name: "Ichnusa", house: "Profumum Roma", cost: 195, ml: 100, notes: ["myrtle","juniper","helichrysum","cedar","musk"], description: "Sardinian macchia — wild herbs baked in Mediterranean sun." },
+  { name: "Olibanum", house: "Profumum Roma", cost: 195, ml: 100, notes: ["frankincense","myrrh","cedar","amber","musk"], description: "Pure sacred frankincense — Roman church incense distilled." },
+  /* — Houbigant — */
+  { name: "Figuier Noir", house: "Houbigant", cost: 220, ml: 100, notes: ["fig","patchouli","cedar","amber","leather","musk"], description: "Dark fig — leathered, patchouli-rich, nighttime sophistication." },
+  /* — Bon Parfumeur — */
+  { name: "204", house: "Bon Parfumeur", cost: 95, ml: 100, notes: ["fig","cedar","vetiver","sandalwood","musk"], description: "Minimalist fig and cedar — clean, affordable, and well-made." },
+  /* — Heeley — */
+  { name: "Cardinal", house: "Heeley", cost: 160, ml: 100, notes: ["incense","cedar","elemi","musk","amber"], description: "Vatican incense — cool stone, elemi resin, and sacred smoke." },
+  /* — Prada — */
+  { name: "Infusion d'Iris", house: "Prada", cost: 145, ml: 100, notes: ["iris","cedar","benzoin","incense","vetiver","musk"], description: "Powdery iris precision — clean, elegant, Italian restraint." },
+  /* — Essential Parfums — */
+  { name: "Fig Fiction", house: "Essential Parfums", cost: 85, ml: 100, notes: ["fig","coconut","sandalwood","cedar","musk"], description: "Affordable fig dream — milky coconut fig at an incredible price." },
+  /* — April Aromatics — */
+  { name: "Calling All Angels", house: "April Aromatics", cost: 160, ml: 30, notes: ["frankincense","rose","sandalwood","amber","musk"], description: "Natural incense and rose — celestial, gentle, handcrafted." },
+  /* — Baruti — */
+  { name: "Homo Homini Lupus", house: "Baruti", cost: 165, ml: 30, notes: ["leather","smoke","birch tar","labdanum","musk"], description: "Man is wolf to man — primal birch tar and feral leather." },
+  /* — BeauFort London — */
+  { name: "Coeur Sombre", house: "BeauFort London", cost: 115, ml: 50, notes: ["oud","incense","leather","smoke","amber","musk"], description: "Dark heart — churchy oud, smoke, and brooding leather." },
+  /* — Anatole Lebreton — */
+  { name: "L'Eau Scandaleuse", house: "Anatole Lebreton", cost: 140, ml: 50, notes: ["iris","vetiver","cedar","musk","amber"], description: "Scandalously understated — iris and vetiver in quiet tension." },
+  /* — Arquiste — */
+  { name: "Flor y Canto", house: "Arquiste", cost: 195, ml: 100, notes: ["tuberose","cacao","vanilla","copal","incense"], description: "Aztec flower ceremony — tuberose, cacao, and sacred copal." },
+  /* — Andy Tauer — */
+  { name: "Incense Extreme", house: "Andy Tauer", cost: 120, ml: 50, notes: ["incense","labdanum","vanilla","cedar","amber","smoke"], description: "Incense pushed to its limit — resinous, smoky, and extreme." },
+  /* — Floraiku — */
+  { name: "AO", house: "Floraiku", cost: 200, ml: 50, notes: ["incense","hinoki","green tea","iris","musk"], description: "Blue stillness — Japanese incense and contemplative green tea." },
+  /* — Diptyque additions — */
+  { name: "Eau de Lierre", house: "Diptyque", cost: 180, ml: 75, notes: ["ivy","green notes","musk","cedar","moss"], description: "Climbing ivy — crushed green leaves and cool stone walls." },
 ];
 
-const DiscoverTab = ({ bottles, setBottles }) => {
+/* Curated Sonnet recommendations with fit categories */
+const SONNET_RECOMMENDATIONS = [
+  { name: "Vétiver Fauve", house: "Guerlain", fit: "essential" },
+  { name: "Debaser", house: "D.S. & Durga", fit: "essential" },
+  { name: "Patchouli 24", house: "Le Labo", fit: "essential" },
+  { name: "Ganymede", house: "Marc-Antoine Barrois", fit: "essential" },
+  { name: "Calahorra", house: "Woha Parfums", fit: "essential" },
+  { name: "Un Jardin en Méditerranée", house: "Hermès", fit: "essential" },
+  { name: "Gris Charnel", house: "BDK Parfums", fit: "essential" },
+  { name: "Encens Mythique d'Orient", house: "Guerlain", fit: "essential" },
+  { name: "Viper Green", house: "Ex Nihilo", fit: "essential" },
+  { name: "Iris Malikhân", house: "Maison Crivelli", fit: "essential" },
+  { name: "Copper Skies", house: "Kerosene", fit: "essential" },
+  { name: "Blackmail", house: "Kerosene", fit: "essential" },
+  { name: "Premier Figuier", house: "L'Artisan Parfumeur", fit: "essential" },
+  { name: "Vetiver 46", house: "Le Labo", fit: "essential" },
+  { name: "Silky Woods", house: "Goldfield & Banks", fit: "essential" },
+  { name: "Ippuku", house: "J-Scent", fit: "essential" },
+  { name: "Broken Theories", house: "Kerosene", fit: "strong" },
+  { name: "Passage d'Enfer", house: "L'Artisan Parfumeur", fit: "strong" },
+  { name: "Vétiver EDT", house: "Guerlain", fit: "strong" },
+  { name: "Vétiver Parfum", house: "Guerlain", fit: "strong" },
+  { name: "From the Garden", house: "Maison Martin Margiela", fit: "strong" },
+  { name: "Bal d'Afrique", house: "Byredo", fit: "strong" },
+  { name: "Terre d'Hermès", house: "Hermès", fit: "strong" },
+  { name: "MAAI", house: "Bogue Profumo", fit: "strong" },
+  { name: "Oud Cadenza", house: "Maison Crivelli", fit: "strong" },
+  { name: "Tales of Amber", house: "Goldfield & Banks", fit: "strong" },
+  { name: "Naked Dance", house: "Oddity", fit: "strong" },
+  { name: "Atlas Fever", house: "Ex Nihilo", fit: "strong" },
+  { name: "Oud in Bourbon", house: "Scents of Wood", fit: "strong" },
+  { name: "Oud in Calvados", house: "Scents of Wood", fit: "strong" },
+  { name: "Encens et Lavande", house: "Serge Lutens", fit: "strong" },
+  { name: "Angélique Noire", house: "Guerlain", fit: "strong" },
+  { name: "Misiones", house: "Fueguia 1833", fit: "strong" },
+  { name: "Desert Rosewood", house: "Goldfield & Banks", fit: "strong" },
+  { name: "Mystic Bliss", house: "Goldfield & Banks", fit: "strong" },
+  { name: "Mycelium in Chestnut", house: "Scents of Wood", fit: "strong" },
+  { name: "Timbuktu", house: "L'Artisan Parfumeur", fit: "good" },
+  { name: "Herbes Troublantes", house: "Guerlain", fit: "good" },
+  { name: "Un Jardin sur le Nil", house: "Hermès", fit: "good" },
+  { name: "Eau de Lierre", house: "Diptyque", fit: "good" },
+  { name: "Gypsy Water", house: "Byredo", fit: "good" },
+  { name: "Sacred Memory", house: "Kerosene", fit: "good" },
+  { name: "Burning Barbershop", house: "D.S. & Durga", fit: "good" },
+  { name: "Canfield Cedar", house: "Kerosene", fit: "good" },
+  { name: "Avignon", house: "Comme des Garçons", fit: "good" },
+  { name: "Kyoto", house: "Diptyque", fit: "good" },
+  { name: "Eau de Campagne", house: "Sisley", fit: "good" },
+  { name: "Ichnusa", house: "Profumum Roma", fit: "good" },
+  { name: "Figuier Noir", house: "Houbigant", fit: "good" },
+  { name: "204", house: "Bon Parfumeur", fit: "good" },
+  { name: "The Lover's Tale", house: "Francesca Bianchi", fit: "good" },
+  { name: "Cardinal", house: "Heeley", fit: "good" },
+  { name: "Violette 30", house: "Le Labo", fit: "good" },
+  { name: "Vetiver in Chestnut", house: "Scents of Wood", fit: "good" },
+  { name: "Fig and Oud", house: "Scents of Wood", fit: "good" },
+  { name: "Patchouli Magnetik", house: "Maison Crivelli", fit: "good" },
+  { name: "Ave Maria", house: "House of Bo", fit: "good" },
+  { name: "Rosario", house: "House of Bo", fit: "good" },
+  { name: "Eau de Sens", house: "Diptyque", fit: "good" },
+  { name: "Eau de Gentiane Blanche", house: "Hermès", fit: "wildcard" },
+  { name: "Après l'Ondée", house: "Guerlain", fit: "wildcard" },
+  { name: "AO", house: "Floraiku", fit: "wildcard" },
+  { name: "Infusion d'Iris", house: "Prada", fit: "wildcard" },
+  { name: "Fig Fiction", house: "Essential Parfums", fit: "wildcard" },
+  { name: "Vetiverio Hermès", house: "Hermès", fit: "wildcard" },
+  { name: "Wonderwood", house: "Comme des Garçons", fit: "wildcard" },
+  { name: "Herba Fresca", house: "Guerlain", fit: "wildcard" },
+  { name: "Calling All Angels", house: "April Aromatics", fit: "wildcard" },
+  { name: "Homo Homini Lupus", house: "Baruti", fit: "wildcard" },
+  { name: "Coeur Sombre", house: "BeauFort London", fit: "wildcard" },
+  { name: "L'Eau Scandaleuse", house: "Anatole Lebreton", fit: "wildcard" },
+  { name: "Flor y Canto", house: "Arquiste", fit: "wildcard" },
+  { name: "Amber Sky", house: "Ex Nihilo", fit: "wildcard" },
+  { name: "Incense Extreme", house: "Andy Tauer", fit: "wildcard" },
+  { name: "Olibanum", house: "Profumum Roma", fit: "wildcard" },
+];
+
+const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
   const [query, setQuery] = useState("");
   const [filterHouse, setFilterHouse] = useState(null);
   const [filterNote, setFilterNote] = useState(null);
   const [addedNames, setAddedNames] = useState(new Set());
+  const [showAllRecs, setShowAllRecs] = useState(false);
 
   const allHouses = useMemo(() => [...new Set(FRAGRANCE_DB.map(f => f.house))].sort(), []);
   const allNotes = useMemo(() => {
@@ -829,9 +1087,119 @@ const DiscoverTab = ({ bottles, setBottles }) => {
     setAddedNames(prev => new Set([...prev, frag.name]));
   };
 
+  const visibleRecs = showAllRecs ? rankedWishlist : rankedWishlist.slice(0, 5);
+
   return (
     <div>
-      <SectionTitle title="Discover Fragrances" sub="Browse & add to your collection" />
+      <SectionTitle title="Discover Fragrances" sub="Your wishlist ranked by fit · browse 200+ fragrances" />
+
+      {/* ─── Next Up For You — Sonnet Curated ─── */}
+      {SONNET_RECOMMENDATIONS.length > 0 && (
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <h3 style={{ fontFamily: ff.display, fontSize: 18, fontWeight: 400, color: PAL.cream, margin: 0 }}>Next Up For You</h3>
+            <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.muted, letterSpacing: 1.5, textTransform: "uppercase" }}>
+              Curated by Sonnet · {SONNET_RECOMMENDATIONS.length} picks
+            </span>
+          </div>
+
+          {[
+            { key: "essential", label: "Essential", color: "#c5a46d", desc: "These belong in your collection" },
+            { key: "strong", label: "Strong Fit", color: "#7a927a", desc: "Highly aligned with your taste" },
+            { key: "good", label: "Good Fit", color: "#b5546a", desc: "Worth exploring" },
+            { key: "wildcard", label: "Wildcard / Stretch", color: "#7a5073", desc: "Expand your horizons" },
+          ].map(cat => {
+            const items = SONNET_RECOMMENDATIONS.filter(r => r.fit === cat.key);
+            const visible = showAllRecs ? items : items.slice(0, cat.key === "essential" ? 16 : 5);
+            if (items.length === 0) return null;
+            return (
+              <div key={cat.key} style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: cat.color }} />
+                  <span style={{ fontFamily: ff.display, fontSize: 15, color: PAL.cream }}>{cat.label}</span>
+                  <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.muted }}>— {cat.desc} ({items.length})</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  {visible.map((rec, i) => {
+                    const dbEntry = FRAGRANCE_DB.find(f => f.name === rec.name && f.house === rec.house);
+                    const exists = alreadyInCollection(rec.name, rec.house);
+                    const justAdded = addedNames.has(rec.name);
+                    return (
+                      <div key={rec.name + rec.house} style={{
+                        display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+                        background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 10,
+                        flexWrap: "wrap",
+                      }}>
+                        <span style={{ fontFamily: ff.body, fontSize: 11, color: cat.color, minWidth: 20 }}>{i + 1}</span>
+                        <div style={{ flex: 1, minWidth: 140 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                            <span style={{ fontFamily: ff.display, fontSize: 14, color: PAL.cream }}>{rec.name}</span>
+                            <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.muted }}>— {rec.house}</span>
+                          </div>
+                          {dbEntry && (
+                            <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 4 }}>
+                              {dbEntry.notes.slice(0, 4).map((n, j) => (
+                                <span key={j} style={{ fontFamily: ff.body, fontSize: 7, letterSpacing: 1, textTransform: "uppercase", color: PAL.gold, background: `${PAL.gold}10`, border: `1px solid ${PAL.gold}20`, borderRadius: 3, padding: "1px 5px" }}>{n}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {dbEntry && dbEntry.cost > 0 && (
+                          <span style={{ fontFamily: ff.display, fontSize: 15, color: PAL.cream, minWidth: 45, textAlign: "right" }}>${dbEntry.cost}</span>
+                        )}
+                        {exists || justAdded ? (
+                          <span style={{ fontFamily: ff.body, fontSize: 9, color: PAL.sage, letterSpacing: 1, minWidth: 70, textAlign: "center" }}>✓ {justAdded ? "Added" : "In collection"}</span>
+                        ) : (
+                          <div style={{ display: "flex", gap: 3 }}>
+                            {[
+                              { s: "want", l: "Want", c: STATUS_COLORS["want"] },
+                              { s: "want to try", l: "Try", c: STATUS_COLORS["want to try"] },
+                            ].map(opt => (
+                              <button key={opt.s} onClick={() => {
+                                if (dbEntry) addToCollection(dbEntry, opt.s);
+                              }} style={{
+                                padding: "4px 10px", borderRadius: 6, cursor: "pointer",
+                                background: `${opt.c}10`, border: `1px solid ${opt.c}35`,
+                                fontFamily: ff.body, fontSize: 9, color: opt.c,
+                                letterSpacing: 1, textTransform: "uppercase",
+                              }}>{opt.l}</button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {!showAllRecs && SONNET_RECOMMENDATIONS.length > 26 && (
+            <button onClick={() => setShowAllRecs(true)} style={{
+              marginTop: 8, width: "100%", padding: "8px",
+              background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 8,
+              color: PAL.muted, fontFamily: ff.body, fontSize: 11, cursor: "pointer",
+              letterSpacing: 1, textTransform: "uppercase",
+            }}>Show all {SONNET_RECOMMENDATIONS.length} recommendations</button>
+          )}
+          {showAllRecs && (
+            <button onClick={() => setShowAllRecs(false)} style={{
+              marginTop: 8, width: "100%", padding: "8px",
+              background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 8,
+              color: PAL.muted, fontFamily: ff.body, fontSize: 11, cursor: "pointer",
+              letterSpacing: 1, textTransform: "uppercase",
+            }}>Show less</button>
+          )}
+
+          <div style={{ height: 1, background: PAL.border, margin: "24px 0 4px" }} />
+        </div>
+      )}
+
+      {/* ─── Browse Database ───────────────────── */}
+      <div style={{ marginBottom: 14 }}>
+        <h3 style={{ fontFamily: ff.display, fontSize: 18, fontWeight: 400, color: PAL.cream, margin: "0 0 4px" }}>Browse Fragrances</h3>
+        <p style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: 0 }}>200+ curated from top houses</p>
+      </div>
 
       {/* Search input */}
       <div style={{ marginBottom: 16 }}>
@@ -988,7 +1356,7 @@ const DiscoverTab = ({ bottles, setBottles }) => {
    WEAR CALENDAR COMPONENT
    ═══════════════════════════════════════════════════════════ */
 
-const WearCalendar = ({ wearLog, setWearLog, bottles }) => {
+const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRatings }) => {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -1172,6 +1540,26 @@ const WearCalendar = ({ wearLog, setWearLog, bottles }) => {
                     </button>
                   );
                 })}
+              </div>
+            )}
+            {/* Daily wear rating */}
+            {(wearLog[selectedDay] || []).length > 0 && (
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${PAL.border}` }}>
+                <span style={{ fontFamily: ff.display, fontStyle: "italic", fontSize: 12, color: PAL.gold, display: "block", marginBottom: 10 }}>Rate today's wear</span>
+                {RATING_CATEGORIES.map(cat => (
+                  <div key={cat.key} style={{ marginBottom: 6 }}>
+                    <RatingSlider
+                      compact
+                      label={cat.label}
+                      color={cat.color}
+                      value={(wearRatings[selectedDay] || {})[cat.key] || 0}
+                      onChange={v => setWearRatings(prev => ({
+                        ...prev,
+                        [selectedDay]: { ...(prev[selectedDay] || {}), [cat.key]: v }
+                      }))}
+                    />
+                  </div>
+                ))}
               </div>
             )}
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
@@ -1383,6 +1771,8 @@ export default function ScentDashboard() {
   });
   const [bottles, setBottles] = useState(() => loadStored("bottles", INITIAL_BOTTLES));
   const [wearLog, setWearLog] = useState(() => loadStored("wearLog", {}));
+  const [bottleRatings, setBottleRatings] = useState(() => loadStored("bottleRatings", {}));
+  const [wearRatings, setWearRatings] = useState(() => loadStored("wearRatings", {}));
 
   /* ─── Auto-save to localStorage whenever data changes ─── */
 
@@ -1401,6 +1791,14 @@ export default function ScentDashboard() {
   useEffect(() => {
     try { localStorage.setItem("scent_wearLog", JSON.stringify(wearLog)); } catch {}
   }, [wearLog]);
+
+  useEffect(() => {
+    try { localStorage.setItem("scent_bottleRatings", JSON.stringify(bottleRatings)); } catch {}
+  }, [bottleRatings]);
+
+  useEffect(() => {
+    try { localStorage.setItem("scent_wearRatings", JSON.stringify(wearRatings)); } catch {}
+  }, [wearRatings]);
 
   /* ─── Initial setup ─── */
 
@@ -1465,6 +1863,8 @@ export default function ScentDashboard() {
   const resetAll = () => {
     setBottles(INITIAL_BOTTLES);
     setWearLog({});
+    setBottleRatings({});
+    setWearRatings({});
     setNotes(FALLBACK_NOTES);
     setNotesSource("fallback");
     setSelectedNote(null);
@@ -1472,6 +1872,8 @@ export default function ScentDashboard() {
     try {
       localStorage.removeItem("scent_bottles");
       localStorage.removeItem("scent_wearLog");
+      localStorage.removeItem("scent_bottleRatings");
+      localStorage.removeItem("scent_wearRatings");
       localStorage.removeItem("scent_notes");
       localStorage.removeItem("scent_notesSource");
     } catch {}
@@ -1697,7 +2099,7 @@ export default function ScentDashboard() {
                   </p>
                 </div>
                 <div style={{ display: "flex", gap: 4 }}>
-                  {[{k:"calendar",l:"Calendar",ic:"📅"},{k:"chart",l:"Chart",ic:"📈"}].map(v => (
+                  {[{k:"calendar",l:"Calendar",ic:"📅"},{k:"chart",l:"Chart",ic:"📈"},{k:"ratings",l:"Ratings",ic:"⭐"}].map(v => (
                     <button key={v.k} onClick={() => setTrendView(v.k)} style={{
                       background: trendView === v.k ? `${PAL.gold}14` : "transparent",
                       border: `1px solid ${trendView === v.k ? PAL.gold + "44" : PAL.border}`,
@@ -1710,7 +2112,7 @@ export default function ScentDashboard() {
               </div>
 
               {trendView === "calendar" && (
-                <WearCalendar wearLog={wearLog} setWearLog={setWearLog} bottles={bottles} />
+                <WearCalendar wearLog={wearLog} setWearLog={setWearLog} bottles={bottles} wearRatings={wearRatings} setWearRatings={setWearRatings} />
               )}
 
               {trendView === "chart" && (
@@ -1753,6 +2155,133 @@ export default function ScentDashboard() {
                     </div>
                   )}
                 </>
+              )}
+
+              {/* ─── Ratings View ─────────────────────── */}
+              {trendView === "ratings" && (
+                <div>
+                  {/* Bottle Ratings */}
+                  <div style={{ marginBottom: 24 }}>
+                    <h3 style={{ fontFamily: ff.display, fontSize: 18, fontWeight: 400, color: PAL.cream, margin: "0 0 4px" }}>Bottle Ratings</h3>
+                    <p style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "0 0 14px" }}>Rate your owned fragrances · 1–10 with half steps</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {bottles.filter(b => b.status === "owned").map(b => {
+                        const r = bottleRatings[b.name] || {};
+                        const filled = RATING_CATEGORIES.filter(c => (r[c.key] || 0) > 0);
+                        const avg = filled.length > 0 ? filled.reduce((s, c) => s + r[c.key], 0) / filled.length : 0;
+                        return (
+                          <div key={b.name} style={{ background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 12, padding: "14px 16px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                              {avg > 0 && <RatingBadge ratings={{ overall: avg }} size={30} />}
+                              <div>
+                                <span style={{ fontFamily: ff.display, fontSize: 15, color: PAL.cream }}>{b.name}</span>
+                                {b.house && <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.muted, marginLeft: 6 }}>{b.house}</span>}
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                              {RATING_CATEGORIES.map(cat => (
+                                <RatingSlider key={cat.key} label={cat.label} color={cat.color}
+                                  value={r[cat.key] || 0}
+                                  onChange={v => setBottleRatings(prev => ({ ...prev, [b.name]: { ...(prev[b.name] || {}), [cat.key]: v } }))}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Leaderboard */}
+                  {(() => {
+                    const rated = bottles.filter(b => b.status === "owned" && bottleRatings[b.name])
+                      .map(b => {
+                        const r = bottleRatings[b.name] || {};
+                        const filled = RATING_CATEGORIES.filter(c => (r[c.key] || 0) > 0);
+                        return { ...b, avg: filled.length > 0 ? filled.reduce((s, c) => s + r[c.key], 0) / filled.length : 0 };
+                      }).filter(b => b.avg > 0).sort((a, b) => b.avg - a.avg);
+                    if (rated.length < 2) return null;
+                    const medals = ["🥇","🥈","🥉"];
+                    return (
+                      <div style={{ marginBottom: 24 }}>
+                        <h3 style={{ fontFamily: ff.display, fontSize: 18, fontWeight: 400, color: PAL.cream, margin: "0 0 4px" }}>Leaderboard</h3>
+                        <p style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "0 0 14px" }}>Your top-rated bottles</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {rated.map((b, i) => (
+                            <div key={b.name} style={{
+                              display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
+                              background: i < 3 ? `${PAL.gold}06` : "transparent",
+                              border: `1px solid ${i < 3 ? PAL.gold + "22" : PAL.border}`,
+                              borderRadius: 10, flexWrap: "wrap",
+                            }}>
+                              <span style={{ fontSize: 16, width: 24, textAlign: "center" }}>{medals[i] || `${i + 1}`}</span>
+                              <div style={{ flex: 1, minWidth: 100 }}>
+                                <span style={{ fontFamily: ff.display, fontSize: 14, color: PAL.cream }}>{b.name}</span>
+                                {b.house && <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.muted, marginLeft: 6 }}>{b.house}</span>}
+                              </div>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                {RATING_CATEGORIES.map(cat => (
+                                  <div key={cat.key} style={{ textAlign: "center" }}>
+                                    <div style={{ fontFamily: ff.body, fontSize: 7, color: PAL.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 }}>{cat.label.slice(0, 4)}</div>
+                                    <div style={{ fontFamily: ff.display, fontSize: 13, color: (bottleRatings[b.name]?.[cat.key] || 0) > 0 ? cat.color : PAL.muted }}>{(bottleRatings[b.name]?.[cat.key] || 0).toFixed(1)}</div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div style={{ fontFamily: ff.display, fontSize: 20, color: PAL.gold, minWidth: 40, textAlign: "right" }}>{b.avg.toFixed(1)}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Recent Wear Ratings */}
+                  {(() => {
+                    const ratedDays = Object.entries(wearRatings)
+                      .filter(([, r]) => r && RATING_CATEGORIES.some(c => (r[c.key] || 0) > 0))
+                      .sort(([a], [b]) => b.localeCompare(a)).slice(0, 20);
+                    if (ratedDays.length === 0) return (
+                      <div style={{ textAlign: "center", padding: "20px 0" }}>
+                        <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted }}>Rate your daily wears from the Calendar view — they'll appear here.</p>
+                      </div>
+                    );
+                    return (
+                      <div>
+                        <h3 style={{ fontFamily: ff.display, fontSize: 18, fontWeight: 400, color: PAL.cream, margin: "0 0 4px" }}>Recent Wear Ratings</h3>
+                        <p style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "0 0 14px" }}>Your last {ratedDays.length} rated sessions</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {ratedDays.map(([day, r]) => {
+                            const worn = wearLog[day] || [];
+                            const filled = RATING_CATEGORIES.filter(c => (r[c.key] || 0) > 0);
+                            const avg = filled.length > 0 ? filled.reduce((s, c) => s + r[c.key], 0) / filled.length : 0;
+                            return (
+                              <div key={day} style={{
+                                display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+                                background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 10, flexWrap: "wrap",
+                              }}>
+                                <span style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, minWidth: 80 }}>{day}</span>
+                                <div style={{ flex: 1, minWidth: 100 }}>
+                                  {worn.map((name, i) => (
+                                    <span key={i} style={{ fontFamily: ff.display, fontSize: 13, color: PAL.cream }}>{name}{i < worn.length - 1 ? ", " : ""}</span>
+                                  ))}
+                                </div>
+                                <div style={{ display: "flex", gap: 6 }}>
+                                  {RATING_CATEGORIES.map(cat => (
+                                    <div key={cat.key} style={{ textAlign: "center" }}>
+                                      <div style={{ fontFamily: ff.body, fontSize: 7, color: PAL.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 1 }}>{cat.label.slice(0, 4)}</div>
+                                      <div style={{ fontFamily: ff.display, fontSize: 12, color: (r[cat.key] || 0) > 0 ? cat.color : PAL.muted }}>{(r[cat.key] || 0) > 0 ? r[cat.key].toFixed(1) : "—"}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div style={{ fontFamily: ff.display, fontSize: 18, color: PAL.gold, minWidth: 36, textAlign: "right" }}>{avg > 0 ? avg.toFixed(1) : "—"}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
               )}
             </div>
           )}
@@ -1820,94 +2349,12 @@ export default function ScentDashboard() {
                 })}
               </div>
 
-              {/* ─── Recommended For You ────────────────── */}
-              {rankedWishlist.length > 0 && (
-                <div style={{ marginTop: 32 }}>
-                  <div style={{ marginBottom: 16 }}>
-                    <h3 style={{ fontFamily: ff.display, fontSize: 20, fontWeight: 400, color: PAL.cream, margin: 0 }}>Next Up For You</h3>
-                    <p style={{ fontFamily: ff.body, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "4px 0 0" }}>
-                      Your wishlist ranked by fit · {rankedWishlist.length} fragrance{rankedWishlist.length !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {rankedWishlist.map((b, i) => {
-                      const sc = STATUS_COLORS[b.status] || PAL.muted;
-                      const fitPct = b.fit.score;
-                      const barColor = fitPct >= 60 ? PAL.sage : fitPct >= 30 ? PAL.gold : PAL.plum;
-                      const label = b.fit.isWildcard ? "Wildcard" : fitPct >= 70 ? "Perfect Fit" : fitPct >= 50 ? "Strong Match" : fitPct >= 30 ? "Good Match" : "Discovery";
-                      return (
-                        <div key={b.name + b.house} style={{
-                          background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 12,
-                          padding: "14px 16px", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap",
-                        }}>
-                          {/* Rank number */}
-                          <div style={{
-                            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                            background: i < 3 ? `${PAL.gold}15` : `${PAL.cream}06`,
-                            border: `1px solid ${i < 3 ? PAL.gold + "33" : PAL.border}`,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontFamily: ff.display, fontSize: 15, color: i < 3 ? PAL.gold : PAL.muted,
-                          }}>{i + 1}</div>
-
-                          {/* Info */}
-                          <div style={{ flex: 1, minWidth: 160 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                              <span style={{ fontFamily: ff.display, fontSize: 16, color: PAL.cream }}>{b.name}</span>
-                              {b.house && <span style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted }}>— {b.house}</span>}
-                              <span style={{
-                                fontSize: 8, color: sc, background: `${sc}15`, border: `1px solid ${sc}30`,
-                                borderRadius: 3, padding: "1px 6px", letterSpacing: 1, textTransform: "uppercase", fontFamily: ff.body,
-                              }}>{b.status}</span>
-                            </div>
-                            <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, margin: "4px 0 0" }}>{b.fit.reason}</p>
-                            {/* Matched note pills */}
-                            {b.fit.matchedNotes.length > 0 && (
-                              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
-                                {b.fit.matchedNotes.slice(0, 5).map((n, j) => (
-                                  <span key={j} style={{
-                                    fontFamily: ff.body, fontSize: 8, letterSpacing: 1, textTransform: "uppercase",
-                                    color: PAL.gold, background: `${PAL.gold}10`, border: `1px solid ${PAL.gold}20`,
-                                    borderRadius: 3, padding: "1px 6px",
-                                  }}>{n}</span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Score bar */}
-                          <div style={{ width: 100, flexShrink: 0 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                              <span style={{ fontFamily: ff.body, fontSize: 9, color: barColor, letterSpacing: 1, textTransform: "uppercase" }}>{label}</span>
-                              <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.cream, fontWeight: 500 }}>{fitPct}%</span>
-                            </div>
-                            <div style={{ width: "100%", height: 4, borderRadius: 2, background: PAL.border }}>
-                              <div style={{
-                                width: `${fitPct}%`, height: "100%", borderRadius: 2,
-                                background: `linear-gradient(90deg, ${barColor}88, ${barColor})`,
-                                transition: "width .5s ease",
-                              }} />
-                            </div>
-                          </div>
-
-                          {/* Price */}
-                          {b.cost > 0 && (
-                            <div style={{ textAlign: "right", flexShrink: 0, minWidth: 60 }}>
-                              <div style={{ fontFamily: ff.display, fontSize: 18, color: PAL.cream }}>${b.cost}</div>
-                              <div style={{ fontFamily: ff.body, fontSize: 9, color: PAL.muted }}>{b.ml}mL</div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
           {/* ═══ DISCOVER ═══════════════════════════════ */}
           {tab === 3 && (
-            <DiscoverTab bottles={bottles} setBottles={setBottles} />
+            <DiscoverTab bottles={bottles} setBottles={setBottles} rankedWishlist={rankedWishlist} />
           )}
         </section>
       </div>
