@@ -2107,38 +2107,49 @@ export default function ScentDashboard() {
   useEffect(() => {
     requestAnimationFrame(() => setVis(true));
 
-    const unsub = onAuth(async (user) => {
-      if (user) {
-        setUid(user.uid);
-        setSyncStatus("syncing");
-        const cloud = await loadUserData(user.uid);
-        if (cloud && cloud.updatedAt) {
-          /* Cloud data exists — check if it's newer than local */
-          const localTs = parseInt(localStorage.getItem("scent_updatedAt") || "0");
-          if (cloud.updatedAt > localTs) {
-            /* Cloud is newer — use cloud data */
-            if (cloud.notes) setNotes(cloud.notes);
-            if (cloud.notesSource) setNotesSource(cloud.notesSource);
-            if (cloud.bottles) setBottles(cloud.bottles);
-            if (cloud.wearLog) setWearLog(cloud.wearLog);
-            if (cloud.bottleRatings) setBottleRatings(cloud.bottleRatings);
-            if (cloud.wearRatings) setWearRatings(cloud.wearRatings);
-            if (cloud.testedScents) setTestedScents(cloud.testedScents);
-            if (cloud.notesSource === "sonnet") setAnalyzing(false);
+    /* Firebase auth — wrapped in try/catch so failures never crash the app */
+    let unsub = () => {};
+    try {
+      unsub = onAuth(async (user) => {
+        if (user) {
+          setUid(user.uid);
+          setSyncStatus("syncing");
+          try {
+            const cloud = await loadUserData(user.uid);
+            if (cloud && cloud.updatedAt) {
+              const localTs = parseInt(localStorage.getItem("scent_updatedAt") || "0");
+              if (cloud.updatedAt > localTs) {
+                if (cloud.notes) setNotes(cloud.notes);
+                if (cloud.notesSource) setNotesSource(cloud.notesSource);
+                if (cloud.bottles) setBottles(cloud.bottles);
+                if (cloud.wearLog) setWearLog(cloud.wearLog);
+                if (cloud.bottleRatings) setBottleRatings(cloud.bottleRatings);
+                if (cloud.wearRatings) setWearRatings(cloud.wearRatings);
+                if (cloud.testedScents) setTestedScents(cloud.testedScents);
+                if (cloud.notesSource === "sonnet") setAnalyzing(false);
+              }
+            }
+            setSyncStatus("synced");
+          } catch (e) {
+            console.warn("Firebase load failed:", e);
+            setSyncStatus("error");
           }
+        } else {
+          try { await signIn(); } catch { setSyncStatus("error"); }
         }
-        setSyncStatus("synced");
-      } else {
-        /* Not signed in yet — sign in anonymously */
-        try { await signIn(); } catch { setSyncStatus("error"); }
-      }
-    });
+      });
+    } catch (e) {
+      console.warn("Firebase auth failed:", e);
+      setSyncStatus("error");
+    }
 
-    /* Sonnet analysis if needed */
+    /* Sonnet analysis if needed — also wrapped */
     if (loadStored("notesSource", "fallback") !== "sonnet") {
       (async () => {
-        const result = await analyzeWithSonnet();
-        if (result) { setNotes(result); setNotesSource("sonnet"); }
+        try {
+          const result = await analyzeWithSonnet();
+          if (result) { setNotes(result); setNotesSource("sonnet"); }
+        } catch (e) { console.warn("Sonnet analysis skipped:", e); }
         setAnalyzing(false);
       })();
     }
@@ -2153,10 +2164,15 @@ export default function ScentDashboard() {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSyncStatus("syncing");
-      const ts = Date.now();
-      await saveUserData(uid, { notes, notesSource, bottles, wearLog, bottleRatings, wearRatings, testedScents, updatedAt: ts });
-      try { localStorage.setItem("scent_updatedAt", String(ts)); } catch {}
-      setSyncStatus("synced");
+      try {
+        const ts = Date.now();
+        await saveUserData(uid, { notes, notesSource, bottles, wearLog, bottleRatings, wearRatings, testedScents, updatedAt: ts });
+        try { localStorage.setItem("scent_updatedAt", String(ts)); } catch {}
+        setSyncStatus("synced");
+      } catch (e) {
+        console.warn("Cloud save failed:", e);
+        setSyncStatus("error");
+      }
     }, 1500); /* debounce 1.5s so rapid edits batch together */
   }, [uid, notes, notesSource, bottles, wearLog, bottleRatings, wearRatings, testedScents]);
 
