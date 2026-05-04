@@ -4,7 +4,6 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ScatterChart, Scatter, ZAxis
 } from "recharts";
-import { signIn, onAuth, saveUserData, loadUserData } from "./firebase.js";
 
 /* ═══════════════════════════════════════════════════════════
    YOUR COLLECTION — from Sonnet chat
@@ -2079,7 +2078,7 @@ export default function ScentDashboard() {
   const [trendView, setTrendView] = useState("chart");
   const [collectionFilter, setCollectionFilter] = useState(null);
 
-  /* ─── Persistent state — loads from localStorage first, then Firebase ─── */
+  /* ─── Persistent state — localStorage only ─── */
 
   const loadStored = (key, fallback) => {
     try {
@@ -2098,113 +2097,63 @@ export default function ScentDashboard() {
   const [wearRatings, setWearRatings] = useState(() => loadStored("wearRatings", {}));
   const [testedScents, setTestedScents] = useState(() => loadStored("testedScents", []));
 
-  const [uid, setUid] = useState(null);
-  const [syncStatus, setSyncStatus] = useState("offline"); /* offline | syncing | synced | error */
-  const saveTimer = useRef(null);
+  /* ─── Auto-save to localStorage ─── */
 
-  /* ─── Firebase auth + initial load ─── */
+  useEffect(() => { try { localStorage.setItem("scent_notes", JSON.stringify(notes)); } catch {} }, [notes]);
+  useEffect(() => { try { localStorage.setItem("scent_notesSource", JSON.stringify(notesSource)); } catch {} }, [notesSource]);
+  useEffect(() => { try { localStorage.setItem("scent_bottles", JSON.stringify(bottles)); } catch {} }, [bottles]);
+  useEffect(() => { try { localStorage.setItem("scent_wearLog", JSON.stringify(wearLog)); } catch {} }, [wearLog]);
+  useEffect(() => { try { localStorage.setItem("scent_bottleRatings", JSON.stringify(bottleRatings)); } catch {} }, [bottleRatings]);
+  useEffect(() => { try { localStorage.setItem("scent_wearRatings", JSON.stringify(wearRatings)); } catch {} }, [wearRatings]);
+  useEffect(() => { try { localStorage.setItem("scent_testedScents", JSON.stringify(testedScents)); } catch {} }, [testedScents]);
+
+  /* ─── Export / Import ─── */
+
+  const exportData = () => {
+    const data = { notes, notesSource, bottles, wearLog, bottleRatings, wearRatings, testedScents, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `scent-profile-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  const importData = () => {
+    const input = document.createElement("input");
+    input.type = "file"; input.accept = ".json";
+    input.onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (data.bottles) setBottles(data.bottles);
+        if (data.notes) setNotes(data.notes);
+        if (data.notesSource) setNotesSource(data.notesSource);
+        if (data.wearLog) setWearLog(data.wearLog);
+        if (data.bottleRatings) setBottleRatings(data.bottleRatings);
+        if (data.wearRatings) setWearRatings(data.wearRatings);
+        if (data.testedScents) setTestedScents(data.testedScents);
+        if (data.notesSource === "sonnet") setAnalyzing(false);
+      } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
+    };
+    input.click();
+  };
+
+  /* ─── Initial setup ─── */
 
   useEffect(() => {
     requestAnimationFrame(() => setVis(true));
-
-    /* Firebase auth — wrapped in try/catch so failures never crash the app */
-    let unsub = () => {};
-    try {
-      unsub = onAuth(async (user) => {
-        if (user) {
-          setUid(user.uid);
-          setSyncStatus("syncing");
-          try {
-            const cloud = await loadUserData(user.uid);
-            if (cloud && cloud.updatedAt) {
-              const localTs = parseInt(localStorage.getItem("scent_updatedAt") || "0");
-              if (cloud.updatedAt > localTs) {
-                if (cloud.notes) setNotes(cloud.notes);
-                if (cloud.notesSource) setNotesSource(cloud.notesSource);
-                if (cloud.bottles) setBottles(cloud.bottles);
-                if (cloud.wearLog) setWearLog(cloud.wearLog);
-                if (cloud.bottleRatings) setBottleRatings(cloud.bottleRatings);
-                if (cloud.wearRatings) setWearRatings(cloud.wearRatings);
-                if (cloud.testedScents) setTestedScents(cloud.testedScents);
-                if (cloud.notesSource === "sonnet") setAnalyzing(false);
-              }
-            }
-            setSyncStatus("synced");
-          } catch (e) {
-            console.warn("Firebase load failed:", e);
-            setSyncStatus("error");
-          }
-        } else {
-          try { await signIn(); } catch { setSyncStatus("error"); }
-        }
-      });
-    } catch (e) {
-      console.warn("Firebase auth failed:", e);
-      setSyncStatus("error");
-    }
-
-    /* Sonnet analysis if needed — also wrapped */
     if (loadStored("notesSource", "fallback") !== "sonnet") {
       (async () => {
         try {
           const result = await analyzeWithSonnet();
           if (result) { setNotes(result); setNotesSource("sonnet"); }
-        } catch (e) { console.warn("Sonnet analysis skipped:", e); }
+        } catch {}
         setAnalyzing(false);
       })();
     }
-
-    return () => unsub();
   }, []);
-
-  /* ─── Auto-save: localStorage immediately, Firebase debounced ─── */
-
-  const saveToCloud = useCallback(() => {
-    if (!uid) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      setSyncStatus("syncing");
-      try {
-        const ts = Date.now();
-        await saveUserData(uid, { notes, notesSource, bottles, wearLog, bottleRatings, wearRatings, testedScents, updatedAt: ts });
-        try { localStorage.setItem("scent_updatedAt", String(ts)); } catch {}
-        setSyncStatus("synced");
-      } catch (e) {
-        console.warn("Cloud save failed:", e);
-        setSyncStatus("error");
-      }
-    }, 1500); /* debounce 1.5s so rapid edits batch together */
-  }, [uid, notes, notesSource, bottles, wearLog, bottleRatings, wearRatings, testedScents]);
-
-  /* Save to localStorage immediately + trigger cloud save */
-  useEffect(() => {
-    try { localStorage.setItem("scent_notes", JSON.stringify(notes)); } catch {}
-    saveToCloud();
-  }, [notes]);
-  useEffect(() => {
-    try { localStorage.setItem("scent_notesSource", JSON.stringify(notesSource)); } catch {}
-    saveToCloud();
-  }, [notesSource]);
-  useEffect(() => {
-    try { localStorage.setItem("scent_bottles", JSON.stringify(bottles)); } catch {}
-    saveToCloud();
-  }, [bottles]);
-  useEffect(() => {
-    try { localStorage.setItem("scent_wearLog", JSON.stringify(wearLog)); } catch {}
-    saveToCloud();
-  }, [wearLog]);
-  useEffect(() => {
-    try { localStorage.setItem("scent_bottleRatings", JSON.stringify(bottleRatings)); } catch {}
-    saveToCloud();
-  }, [bottleRatings]);
-  useEffect(() => {
-    try { localStorage.setItem("scent_wearRatings", JSON.stringify(wearRatings)); } catch {}
-    saveToCloud();
-  }, [wearRatings]);
-  useEffect(() => {
-    try { localStorage.setItem("scent_testedScents", JSON.stringify(testedScents)); } catch {}
-    saveToCloud();
-  }, [testedScents]);
 
   /* Derive monthly trends from wearLog (arrays per day) */
   const calendarTrends = useMemo(() => {
@@ -2253,7 +2202,7 @@ export default function ScentDashboard() {
     setAnalyzing(false);
   };
 
-  const resetAll = async () => {
+  const resetAll = () => {
     setBottles(INITIAL_BOTTLES);
     setWearLog({});
     setBottleRatings({});
@@ -2271,15 +2220,7 @@ export default function ScentDashboard() {
       localStorage.removeItem("scent_testedScents");
       localStorage.removeItem("scent_notes");
       localStorage.removeItem("scent_notesSource");
-      localStorage.removeItem("scent_updatedAt");
     } catch {}
-    if (uid) {
-      await saveUserData(uid, {
-        notes: FALLBACK_NOTES, notesSource: "fallback",
-        bottles: INITIAL_BOTTLES, wearLog: {}, bottleRatings: {}, wearRatings: {}, testedScents: [],
-        updatedAt: Date.now(),
-      });
-    }
   };
 
   const handleNoteClick = async (index) => {
@@ -2314,18 +2255,9 @@ export default function ScentDashboard() {
               <h1 style={{ fontFamily: ff.display, fontSize: "clamp(34px,5vw,52px)", fontWeight: 400, margin: "6px 0 0", lineHeight: 1.05, color: PAL.cream }}>Scent Profile</h1>
               <div style={{ width: 48, height: 2, background: `linear-gradient(90deg, ${PAL.gold}, transparent)`, marginTop: 14, borderRadius: 1 }} />
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <div style={{
-                  width: 6, height: 6, borderRadius: "50%",
-                  background: syncStatus === "synced" ? PAL.sage : syncStatus === "syncing" ? PAL.gold : syncStatus === "error" ? PAL.rose : PAL.muted,
-                  boxShadow: syncStatus === "synced" ? `0 0 6px ${PAL.sage}88` : "none",
-                  transition: "all .3s",
-                }} />
-                <span style={{ fontFamily: ff.body, fontSize: 8, color: PAL.muted, letterSpacing: 1.5, textTransform: "uppercase" }}>
-                  {syncStatus === "synced" ? "Synced" : syncStatus === "syncing" ? "Saving…" : syncStatus === "error" ? "Offline" : "…"}
-                </span>
-              </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <button onClick={exportData} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "7px 12px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer" }}>↓ Export</button>
+              <button onClick={importData} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "7px 12px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer" }}>↑ Import</button>
               <button onClick={() => setEditing(true)} style={{ background: `${PAL.gold}12`, border: `1px solid ${PAL.gold}33`, borderRadius: 8, padding: "9px 18px", color: PAL.gold, fontFamily: ff.body, fontSize: 11, letterSpacing: 1.8, textTransform: "uppercase", cursor: "pointer" }}>✎ Edit Collection</button>
             </div>
           </div>
