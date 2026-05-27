@@ -411,8 +411,13 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset }) => {
     setNewHouseInput(prev => { const n = { ...prev }; delete n[i]; return n; });
   };
 
+  const mouseDownTarget = useRef(null);
+
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }} onClick={onClose}>
+    <div
+      onMouseDown={e => { mouseDownTarget.current = e.target; }}
+      onClick={e => { if (e.target === e.currentTarget && mouseDownTarget.current === e.currentTarget) onClose(); }}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: PAL.bg, border: `1px solid ${PAL.border}`, borderRadius: 16, padding: 28, width: "94%", maxWidth: 780, maxHeight: "85vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
           <h3 style={{ fontFamily: ff.display, fontSize: 20, color: PAL.cream, margin: 0 }}>Edit Collection</h3>
@@ -1111,6 +1116,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerMouseDown = useRef(null);
 
   /* Only show owned bottles in the picker */
   const ownedBottles = useMemo(() => bottles.filter(b => b.status === "owned"), [bottles]);
@@ -1237,10 +1243,13 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
 
       {/* Fragrance picker popover */}
       {pickerOpen && (
-        <div style={{
+        <div
+          onMouseDown={e => { pickerMouseDown.current = e.target; }}
+          onClick={e => { if (e.target === e.currentTarget && pickerMouseDown.current === e.currentTarget) setPickerOpen(false); }}
+          style={{
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)",
           display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999,
-        }} onClick={() => setPickerOpen(false)}>
+        }}>
           <div onClick={e => e.stopPropagation()} style={{
             background: PAL.bg, border: `1px solid ${PAL.border}`, borderRadius: 16,
             padding: 24, width: "88%", maxWidth: 400, maxHeight: "70vh", overflowY: "auto",
