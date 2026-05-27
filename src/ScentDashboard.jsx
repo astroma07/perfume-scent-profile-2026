@@ -2088,14 +2088,69 @@ export default function ScentDashboard() {
     return fallback;
   };
 
-  const [notes, setNotes] = useState(() => loadStored("notes", FALLBACK_NOTES));
-  const [notesSource, setNotesSource] = useState(() => loadStored("notesSource", "fallback"));
-  const [analyzing, setAnalyzing] = useState(() => loadStored("notesSource", "fallback") === "sonnet" ? false : true);
-  const [bottles, setBottles] = useState(() => loadStored("bottles", INITIAL_BOTTLES));
-  const [wearLog, setWearLog] = useState(() => loadStored("wearLog", {}));
-  const [bottleRatings, setBottleRatings] = useState(() => loadStored("bottleRatings", {}));
-  const [wearRatings, setWearRatings] = useState(() => loadStored("wearRatings", {}));
-  const [testedScents, setTestedScents] = useState(() => loadStored("testedScents", []));
+  const isFirstVisit = (() => {
+    try {
+      const hasFlag = localStorage.getItem("scent_hasVisited");
+      if (!hasFlag) return true;
+      /* Even if the flag exists, if there are no bottles saved, treat as new user */
+      const savedBottles = localStorage.getItem("scent_bottles");
+      if (!savedBottles) return true;
+      const parsed = JSON.parse(savedBottles);
+      if (Array.isArray(parsed) && parsed.length === 0) return true;
+    } catch {}
+    return false;
+  })();
+  const [showWelcome, setShowWelcome] = useState(isFirstVisit);
+
+  const [notes, setNotes] = useState(() => isFirstVisit ? FALLBACK_NOTES : loadStored("notes", FALLBACK_NOTES));
+  const [notesSource, setNotesSource] = useState(() => isFirstVisit ? "fallback" : loadStored("notesSource", "fallback"));
+  const [analyzing, setAnalyzing] = useState(() => isFirstVisit ? false : (loadStored("notesSource", "fallback") === "sonnet" ? false : true));
+  const [bottles, setBottles] = useState(() => isFirstVisit ? [] : loadStored("bottles", INITIAL_BOTTLES));
+  const [wearLog, setWearLog] = useState(() => isFirstVisit ? {} : loadStored("wearLog", {}));
+  const [bottleRatings, setBottleRatings] = useState(() => isFirstVisit ? {} : loadStored("bottleRatings", {}));
+  const [wearRatings, setWearRatings] = useState(() => isFirstVisit ? {} : loadStored("wearRatings", {}));
+  const [testedScents, setTestedScents] = useState(() => isFirstVisit ? [] : loadStored("testedScents", []));
+
+  const startFresh = () => {
+    setBottles([]);
+    setNotes(FALLBACK_NOTES);
+    setNotesSource("fallback");
+    setAnalyzing(false);
+    try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
+    setShowWelcome(false);
+  };
+
+  const startWithDemo = () => {
+    setBottles(INITIAL_BOTTLES);
+    setNotes(FALLBACK_NOTES);
+    setAnalyzing(true);
+    try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
+    setShowWelcome(false);
+  };
+
+  const startWithImport = () => {
+    const input = document.createElement("input");
+    input.type = "file"; input.accept = ".json";
+    input.onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (data.bottles) setBottles(data.bottles);
+        if (data.notes) setNotes(data.notes);
+        if (data.notesSource) setNotesSource(data.notesSource);
+        if (data.wearLog) setWearLog(data.wearLog);
+        if (data.bottleRatings) setBottleRatings(data.bottleRatings);
+        if (data.wearRatings) setWearRatings(data.wearRatings);
+        if (data.testedScents) setTestedScents(data.testedScents);
+        if (data.notesSource === "sonnet") setAnalyzing(false);
+        try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
+        setShowWelcome(false);
+      } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
+    };
+    input.click();
+  };
 
   /* ─── Auto-save to localStorage ─── */
 
@@ -2238,6 +2293,55 @@ export default function ScentDashboard() {
     setLookingUp(false);
   };
 
+  /* ═══ Welcome Screen ═══════════════════════════ */
+  if (showWelcome) {
+    return (
+      <div style={{ fontFamily: ff.body, background: PAL.bg, minHeight: "100vh", color: PAL.cream, position: "relative", overflow: "hidden" }}>
+        <link href={FONT_LINK} rel="stylesheet" />
+        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, opacity: 0.03 }} />
+        <div style={{ position: "fixed", top: -180, left: "30%", width: 500, height: 500, background: `radial-gradient(circle, ${PAL.gold}08 0%, transparent 70%)`, pointerEvents: "none" }} />
+        <div style={{ position: "fixed", bottom: -200, right: "10%", width: 400, height: 400, background: `radial-gradient(circle, ${PAL.rose}06 0%, transparent 70%)`, pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", zIndex: 2, maxWidth: 520, margin: "0 auto", padding: "0 24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", textAlign: "center" }}>
+          <div style={{ fontSize: 48, marginBottom: 20, opacity: .6 }}>❋</div>
+          <div style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 5, textTransform: "uppercase", color: PAL.muted, marginBottom: 8 }}>Olfactory · Analytics</div>
+          <h1 style={{ fontFamily: ff.display, fontSize: "clamp(36px, 6vw, 52px)", fontWeight: 400, margin: "0 0 8px", lineHeight: 1.1, color: PAL.cream }}>Scent Profile</h1>
+          <div style={{ width: 48, height: 2, background: `linear-gradient(90deg, ${PAL.gold}, transparent)`, margin: "0 auto 24px", borderRadius: 1 }} />
+          <p style={{ fontFamily: ff.body, fontSize: 14, color: PAL.muted, lineHeight: 1.7, maxWidth: 400, marginBottom: 36 }}>
+            Track your fragrance collection, log daily wears, rate what you sample, and discover your olfactory DNA.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 320 }}>
+            <button onClick={startFresh} style={{
+              padding: "16px 24px", borderRadius: 12, cursor: "pointer",
+              background: `linear-gradient(135deg, ${PAL.gold}18, ${PAL.rose}10)`,
+              border: `1px solid ${PAL.gold}44`,
+              fontFamily: ff.display, fontSize: 16, fontStyle: "italic", color: PAL.gold,
+              letterSpacing: 0.5,
+            }}>Start Fresh</button>
+
+            <button onClick={startWithDemo} style={{
+              padding: "14px 24px", borderRadius: 12, cursor: "pointer",
+              background: "transparent", border: `1px solid ${PAL.border}`,
+              fontFamily: ff.body, fontSize: 13, color: PAL.muted,
+            }}>Load Demo Collection</button>
+
+            <button onClick={startWithImport} style={{
+              padding: "14px 24px", borderRadius: 12, cursor: "pointer",
+              background: "transparent", border: `1px solid ${PAL.border}`,
+              fontFamily: ff.body, fontSize: 13, color: PAL.muted,
+            }}>↑ Import Existing Data</button>
+          </div>
+
+          <p style={{ fontFamily: ff.body, fontSize: 10, color: `${PAL.muted}88`, marginTop: 24, lineHeight: 1.6 }}>
+            Your data is stored locally in your browser.<br />Use Export / Import to transfer between devices.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  /* ═══ Main Dashboard ═══════════════════════════ */
   return (
     <div style={{ fontFamily: ff.body, background: PAL.bg, minHeight: "100vh", color: PAL.cream, position: "relative", overflow: "hidden" }}>
       <link href={FONT_LINK} rel="stylesheet" />
