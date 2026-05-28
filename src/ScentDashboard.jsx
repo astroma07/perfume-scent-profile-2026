@@ -99,15 +99,17 @@ const ff = { display: "'Playfair Display', Georgia, serif", body: "'DM Sans', sa
 function computeNotesProfile(bottles, testedScents) {
   const counts = {};
 
+  const isValidBottle = (b) => b.name.trim() && b.name.trim().toLowerCase() !== "new fragrance";
+
   /* Count notes from owned/had bottles (weighted 3x) */
-  bottles.filter(b => (b.status === "owned" || b.status === "had") && b.name.trim()).forEach(b => {
+  bottles.filter(b => (b.status === "owned" || b.status === "had") && isValidBottle(b)).forEach(b => {
     (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean).forEach(n => {
       counts[n] = (counts[n] || 0) + 3;
     });
   });
 
   /* Count notes from want/want-to-try (weighted 1x) */
-  bottles.filter(b => (b.status === "want" || b.status === "want to try") && b.name.trim()).forEach(b => {
+  bottles.filter(b => (b.status === "want" || b.status === "want to try") && isValidBottle(b)).forEach(b => {
     (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean).forEach(n => {
       counts[n] = (counts[n] || 0) + 1;
     });
@@ -121,7 +123,7 @@ function computeNotesProfile(bottles, testedScents) {
   });
 
   /* Also check NOTE_TO_FRAGRANCES for bottles that don't have userNotes */
-  bottles.filter(b => b.name.trim() && (!b.userNotes || b.userNotes.trim() === "")).forEach(b => {
+  bottles.filter(b => isValidBottle(b) && (!b.userNotes || b.userNotes.trim() === "")).forEach(b => {
     const bName = (b.fullName || b.name).toLowerCase();
     Object.entries(NOTE_TO_FRAGRANCES).forEach(([note, frags]) => {
       frags.forEach(f => {
@@ -1948,7 +1950,7 @@ export default function ScentDashboard() {
 
     /* 1. Check all bottles in your collection by their userNotes field */
     bottles.forEach(b => {
-      if (!b.name.trim()) return;
+      if (!b.name.trim() || b.name.trim().toLowerCase() === "new fragrance") return;
       const bName = b.fullName || (b.house ? `${b.name} — ${b.house}` : b.name);
       const userNotesList = (b.userNotes || "").toLowerCase().split(",").map(n => n.trim()).filter(Boolean);
       if (userNotesList.includes(lowerNote)) {
