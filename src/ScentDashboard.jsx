@@ -100,14 +100,14 @@ function computeNotesProfile(bottles, testedScents) {
   const counts = {};
 
   /* Count notes from owned/had bottles (weighted 3x) */
-  bottles.filter(b => b.status === "owned" || b.status === "had").forEach(b => {
+  bottles.filter(b => (b.status === "owned" || b.status === "had") && b.name.trim()).forEach(b => {
     (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean).forEach(n => {
       counts[n] = (counts[n] || 0) + 3;
     });
   });
 
   /* Count notes from want/want-to-try (weighted 1x) */
-  bottles.filter(b => b.status === "want" || b.status === "want to try").forEach(b => {
+  bottles.filter(b => (b.status === "want" || b.status === "want to try") && b.name.trim()).forEach(b => {
     (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean).forEach(n => {
       counts[n] = (counts[n] || 0) + 1;
     });
@@ -121,7 +121,7 @@ function computeNotesProfile(bottles, testedScents) {
   });
 
   /* Also check NOTE_TO_FRAGRANCES for bottles that don't have userNotes */
-  bottles.filter(b => !b.userNotes || b.userNotes.trim() === "").forEach(b => {
+  bottles.filter(b => b.name.trim() && (!b.userNotes || b.userNotes.trim() === "")).forEach(b => {
     const bName = (b.fullName || b.name).toLowerCase();
     Object.entries(NOTE_TO_FRAGRANCES).forEach(([note, frags]) => {
       frags.forEach(f => {
@@ -400,14 +400,14 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset }) => {
     if (val === "__new__") {
       setNewHouseInput(prev => ({ ...prev, [i]: "" }));
     } else {
-      const a = [...bottles]; a[i] = { ...a[i], house: val }; setBottles(a);
+      const a = [...bottles]; a[i] = { ...a[i], house: val, fullName: a[i].name + (val ? ` — ${val}` : "") }; setBottles(a);
       setNewHouseInput(prev => { const n = { ...prev }; delete n[i]; return n; });
     }
   };
 
   const confirmNewHouse = (i) => {
     const val = (newHouseInput[i] || "").trim();
-    if (val) { const a = [...bottles]; a[i] = { ...a[i], house: val }; setBottles(a); }
+    if (val) { const a = [...bottles]; a[i] = { ...a[i], house: val, fullName: a[i].name + ` — ${val}` }; setBottles(a); }
     setNewHouseInput(prev => { const n = { ...prev }; delete n[i]; return n; });
   };
 
@@ -439,7 +439,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset }) => {
                 const isNewHouse = newHouseInput.hasOwnProperty(i);
                 return (
                   <div key={i} style={row}>
-                    <div style={{ flex: "1.5 1 120px" }}><label style={lab}>Name</label><input style={inputCss} value={b.name} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], name: e.target.value }; setBottles(a); }} /></div>
+                    <div style={{ flex: "1.5 1 120px" }}><label style={lab}>Name *</label><input style={{ ...inputCss, borderColor: !b.name.trim() ? `${PAL.rose}44` : undefined }} placeholder="Enter fragrance name…" value={b.name} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], name: e.target.value, fullName: e.target.value + (b.house ? ` — ${b.house}` : "") }; setBottles(a); }} /></div>
                     <div style={{ flex: "1.2 1 110px" }}>
                       <label style={lab}>House</label>
                       {isNewHouse ? (
@@ -477,7 +477,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset }) => {
           );
         })}
 
-        <button onClick={() => setBottles([...bottles, { name: "New Fragrance", fullName: "New Fragrance", house: "", cost: 100, ml: 50, freq: 3, status: "want to try", userNotes: "" }])} style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: 10, color: PAL.gold, cursor: "pointer", fontFamily: ff.body, fontSize: 12, width: "100%" }}>+ Add Fragrance</button>
+        <button onClick={() => setBottles([...bottles, { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "want to try", userNotes: "" }])} style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: 10, color: PAL.gold, cursor: "pointer", fontFamily: ff.body, fontSize: 12, width: "100%" }}>+ Add Fragrance</button>
 
         {/* Reset all data */}
         <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${PAL.border}` }}>
@@ -1948,6 +1948,7 @@ export default function ScentDashboard() {
 
     /* 1. Check all bottles in your collection by their userNotes field */
     bottles.forEach(b => {
+      if (!b.name.trim()) return;
       const bName = b.fullName || (b.house ? `${b.name} — ${b.house}` : b.name);
       const userNotesList = (b.userNotes || "").toLowerCase().split(",").map(n => n.trim()).filter(Boolean);
       if (userNotesList.includes(lowerNote)) {
