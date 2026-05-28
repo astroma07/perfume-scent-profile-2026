@@ -1756,7 +1756,6 @@ export default function ScentDashboard() {
   const [trendView, setTrendView] = useState("chart");
   const [collectionFilter, setCollectionFilter] = useState(null);
   const [statsMenuOpen, setStatsMenuOpen] = useState(false);
-  const [visibleStats, setVisibleStats] = useState(() => loadStored("visibleStats", { collection: true, invested: true, daysWorn: true, signature: true }));
 
   /* ─── Persistent state — localStorage only ─── */
 
@@ -1767,6 +1766,8 @@ export default function ScentDashboard() {
     } catch {}
     return fallback;
   };
+
+  const [visibleStats, setVisibleStats] = useState(() => loadStored("visibleStats", { collection: true, invested: true, daysWorn: true, signature: true }));
 
   const isFirstVisit = (() => {
     try {
