@@ -1755,6 +1755,8 @@ export default function ScentDashboard() {
   const [vis, setVis] = useState(false);
   const [trendView, setTrendView] = useState("chart");
   const [collectionFilter, setCollectionFilter] = useState(null);
+  const [statsMenuOpen, setStatsMenuOpen] = useState(false);
+  const [visibleStats, setVisibleStats] = useState(() => loadStored("visibleStats", { collection: true, invested: true, daysWorn: true, signature: true }));
 
   /* ─── Persistent state — localStorage only ─── */
 
@@ -1835,6 +1837,7 @@ export default function ScentDashboard() {
   useEffect(() => { try { localStorage.setItem("scent_bottleRatings", JSON.stringify(bottleRatings)); } catch {} }, [bottleRatings]);
   useEffect(() => { try { localStorage.setItem("scent_wearRatings", JSON.stringify(wearRatings)); } catch {} }, [wearRatings]);
   useEffect(() => { try { localStorage.setItem("scent_testedScents", JSON.stringify(testedScents)); } catch {} }, [testedScents]);
+  useEffect(() => { try { localStorage.setItem("scent_visibleStats", JSON.stringify(visibleStats)); } catch {} }, [visibleStats]);
 
   /* ─── Export / Import ─── */
 
@@ -1938,29 +1941,46 @@ export default function ScentDashboard() {
     setSelectedNote(index);
     const noteName = displayNotes[index]?.name;
     if (!noteName) return;
-
-    /* Check static map first */
-    const staticResult = getFragrancesForNote(noteName);
-    const results = staticResult ? [...staticResult] : [];
-
-    /* Also check bottles with matching userNotes */
     const lowerNote = noteName.toLowerCase();
+    const seen = new Set();
+    const results = [];
+
+    /* 1. Check all bottles in your collection by their userNotes field */
     bottles.forEach(b => {
-      const bName = b.fullName || `${b.name} — ${b.house}`;
-      if ((b.userNotes || "").toLowerCase().split(",").some(n => n.trim() === lowerNote)) {
-        if (!results.includes(bName)) results.push(bName);
+      const bName = b.fullName || (b.house ? `${b.name} — ${b.house}` : b.name);
+      const userNotesList = (b.userNotes || "").toLowerCase().split(",").map(n => n.trim()).filter(Boolean);
+      if (userNotesList.includes(lowerNote)) {
+        if (!seen.has(bName.toLowerCase())) { seen.add(bName.toLowerCase()); results.push(bName); }
       }
     });
 
-    /* Check tested scents too */
+    /* 2. Check tested scents by their notes field */
     testedScents.forEach(t => {
       const tName = t.house ? `${t.name} — ${t.house}` : t.name;
-      if ((t.notes || "").toLowerCase().split(",").some(n => n.trim() === lowerNote)) {
-        if (!results.includes(tName)) results.push(tName);
+      const testedNotesList = (t.notes || "").toLowerCase().split(",").map(n => n.trim()).filter(Boolean);
+      if (testedNotesList.includes(lowerNote)) {
+        if (!seen.has(tName.toLowerCase())) { seen.add(tName.toLowerCase()); results.push(tName); }
       }
     });
 
-    setNoteFragrances(results.length > 0 ? results : [`No matches found for "${noteName}"`]);
+    /* 3. Check bottles against NOTE_TO_FRAGRANCES for those without userNotes */
+    const staticResult = getFragrancesForNote(noteName);
+    if (staticResult) {
+      staticResult.forEach(fragName => {
+        /* Only include if this fragrance is actually in the user's collection */
+        const inCollection = bottles.some(b => {
+          const bName = (b.fullName || b.name).toLowerCase();
+          const fName = fragName.toLowerCase();
+          return bName.includes(fName.split(" — ")[0]) || fName.includes(bName.split(" — ")[0]) || b.name.toLowerCase() === fName.split(" — ")[0];
+        });
+        if (inCollection && !seen.has(fragName.toLowerCase())) {
+          seen.add(fragName.toLowerCase());
+          results.push(fragName);
+        }
+      });
+    }
+
+    setNoteFragrances(results.length > 0 ? results : [`No fragrances with "${noteName}" in your collection yet`]);
   };
 
   /* ═══ Welcome Screen ═══════════════════════════ */
@@ -2035,8 +2055,35 @@ export default function ScentDashboard() {
               <button onClick={() => setEditing(true)} style={{ background: `${PAL.gold}12`, border: `1px solid ${PAL.gold}33`, borderRadius: 8, padding: "9px 18px", color: PAL.gold, fontFamily: ff.body, fontSize: 11, letterSpacing: 1.8, textTransform: "uppercase", cursor: "pointer" }}>✎ Edit Collection</button>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .1s" }}>
-            <Pill label="Collection" value={`${bottles.filter(b => b.status === "owned").length} owned`} accent={PAL.gold} />
+
+          {/* Stats with show/hide */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 20 }}>
+            <div style={{ position: "relative" }}>
+              <button onClick={() => setStatsMenuOpen(!statsMenuOpen)} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", color: PAL.muted, cursor: "pointer", fontSize: 14 }}>⚙</button>
+              {statsMenuOpen && (
+                <div style={{ position: "absolute", top: 36, left: 0, background: PAL.bg, border: `1px solid ${PAL.border}`, borderRadius: 10, padding: "10px 14px", zIndex: 50, minWidth: 180, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+                  <p style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "0 0 8px" }}>Show / Hide Stats</p>
+                  {[
+                    { key: "collection", label: "Collection" },
+                    { key: "invested", label: "Invested" },
+                    { key: "daysWorn", label: "Days Worn" },
+                    { key: "signature", label: "Signature Note" },
+                  ].map(item => (
+                    <label key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", cursor: "pointer" }}>
+                      <div onClick={() => setVisibleStats(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
+                        style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${visibleStats[item.key] ? PAL.gold : PAL.border}`, background: visibleStats[item.key] ? PAL.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all .2s" }}>
+                        {visibleStats[item.key] && <span style={{ color: "#fff", fontSize: 10, fontWeight: 700 }}>✓</span>}
+                      </div>
+                      <span style={{ fontFamily: ff.body, fontSize: 12, color: PAL.cream }}>{item.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .1s" }}>
+            {visibleStats.collection && <Pill label="Collection" value={`${bottles.filter(b => b.status === "owned").length} owned`} accent={PAL.gold} />}
+            {visibleStats.invested && (
             <div style={{ background: PAL.card, border: `1px solid ${PAL.border}`, borderRadius: 12, padding: "14px 18px", flex: "1 1 180px", display: "flex", flexDirection: "column", gap: 4 }}>
               <span style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase", color: PAL.muted }}>Invested</span>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
@@ -2046,13 +2093,14 @@ export default function ScentDashboard() {
               </div>
               <span style={{ fontFamily: ff.body, fontSize: 9, color: PAL.muted, letterSpacing: 1, marginTop: 1 }}>owned / full collection</span>
             </div>
-            <Pill label="Days Worn" value={totalWears} accent={PAL.sage} />
-            <Pill label="Signature" value={topNote} accent={PAL.rose} />
+            )}
+            {visibleStats.daysWorn && <Pill label="Days Worn" value={totalWears} accent={PAL.sage} />}
+            {visibleStats.signature && <Pill label="Signature" value={topNote} accent={PAL.rose} />}
           </div>
         </header>
 
         {/* Tabs */}
-        <nav style={{ display: "flex", gap: 8, paddingTop: 28, opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .2s" }}>
+        <nav style={{ display: "flex", gap: 8, paddingTop: 28, opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .2s" }} onClick={() => setStatsMenuOpen(false)}>
           {tabs.map((t, i) => (
             <button key={i} onClick={() => setTab(i)} style={{
               background: tab === i ? `${PAL.gold}14` : "transparent",
