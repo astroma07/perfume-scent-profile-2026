@@ -384,7 +384,7 @@ const SectionTitle = ({ title, sub }) => (
 
 /* ─── Edit Panel ─────────────────────────────────────────── */
 
-const EditPanel = ({ bottles, setBottles, onClose, onReset }) => {
+const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNoteOverrides }) => {
   const [newHouseInput, setNewHouseInput] = useState({});
   const inputCss = { background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "7px 10px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box" };
   const selectCss = { ...inputCss, appearance: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%238a7e6b' stroke-width='1.5'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", paddingRight: 28 };
@@ -470,7 +470,42 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset }) => {
                     <div style={{ flex: "0.4 1 45px" }}><label style={lab}>mL</label><input style={inputCss} type="number" value={b.ml} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], ml: +e.target.value }; setBottles(a); }} /></div>
                     <div style={{ flex: "0.4 1 45px" }}><label style={lab}>Freq</label><input style={inputCss} type="number" value={b.freq} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], freq: +e.target.value }; setBottles(a); }} /></div>
                     <button onClick={() => setBottles(bottles.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: PAL.rose, fontSize: 18, cursor: "pointer", paddingBottom: 6 }}>−</button>
-                    <div style={{ flex: "100% 1 100%", marginTop: -2 }}><label style={lab}>Notes (comma-separated)</label><input style={inputCss} value={b.userNotes || ""} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], userNotes: e.target.value }; setBottles(a); }} placeholder="e.g. sandalwood, vetiver, amber, musk" /></div>
+                    <div style={{ flex: "100% 1 100%", marginTop: -2 }}>
+                      <label style={lab}>Notes (comma-separated)</label>
+                      <input style={inputCss} value={b.userNotes || ""} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], userNotes: e.target.value }; setBottles(a); }} placeholder="e.g. sandalwood, vetiver, amber, musk" />
+                      {/* Note category pills */}
+                      {(b.userNotes || "").trim() && (
+                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
+                          {(b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean).map((note, j) => {
+                            const family = getNoteFamily(note, noteOverrides);
+                            const color = FAMILY_COLORS[family];
+                            return (
+                              <div key={j} style={{ position: "relative", display: "inline-flex" }}>
+                                <select
+                                  value={family}
+                                  onChange={e => setNoteOverrides(prev => ({ ...prev, [note]: e.target.value }))}
+                                  style={{
+                                    appearance: "none", cursor: "pointer",
+                                    background: `${color}20`, border: `1px solid ${color}50`,
+                                    borderRadius: 4, padding: "3px 20px 3px 8px",
+                                    color: color, fontFamily: ff.body, fontSize: 9, letterSpacing: 0.5,
+                                    outline: "none",
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath d='M2 3l2 2 2-2' fill='none' stroke='${encodeURIComponent(color)}' stroke-width='1'/%3E%3C/svg%3E")`,
+                                    backgroundRepeat: "no-repeat", backgroundPosition: "right 5px center",
+                                  }}
+                                >
+                                  {FAMILY_ORDER.map(f => (
+                                    <option key={f} value={f} style={{ background: PAL.bg, color: FAMILY_COLORS[f] }}>
+                                      {note} → {FAMILY_LABELS[f]}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -1748,18 +1783,30 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles }) => {
    ═══════════════════════════════════════════════════════════ */
 
 const NOTE_FAMILIES = {
-  citrus: ["bergamot","lemon","orange","grapefruit","mandarin","lime","yuzu","blood orange","bitter orange","citrus","kumquat","tangerine","petitgrain"],
-  fruity: ["apple","pear","peach","plum","raspberry","blackberry","cherry","fig","mango","coconut","pineapple","blackcurrant","apricot","pomegranate","date","tamarind","quince","passion fruit","lychee","cassis","berry","african marigold"],
-  green: ["green notes","grass","basil","mint","galbanum","ivy","tomato leaf","green tea","tea","herbs","violet leaf","mate","thyme","rosemary","sage","clary sage","bamboo","hemp","green pepper","bay leaf","tarragon","artemisia","wormwood","absinthe","black tea","pine","palm leaves"],
-  aquatic: ["sea salt","sea notes","ozone","seaweed","water","rain","marine","driftwood","ambergris","calone"],
-  floral: ["rose","jasmine","iris","tuberose","violet","magnolia","ylang-ylang","orange blossom","gardenia","lily","orchid","geranium","carnation","peony","freesia","heliotrope","osmanthus","chamomile","honeysuckle","neroli","davana","jasmine sambac","frangipani","mimosa","white floral","lotus","champaca","chrysanthemum"],
-  spicy: ["cardamom","pepper","pink pepper","black pepper","cinnamon","saffron","nutmeg","ginger","clove","cumin","coriander","anise","star anise","juniper","oregano","angelica","red pepper","sichuan pepper"],
-  oriental: ["amber","vanilla","tonka","benzoin","labdanum","honey","resins","copal","styrax","balsam","ambrette","musk","cashmeran","iso e super","ambroxan","marshmallow"],
-  resinous: ["frankincense","myrrh","incense","opopanax","olibanum","elemi","dragon's blood"],
-  woody: ["sandalwood","cedar","cedarwood","vetiver","oud","rosewood","hinoki","guaiac wood","cypress","birch","mahogany","teak","agarwood","amyris","akigalawood","palo santo"],
-  earthy: ["patchouli","oakmoss","moss","earth","mushroom","soil","truffle","myrtle","helichrysum","immortelle","cave moss","stone"],
-  smoky: ["leather","suede","smoke","tobacco","birch tar","cade","gunpowder","tar","civet","castoreum","cannabis","neon","copper","peat"],
-  gourmand: ["chocolate","coffee","cacao","caramel","almond","praline","sugar","chestnut","whiskey","rum","bourbon","milk","sesame","popcorn","apple brandy","cookie","hazelnut"],
+  /* ── CITRUS ── bright, zesty */
+  citrus: ["bergamot","lemon","orange","grapefruit","mandarin","lime","yuzu","blood orange","bitter orange","citrus","citrusy","kumquat","tangerine","petitgrain","clementine"],
+  /* ── FRUITY ── sweet, vibrant */
+  fruity: ["apple","pear","peach","plum","raspberry","blackberry","cherry","fig","mango","coconut","pineapple","blackcurrant","apricot","pomegranate","date","tamarind","quince","passion fruit","lychee","cassis","berry","african marigold","fruity","fruit","grape","melon","banana","strawberry"],
+  /* ── GREEN & HERBAL ── crisp, herbaceous */
+  green: ["green notes","green","grass","basil","mint","galbanum","ivy","tomato leaf","green tea","tea","herbs","herbal","herbaceous","violet leaf","mate","thyme","rosemary","sage","clary sage","bamboo","hemp","green pepper","bay leaf","tarragon","artemisia","wormwood","absinthe","black tea","pine","palm leaves","aromatic","lavender","fougere","conifer","eucalyptus","camphor"],
+  /* ── AQUATIC & FRESH ── clean, oceanic */
+  aquatic: ["sea salt","sea notes","ozone","seaweed","water","rain","marine","driftwood","ambergris","calone","fresh","clean","watery","ozonic","mineral","aldehyde","aldehydic","crisp","cool"],
+  /* ── FLORAL ── romantic, elegant */
+  floral: ["rose","jasmine","iris","tuberose","violet","magnolia","ylang-ylang","orange blossom","gardenia","lily","orchid","geranium","carnation","peony","freesia","heliotrope","osmanthus","chamomile","honeysuckle","neroli","davana","jasmine sambac","frangipani","mimosa","white floral","lotus","champaca","chrysanthemum","floral","powdery","soft","delicate"],
+  /* ── SPICY ── warm, piquant */
+  spicy: ["cardamom","pepper","pink pepper","black pepper","cinnamon","saffron","nutmeg","ginger","clove","cumin","coriander","anise","star anise","juniper","oregano","angelica","red pepper","sichuan pepper","spicy","spice","spices","hot","pungent","peppery"],
+  /* ── ORIENTAL & AMBER ── warm, sensual */
+  oriental: ["amber","vanilla","tonka","benzoin","labdanum","honey","resins","copal","styrax","balsam","ambrette","musk","cashmeran","iso e super","ambroxan","marshmallow","sweet","warm","creamy","musky","sensual","opulent","rich","velvety","balmy","ambery"],
+  /* ── RESINOUS & INCENSE ── sacred, deep */
+  resinous: ["frankincense","myrrh","incense","opopanax","olibanum","elemi","dragon's blood","balsamic","resinous","sacred"],
+  /* ── WOODY ── grounded, sophisticated */
+  woody: ["sandalwood","cedar","cedarwood","vetiver","oud","rosewood","hinoki","guaiac wood","cypress","birch","mahogany","teak","agarwood","amyris","akigalawood","palo santo","woody","wood","oakwood","dry"],
+  /* ── EARTHY & MOSSY ── forest floor */
+  earthy: ["patchouli","oakmoss","moss","earth","mushroom","soil","truffle","myrtle","helichrysum","immortelle","cave moss","stone","earthy","mossy","damp","loamy","petrichor","dirt"],
+  /* ── SMOKY & LEATHER ── rugged, dark */
+  smoky: ["leather","suede","smoke","tobacco","birch tar","cade","gunpowder","tar","civet","castoreum","cannabis","neon","copper","peat","smoky","smokey","leathery","metallic","animalic","dark","rugged","industrial"],
+  /* ── GOURMAND ── edible, comforting */
+  gourmand: ["chocolate","coffee","cacao","caramel","almond","praline","sugar","chestnut","whiskey","rum","bourbon","milk","sesame","popcorn","apple brandy","cookie","hazelnut","gourmand","edible","buttery","nutty","roasted","toasted","baked","syrupy","boozy","dessert"],
 };
 
 const FAMILY_COLORS = {
@@ -1778,12 +1825,16 @@ const FAMILY_LABELS = {
 
 const FAMILY_ORDER = ["floral","oriental","resinous","spicy","smoky","woody","earthy","gourmand","fruity","citrus","green","aquatic"];
 
-function getNoteFamily(note) {
-  const nl = note.toLowerCase();
+function getNoteFamily(note, overrides) {
+  const nl = note.toLowerCase().trim();
+  if (overrides && overrides[nl]) return overrides[nl];
   for (const [family, notes] of Object.entries(NOTE_FAMILIES)) {
     if (notes.includes(nl)) return family;
   }
-  return "woody"; /* default */
+  for (const [family, notes] of Object.entries(NOTE_FAMILIES)) {
+    if (notes.some(n => nl.includes(n) || n.includes(nl))) return family;
+  }
+  return "oriental";
 }
 
 function getBottleNotes(bottle) {
@@ -1814,7 +1865,7 @@ function calcPairScore(a, b) {
   return { score: Math.min(100, score), shared, uniqueA, uniqueB, sharedFamilies, uniqueFamilies };
 }
 
-const PairingWheel = ({ bottles }) => {
+const PairingWheel = ({ bottles, noteOverrides }) => {
   const [selectedPair, setSelectedPair] = useState(null);
   const [hoveredFrag, setHoveredFrag] = useState(null);
 
@@ -1826,8 +1877,8 @@ const PairingWheel = ({ bottles }) => {
     owned.forEach(b => getBottleNotes(b).forEach(n => allNotes.add(n)));
     /* Sort notes by family so related notes cluster together */
     const sorted = [...allNotes].sort((a, b) => {
-      const fa = FAMILY_ORDER.indexOf(getNoteFamily(a));
-      const fb = FAMILY_ORDER.indexOf(getNoteFamily(b));
+      const fa = FAMILY_ORDER.indexOf(getNoteFamily(a, noteOverrides));
+      const fb = FAMILY_ORDER.indexOf(getNoteFamily(b, noteOverrides));
       return fa - fb || a.localeCompare(b);
     });
     const positions = {};
@@ -1880,7 +1931,7 @@ const PairingWheel = ({ bottles }) => {
   const familySlices = useMemo(() => {
     const familyCounts = {};
     noteList.forEach(([note]) => {
-      const f = getNoteFamily(note);
+      const f = getNoteFamily(note, noteOverrides);
       familyCounts[f] = (familyCounts[f] || 0) + 1;
     });
     const slices = [];
@@ -1919,85 +1970,43 @@ const PairingWheel = ({ bottles }) => {
 
   return (
     <div>
-      {/* Wheel SVG */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+      {/* Wheel SVG — clean, no cramped text */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
         <svg viewBox={`0 0 ${size} ${size}`} width="100%" style={{ maxWidth: size }}>
           {/* Family pie slices — outer ring */}
-          {familySlices.map(slice => {
-            const color = FAMILY_COLORS[slice.family];
-            return (
-              <path key={`outer-${slice.family}`}
-                d={arcPath(cx, cy, midR, outerR, slice.startAngle, slice.endAngle)}
-                fill={color} opacity=".12" stroke={PAL.bg} strokeWidth="1.5" />
-            );
-          })}
+          {familySlices.map(slice => (
+            <path key={`outer-${slice.family}`}
+              d={arcPath(cx, cy, midR, outerR, slice.startAngle, slice.endAngle)}
+              fill={FAMILY_COLORS[slice.family]} opacity=".14" stroke={PAL.bg} strokeWidth="1.5" />
+          ))}
 
-          {/* Inner ring — slightly different shade per family */}
-          {familySlices.map(slice => {
-            const color = FAMILY_COLORS[slice.family];
-            return (
-              <path key={`inner-${slice.family}`}
-                d={arcPath(cx, cy, innerR, midR, slice.startAngle, slice.endAngle)}
-                fill={color} opacity=".06" stroke={PAL.bg} strokeWidth="1" />
-            );
-          })}
-
-          {/* Individual note slices — subtle dividers in outer ring */}
+          {/* Individual note slices — inner ring */}
           {noteList.map(([note], i) => {
-            const angle = (i / noteList.length) * Math.PI * 2 - Math.PI / 2;
-            const x1 = cx + Math.cos(angle) * midR;
-            const y1 = cy + Math.sin(angle) * midR;
-            const x2 = cx + Math.cos(angle) * outerR;
-            const y2 = cy + Math.sin(angle) * outerR;
-            return <line key={`div-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={PAL.bg} strokeWidth="1" opacity=".6" />;
-          })}
-
-          {/* Note labels — placed in the middle of each slice */}
-          {noteList.map(([note], i) => {
-            const midAngle = ((i + 0.5) / noteList.length) * Math.PI * 2 - Math.PI / 2;
-            const labelR = (midR + outerR) / 2;
-            const lx = cx + Math.cos(midAngle) * labelR;
-            const ly = cy + Math.sin(midAngle) * labelR;
-            const angleDeg = midAngle * (180 / Math.PI);
-            const flip = angleDeg > 90 || angleDeg < -90;
-            const family = getNoteFamily(note);
+            const a1 = (i / noteList.length) * Math.PI * 2 - Math.PI / 2;
+            const a2 = ((i + 1) / noteList.length) * Math.PI * 2 - Math.PI / 2;
+            const family = getNoteFamily(note, noteOverrides);
             return (
-              <text key={`label-${note}`} x={lx} y={ly}
-                textAnchor="middle" dominantBaseline="middle"
-                transform={`rotate(${flip ? angleDeg + 180 : angleDeg}, ${lx}, ${ly})`}
-                fill={FAMILY_COLORS[family]} fontSize={noteList.length > 20 ? "7" : noteList.length > 12 ? "8" : "9.5"}
-                fontFamily="DM Sans, sans-serif" fontWeight="500" letterSpacing="0.3"
-                style={{ textTransform: "capitalize" }}>
-                {note}
-              </text>
+              <path key={`note-${i}`}
+                d={arcPath(cx, cy, innerR, midR, a1, a2)}
+                fill={FAMILY_COLORS[family]} opacity=".08" stroke={PAL.bg} strokeWidth="0.5" />
             );
           })}
 
-          {/* Family labels — inner ring */}
+          {/* Family label arcs — small colored marks on outer edge */}
           {familySlices.map(slice => {
             const midAngle = (slice.startAngle + slice.endAngle) / 2;
-            const labelR = (innerR + midR) / 2;
-            const lx = cx + Math.cos(midAngle) * labelR;
-            const ly = cy + Math.sin(midAngle) * labelR;
-            const angleDeg = midAngle * (180 / Math.PI);
-            const flip = angleDeg > 90 || angleDeg < -90;
+            const lx = cx + Math.cos(midAngle) * (outerR + 2);
+            const ly = cy + Math.sin(midAngle) * (outerR + 2);
             return (
-              <text key={`fam-${slice.family}`} x={lx} y={ly}
-                textAnchor="middle" dominantBaseline="middle"
-                transform={`rotate(${flip ? angleDeg + 180 : angleDeg}, ${lx}, ${ly})`}
-                fill={FAMILY_COLORS[slice.family]} fontSize="7" fontFamily="DM Sans, sans-serif"
-                fontWeight="600" letterSpacing="2" opacity=".5"
-                style={{ textTransform: "uppercase" }}>
-                {FAMILY_LABELS[slice.family] || slice.family}
-              </text>
+              <circle key={`mark-${slice.family}`} cx={lx} cy={ly} r="3"
+                fill={FAMILY_COLORS[slice.family]} opacity=".6" />
             );
           })}
 
-          {/* Center circle */}
+          {/* Center */}
           <circle cx={cx} cy={cy} r={innerR - 2} fill={PAL.bg} stroke={PAL.border} strokeWidth=".5" />
-          <text x={cx} y={cy - 10} textAnchor="middle" fill={PAL.cream} fontSize="8" fontFamily="DM Sans, sans-serif" letterSpacing="3" fontWeight="400" opacity=".5">THE</text>
-          <text x={cx} y={cy + 6} textAnchor="middle" fill={PAL.cream} fontSize="14" fontFamily="Playfair Display, serif" fontWeight="400" fontStyle="italic">Fragrance</text>
-          <text x={cx} y={cy + 22} textAnchor="middle" fill={PAL.cream} fontSize="8" fontFamily="DM Sans, sans-serif" letterSpacing="3" fontWeight="400" opacity=".5">WHEEL</text>
+          <text x={cx} y={cy - 8} textAnchor="middle" fill={PAL.cream} fontSize="7" fontFamily="DM Sans, sans-serif" letterSpacing="3" opacity=".4">PAIRING</text>
+          <text x={cx} y={cy + 8} textAnchor="middle" fill={PAL.cream} fontSize="12" fontFamily="Playfair Display, serif" fontStyle="italic">Wheel</text>
 
           {/* Pairing lines */}
           {pairings.slice(0, 8).map((pair, i) => {
@@ -2016,18 +2025,17 @@ const PairingWheel = ({ bottles }) => {
             );
           })}
 
-          {/* Fragrance dots — plotted in the inner zone */}
+          {/* Fragrance dots */}
           {fragPositions.map((fp, i) => {
             const plotR = midR * 0.85;
             const x = cx + fp.x * plotR;
             const y = cy + fp.y * plotR;
-            const dominantFamily = getNoteFamily(fp.notes[0] || "");
+            const dominantFamily = getNoteFamily(fp.notes[0] || "", noteOverrides);
             const isHovered = hoveredFrag === i;
             const isInPair = selectedPair && (selectedPair.a === fp.bottle || selectedPair.b === fp.bottle);
             return (
               <g key={`frag-${i}`} onMouseEnter={() => setHoveredFrag(i)} onMouseLeave={() => setHoveredFrag(null)}
                 style={{ cursor: "pointer" }}>
-                {/* Glow */}
                 {(isHovered || isInPair) && (
                   <circle cx={x} cy={y} r={14} fill={FAMILY_COLORS[dominantFamily]} opacity=".15" />
                 )}
@@ -2038,11 +2046,11 @@ const PairingWheel = ({ bottles }) => {
                   style={{ transition: "all .25s" }} />
                 {(isHovered || isInPair) && (
                   <>
-                    <rect x={x - 40} y={y - 24} width="80" height="16" rx="4"
-                      fill={PAL.bg} opacity=".85" stroke={FAMILY_COLORS[dominantFamily]} strokeWidth=".5" />
+                    <rect x={x - 45} y={y - 24} width="90" height="16" rx="4"
+                      fill={PAL.bg} opacity=".9" stroke={FAMILY_COLORS[dominantFamily]} strokeWidth=".5" />
                     <text x={x} y={y - 14} textAnchor="middle" fill={PAL.cream}
                       fontSize="8" fontFamily="Playfair Display, serif" fontStyle="italic">
-                      {fp.bottle.name.length > 14 ? fp.bottle.name.slice(0, 13) + "…" : fp.bottle.name}
+                      {fp.bottle.name.length > 16 ? fp.bottle.name.slice(0, 15) + "…" : fp.bottle.name}
                     </text>
                   </>
                 )}
@@ -2052,6 +2060,31 @@ const PairingWheel = ({ bottles }) => {
         </svg>
       </div>
 
+      {/* Legend — families with their notes, always legible */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8, marginBottom: 24 }}>
+        {familySlices.map(slice => {
+          const color = FAMILY_COLORS[slice.family];
+          const familyNotes = noteList
+            .filter(([n]) => getNoteFamily(n, noteOverrides) === slice.family)
+            .map(([n]) => n);
+          return (
+            <div key={slice.family} style={{
+              background: `${color}08`, border: `1px solid ${color}25`,
+              borderRadius: 8, padding: "8px 10px",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                <span style={{ fontFamily: ff.body, fontSize: 10, fontWeight: 600, color: color, letterSpacing: 1, textTransform: "uppercase" }}>
+                  {FAMILY_LABELS[slice.family]}
+                </span>
+              </div>
+              <div style={{ fontFamily: ff.body, fontSize: 10, color: PAL.cream, lineHeight: 1.6, opacity: .7 }}>
+                {familyNotes.map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(", ")}
+              </div>
+            </div>
+          );
+        })}
+      </div>
       {/* Pairing suggestions list */}
       <h3 style={{ fontFamily: ff.display, fontSize: 18, fontWeight: 400, color: PAL.cream, margin: "0 0 4px" }}>Suggested Pairings</h3>
       <p style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "0 0 14px" }}>
@@ -2120,7 +2153,8 @@ export default function ScentDashboard() {
   const [vis, setVis] = useState(false);
   const [trendView, setTrendView] = useState("chart");
   const [collectionFilter, setCollectionFilter] = useState(null);
-  const [collectionView, setCollectionView] = useState("breakdown"); /* breakdown | pairings */
+  const [collectionView, setCollectionView] = useState("breakdown");
+  const [noteOverrides, setNoteOverrides] = useState(() => loadStored("noteOverrides", {})); /* breakdown | pairings */
   const [statsMenuOpen, setStatsMenuOpen] = useState(false);
 
   /* ─── Persistent state — localStorage only ─── */
@@ -2189,6 +2223,7 @@ export default function ScentDashboard() {
         if (data.bottleRatings) setBottleRatings(data.bottleRatings);
         if (data.wearRatings) setWearRatings(data.wearRatings);
         if (data.testedScents) setTestedScents(data.testedScents);
+        if (data.noteOverrides) setNoteOverrides(data.noteOverrides);
         try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
         setShowWelcome(false);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
@@ -2205,11 +2240,12 @@ export default function ScentDashboard() {
   useEffect(() => { try { localStorage.setItem("scent_wearRatings", JSON.stringify(wearRatings)); } catch {} }, [wearRatings]);
   useEffect(() => { try { localStorage.setItem("scent_testedScents", JSON.stringify(testedScents)); } catch {} }, [testedScents]);
   useEffect(() => { try { localStorage.setItem("scent_visibleStats", JSON.stringify(visibleStats)); } catch {} }, [visibleStats]);
+  useEffect(() => { try { localStorage.setItem("scent_noteOverrides", JSON.stringify(noteOverrides)); } catch {} }, [noteOverrides]);
 
   /* ─── Export / Import ─── */
 
   const exportData = () => {
-    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, exportedAt: new Date().toISOString() };
+    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -2232,6 +2268,7 @@ export default function ScentDashboard() {
         if (data.bottleRatings) setBottleRatings(data.bottleRatings);
         if (data.wearRatings) setWearRatings(data.wearRatings);
         if (data.testedScents) setTestedScents(data.testedScents);
+        if (data.noteOverrides) setNoteOverrides(data.noteOverrides);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
     };
     input.click();
@@ -2904,7 +2941,7 @@ export default function ScentDashboard() {
               )}
 
               {collectionView === "pairings" && (
-                <PairingWheel bottles={bottles} />
+                <PairingWheel bottles={bottles} noteOverrides={noteOverrides} />
               )}
             </div>
           )}
@@ -2922,7 +2959,7 @@ export default function ScentDashboard() {
       </div>
 
       {editing && (
-        <EditPanel bottles={bottles} setBottles={setBottles} onClose={() => setEditing(false)} onReset={resetAll} />
+        <EditPanel bottles={bottles} setBottles={setBottles} onClose={() => setEditing(false)} onReset={resetAll} noteOverrides={noteOverrides} setNoteOverrides={setNoteOverrides} />
       )}
     </div>
   );
