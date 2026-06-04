@@ -1748,25 +1748,35 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles }) => {
    ═══════════════════════════════════════════════════════════ */
 
 const NOTE_FAMILIES = {
-  woody: ["sandalwood","cedar","vetiver","oud","cypress","rosewood","hinoki","birch","guaiac wood","driftwood","mahogany"],
-  resinous: ["myrrh","frankincense","labdanum","amber","benzoin","incense","copal","styrax","resins","elemi"],
-  earthy: ["patchouli","oakmoss","moss","earth","mushroom","musk","ambrette"],
-  smoky: ["smoke","leather","suede","tobacco","birch tar","cade","gunpowder"],
-  spicy: ["cardamom","pepper","pink pepper","cinnamon","saffron","nutmeg","ginger","clove","cumin"],
-  floral: ["rose","jasmine","iris","tuberose","violet","magnolia","ylang-ylang","orange blossom","geranium","lily","orchid","heliotrope"],
-  citrus: ["bergamot","lemon","orange","grapefruit","neroli","lime","mandarin","petitgrain"],
-  green: ["basil","sage","mint","green notes","ivy","herbs","fig","tea","green tea","mate","tomato leaf"],
-  sweet: ["vanilla","tonka","honey","chocolate","cacao","almond","coconut","caramel"],
-  aquatic: ["sea salt","sea notes","seaweed","rain","ozone"],
+  citrus: ["bergamot","lemon","orange","grapefruit","mandarin","lime","yuzu","blood orange","bitter orange","citrus","kumquat","tangerine","petitgrain"],
+  fruity: ["apple","pear","peach","plum","raspberry","blackberry","cherry","fig","mango","coconut","pineapple","blackcurrant","apricot","pomegranate","date","tamarind","quince","passion fruit","lychee","cassis","berry","african marigold"],
+  green: ["green notes","grass","basil","mint","galbanum","ivy","tomato leaf","green tea","tea","herbs","violet leaf","mate","thyme","rosemary","sage","clary sage","bamboo","hemp","green pepper","bay leaf","tarragon","artemisia","wormwood","absinthe","black tea","pine","palm leaves"],
+  aquatic: ["sea salt","sea notes","ozone","seaweed","water","rain","marine","driftwood","ambergris","calone"],
+  floral: ["rose","jasmine","iris","tuberose","violet","magnolia","ylang-ylang","orange blossom","gardenia","lily","orchid","geranium","carnation","peony","freesia","heliotrope","osmanthus","chamomile","honeysuckle","neroli","davana","jasmine sambac","frangipani","mimosa","white floral","lotus","champaca","chrysanthemum"],
+  spicy: ["cardamom","pepper","pink pepper","black pepper","cinnamon","saffron","nutmeg","ginger","clove","cumin","coriander","anise","star anise","juniper","oregano","angelica","red pepper","sichuan pepper"],
+  oriental: ["amber","vanilla","tonka","benzoin","labdanum","honey","resins","copal","styrax","balsam","ambrette","musk","cashmeran","iso e super","ambroxan","marshmallow"],
+  resinous: ["frankincense","myrrh","incense","opopanax","olibanum","elemi","dragon's blood"],
+  woody: ["sandalwood","cedar","cedarwood","vetiver","oud","rosewood","hinoki","guaiac wood","cypress","birch","mahogany","teak","agarwood","amyris","akigalawood","palo santo"],
+  earthy: ["patchouli","oakmoss","moss","earth","mushroom","soil","truffle","myrtle","helichrysum","immortelle","cave moss","stone"],
+  smoky: ["leather","suede","smoke","tobacco","birch tar","cade","gunpowder","tar","civet","castoreum","cannabis","neon","copper","peat"],
+  gourmand: ["chocolate","coffee","cacao","caramel","almond","praline","sugar","chestnut","whiskey","rum","bourbon","milk","sesame","popcorn","apple brandy","cookie","hazelnut"],
 };
 
 const FAMILY_COLORS = {
-  woody: "#c5a46d", resinous: "#b5546a", earthy: "#7a927a", smoky: "#6b3a2a",
-  spicy: "#c98a3e", floral: "#d4b896", citrus: "#a3c47a", green: "#5e7a6e",
-  sweet: "#7a5073", aquatic: "#5a7a9a",
+  citrus: "#a8c256", fruity: "#c49bd4", green: "#6b9e6b", aquatic: "#7bafc4",
+  floral: "#d4849a", spicy: "#d4944a", oriental: "#c47a6b", resinous: "#a35a5a",
+  woody: "#8a9e7a", earthy: "#7a8a5a", smoky: "#8a6a4a", gourmand: "#9a6a8a",
 };
 
-const FAMILY_ORDER = ["woody","resinous","smoky","earthy","spicy","sweet","floral","citrus","green","aquatic"];
+const FAMILY_LABELS = {
+  citrus: "Citrus", fruity: "Fruity", green: "Green & Herbal",
+  aquatic: "Aquatic & Fresh", floral: "Floral", spicy: "Spicy",
+  oriental: "Oriental & Amber", resinous: "Resinous & Incense",
+  woody: "Woody", earthy: "Earthy & Mossy",
+  smoky: "Smoky & Leather", gourmand: "Gourmand",
+};
+
+const FAMILY_ORDER = ["floral","oriental","resinous","spicy","smoky","woody","earthy","gourmand","fruity","citrus","green","aquatic"];
 
 function getNoteFamily(note) {
   const nl = note.toLowerCase();
@@ -1978,7 +1988,7 @@ const PairingWheel = ({ bottles }) => {
                 fill={FAMILY_COLORS[slice.family]} fontSize="7" fontFamily="DM Sans, sans-serif"
                 fontWeight="600" letterSpacing="2" opacity=".5"
                 style={{ textTransform: "uppercase" }}>
-                {slice.family}
+                {FAMILY_LABELS[slice.family] || slice.family}
               </text>
             );
           })}
