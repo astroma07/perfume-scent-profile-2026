@@ -2154,7 +2154,6 @@ export default function ScentDashboard() {
   const [trendView, setTrendView] = useState("chart");
   const [collectionFilter, setCollectionFilter] = useState(null);
   const [collectionView, setCollectionView] = useState("breakdown");
-  const [noteOverrides, setNoteOverrides] = useState(() => loadStored("noteOverrides", {})); /* breakdown | pairings */
   const [statsMenuOpen, setStatsMenuOpen] = useState(false);
 
   /* ─── Persistent state — localStorage only ─── */
@@ -2168,6 +2167,7 @@ export default function ScentDashboard() {
   };
 
   const [visibleStats, setVisibleStats] = useState(() => loadStored("visibleStats", { collection: true, invested: true, daysWorn: true, signature: true }));
+  const [noteOverrides, setNoteOverrides] = useState(() => loadStored("noteOverrides", {}));
 
   const isFirstVisit = (() => {
     try {
