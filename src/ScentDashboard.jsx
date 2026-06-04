@@ -1859,9 +1859,41 @@ const PairingWheel = ({ bottles }) => {
     return pairs.sort((a, b) => b.score - a.score).slice(0, 15);
   }, [owned]);
 
-  const size = 340;
-  const cx = size / 2, cy = size / 2, radius = size / 2 - 50;
+  const size = 420;
+  const cx = size / 2, cy = size / 2;
+  const outerR = size / 2 - 10;
+  const innerR = outerR * 0.38;
+  const midR = outerR * 0.68;
   const noteList = Object.entries(notePositions);
+
+  /* Build pie slices grouped by family */
+  const familySlices = useMemo(() => {
+    const familyCounts = {};
+    noteList.forEach(([note]) => {
+      const f = getNoteFamily(note);
+      familyCounts[f] = (familyCounts[f] || 0) + 1;
+    });
+    const slices = [];
+    let offset = 0;
+    FAMILY_ORDER.filter(f => familyCounts[f]).forEach(f => {
+      const count = familyCounts[f];
+      const startAngle = (offset / noteList.length) * Math.PI * 2 - Math.PI / 2;
+      const endAngle = ((offset + count) / noteList.length) * Math.PI * 2 - Math.PI / 2;
+      slices.push({ family: f, startAngle, endAngle, count, startIdx: offset });
+      offset += count;
+    });
+    return slices;
+  }, [noteList]);
+
+  /* Helper: SVG arc path */
+  const arcPath = (cx, cy, r1, r2, a1, a2) => {
+    const x1o = cx + Math.cos(a1) * r2, y1o = cy + Math.sin(a1) * r2;
+    const x2o = cx + Math.cos(a2) * r2, y2o = cy + Math.sin(a2) * r2;
+    const x1i = cx + Math.cos(a2) * r1, y1i = cy + Math.sin(a2) * r1;
+    const x2i = cx + Math.cos(a1) * r1, y2i = cy + Math.sin(a1) * r1;
+    const large = a2 - a1 > Math.PI ? 1 : 0;
+    return `M${x1o},${y1o} A${r2},${r2} 0 ${large},1 ${x2o},${y2o} L${x1i},${y1i} A${r1},${r1} 0 ${large},0 ${x2i},${y2i} Z`;
+  };
 
   if (owned.length < 2) {
     return (
@@ -1878,50 +1910,84 @@ const PairingWheel = ({ bottles }) => {
   return (
     <div>
       {/* Wheel SVG */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
         <svg viewBox={`0 0 ${size} ${size}`} width="100%" style={{ maxWidth: size }}>
-          {/* Background circles */}
-          {[0.33, 0.66, 1].map(r => (
-            <circle key={r} cx={cx} cy={cy} r={radius * r} fill="none" stroke={PAL.border} strokeWidth=".5" opacity=".4" />
-          ))}
-
-          {/* Note labels around perimeter */}
-          {noteList.map(([note, pos], i) => {
-            const family = getNoteFamily(note);
-            const lx = cx + pos.x * (radius + 20);
-            const ly = cy + pos.y * (radius + 20);
-            const angle = pos.angle * (180 / Math.PI);
-            const rotate = angle > 90 || angle < -90 ? angle + 180 : angle;
+          {/* Family pie slices — outer ring */}
+          {familySlices.map(slice => {
+            const color = FAMILY_COLORS[slice.family];
             return (
-              <text key={note} x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
-                transform={`rotate(${rotate}, ${lx}, ${ly})`}
-                fill={FAMILY_COLORS[family]} fontSize="6.5" fontFamily="DM Sans, sans-serif" letterSpacing="0.5" opacity=".7">
+              <path key={`outer-${slice.family}`}
+                d={arcPath(cx, cy, midR, outerR, slice.startAngle, slice.endAngle)}
+                fill={color} opacity=".12" stroke={PAL.bg} strokeWidth="1.5" />
+            );
+          })}
+
+          {/* Inner ring — slightly different shade per family */}
+          {familySlices.map(slice => {
+            const color = FAMILY_COLORS[slice.family];
+            return (
+              <path key={`inner-${slice.family}`}
+                d={arcPath(cx, cy, innerR, midR, slice.startAngle, slice.endAngle)}
+                fill={color} opacity=".06" stroke={PAL.bg} strokeWidth="1" />
+            );
+          })}
+
+          {/* Individual note slices — subtle dividers in outer ring */}
+          {noteList.map(([note], i) => {
+            const angle = (i / noteList.length) * Math.PI * 2 - Math.PI / 2;
+            const x1 = cx + Math.cos(angle) * midR;
+            const y1 = cy + Math.sin(angle) * midR;
+            const x2 = cx + Math.cos(angle) * outerR;
+            const y2 = cy + Math.sin(angle) * outerR;
+            return <line key={`div-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={PAL.bg} strokeWidth="1" opacity=".6" />;
+          })}
+
+          {/* Note labels — placed in the middle of each slice */}
+          {noteList.map(([note], i) => {
+            const midAngle = ((i + 0.5) / noteList.length) * Math.PI * 2 - Math.PI / 2;
+            const labelR = (midR + outerR) / 2;
+            const lx = cx + Math.cos(midAngle) * labelR;
+            const ly = cy + Math.sin(midAngle) * labelR;
+            const angleDeg = midAngle * (180 / Math.PI);
+            const flip = angleDeg > 90 || angleDeg < -90;
+            const family = getNoteFamily(note);
+            return (
+              <text key={`label-${note}`} x={lx} y={ly}
+                textAnchor="middle" dominantBaseline="middle"
+                transform={`rotate(${flip ? angleDeg + 180 : angleDeg}, ${lx}, ${ly})`}
+                fill={FAMILY_COLORS[family]} fontSize={noteList.length > 20 ? "7" : noteList.length > 12 ? "8" : "9.5"}
+                fontFamily="DM Sans, sans-serif" fontWeight="500" letterSpacing="0.3"
+                style={{ textTransform: "capitalize" }}>
                 {note}
               </text>
             );
           })}
 
-          {/* Family arc segments */}
-          {(() => {
-            const familyCounts = {};
-            noteList.forEach(([note]) => {
-              const f = getNoteFamily(note);
-              familyCounts[f] = (familyCounts[f] || 0) + 1;
-            });
-            let offset = 0;
-            return FAMILY_ORDER.filter(f => familyCounts[f]).map(f => {
-              const count = familyCounts[f];
-              const startAngle = (offset / noteList.length) * Math.PI * 2 - Math.PI / 2;
-              const endAngle = ((offset + count) / noteList.length) * Math.PI * 2 - Math.PI / 2;
-              offset += count;
-              const r = radius + 8;
-              const x1 = cx + Math.cos(startAngle) * r, y1 = cy + Math.sin(startAngle) * r;
-              const x2 = cx + Math.cos(endAngle) * r, y2 = cy + Math.sin(endAngle) * r;
-              const large = endAngle - startAngle > Math.PI ? 1 : 0;
-              return <path key={f} d={`M${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2}`}
-                fill="none" stroke={FAMILY_COLORS[f]} strokeWidth="2" opacity=".25" />;
-            });
-          })()}
+          {/* Family labels — inner ring */}
+          {familySlices.map(slice => {
+            const midAngle = (slice.startAngle + slice.endAngle) / 2;
+            const labelR = (innerR + midR) / 2;
+            const lx = cx + Math.cos(midAngle) * labelR;
+            const ly = cy + Math.sin(midAngle) * labelR;
+            const angleDeg = midAngle * (180 / Math.PI);
+            const flip = angleDeg > 90 || angleDeg < -90;
+            return (
+              <text key={`fam-${slice.family}`} x={lx} y={ly}
+                textAnchor="middle" dominantBaseline="middle"
+                transform={`rotate(${flip ? angleDeg + 180 : angleDeg}, ${lx}, ${ly})`}
+                fill={FAMILY_COLORS[slice.family]} fontSize="7" fontFamily="DM Sans, sans-serif"
+                fontWeight="600" letterSpacing="2" opacity=".5"
+                style={{ textTransform: "uppercase" }}>
+                {slice.family}
+              </text>
+            );
+          })}
+
+          {/* Center circle */}
+          <circle cx={cx} cy={cy} r={innerR - 2} fill={PAL.bg} stroke={PAL.border} strokeWidth=".5" />
+          <text x={cx} y={cy - 10} textAnchor="middle" fill={PAL.cream} fontSize="8" fontFamily="DM Sans, sans-serif" letterSpacing="3" fontWeight="400" opacity=".5">THE</text>
+          <text x={cx} y={cy + 6} textAnchor="middle" fill={PAL.cream} fontSize="14" fontFamily="Playfair Display, serif" fontWeight="400" fontStyle="italic">Fragrance</text>
+          <text x={cx} y={cy + 22} textAnchor="middle" fill={PAL.cream} fontSize="8" fontFamily="DM Sans, sans-serif" letterSpacing="3" fontWeight="400" opacity=".5">WHEEL</text>
 
           {/* Pairing lines */}
           {pairings.slice(0, 8).map((pair, i) => {
@@ -1929,35 +1995,46 @@ const PairingWheel = ({ bottles }) => {
             const posB = fragPositions.find(f => f.bottle === pair.b);
             if (!posA || !posB) return null;
             const isSelected = selectedPair && selectedPair.a === pair.a && selectedPair.b === pair.b;
-            const ax = cx + posA.x * radius, ay = cy + posA.y * radius;
-            const bx = cx + posB.x * radius, by = cy + posB.y * radius;
+            const plotR = midR * 0.85;
+            const ax = cx + posA.x * plotR, ay = cy + posA.y * plotR;
+            const bx = cx + posB.x * plotR, by = cy + posB.y * plotR;
             return (
-              <line key={i} x1={ax} y1={ay} x2={bx} y2={by}
-                stroke={isSelected ? PAL.gold : PAL.muted} strokeWidth={isSelected ? 1.5 : .5}
-                opacity={isSelected ? .8 : .15} strokeDasharray={isSelected ? "none" : "3,3"}
+              <line key={`pair-${i}`} x1={ax} y1={ay} x2={bx} y2={by}
+                stroke={isSelected ? PAL.gold : PAL.muted} strokeWidth={isSelected ? 2 : .6}
+                opacity={isSelected ? .9 : .12} strokeDasharray={isSelected ? "none" : "4,3"}
                 style={{ transition: "all .3s" }} />
             );
           })}
 
-          {/* Fragrance dots */}
+          {/* Fragrance dots — plotted in the inner zone */}
           {fragPositions.map((fp, i) => {
-            const x = cx + fp.x * radius;
-            const y = cy + fp.y * radius;
+            const plotR = midR * 0.85;
+            const x = cx + fp.x * plotR;
+            const y = cy + fp.y * plotR;
             const dominantFamily = getNoteFamily(fp.notes[0] || "");
             const isHovered = hoveredFrag === i;
             const isInPair = selectedPair && (selectedPair.a === fp.bottle || selectedPair.b === fp.bottle);
             return (
-              <g key={i} onMouseEnter={() => setHoveredFrag(i)} onMouseLeave={() => setHoveredFrag(null)}
+              <g key={`frag-${i}`} onMouseEnter={() => setHoveredFrag(i)} onMouseLeave={() => setHoveredFrag(null)}
                 style={{ cursor: "pointer" }}>
-                <circle cx={x} cy={y} r={isHovered || isInPair ? 7 : 5}
-                  fill={FAMILY_COLORS[dominantFamily]} opacity={isHovered || isInPair ? 1 : .7}
-                  stroke={isInPair ? PAL.gold : "none"} strokeWidth={isInPair ? 1.5 : 0}
-                  style={{ transition: "all .2s" }} />
+                {/* Glow */}
                 {(isHovered || isInPair) && (
-                  <text x={x} y={y - 11} textAnchor="middle" fill={PAL.cream} fontSize="7.5"
-                    fontFamily="Playfair Display, serif" fontStyle="italic">
-                    {fp.bottle.name}
-                  </text>
+                  <circle cx={x} cy={y} r={14} fill={FAMILY_COLORS[dominantFamily]} opacity=".15" />
+                )}
+                <circle cx={x} cy={y} r={isHovered || isInPair ? 8 : 5.5}
+                  fill={FAMILY_COLORS[dominantFamily]}
+                  opacity={isHovered || isInPair ? 1 : .8}
+                  stroke={isInPair ? PAL.gold : PAL.bg} strokeWidth={isInPair ? 2 : 1}
+                  style={{ transition: "all .25s" }} />
+                {(isHovered || isInPair) && (
+                  <>
+                    <rect x={x - 40} y={y - 24} width="80" height="16" rx="4"
+                      fill={PAL.bg} opacity=".85" stroke={FAMILY_COLORS[dominantFamily]} strokeWidth=".5" />
+                    <text x={x} y={y - 14} textAnchor="middle" fill={PAL.cream}
+                      fontSize="8" fontFamily="Playfair Display, serif" fontStyle="italic">
+                      {fp.bottle.name.length > 14 ? fp.bottle.name.slice(0, 13) + "…" : fp.bottle.name}
+                    </text>
+                  </>
                 )}
               </g>
             );
