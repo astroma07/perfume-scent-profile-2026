@@ -1744,6 +1744,282 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles }) => {
 };
 
 /* ═══════════════════════════════════════════════════════════
+   PAIRING WHEEL — Note-based fragrance pairing visualization
+   ═══════════════════════════════════════════════════════════ */
+
+const NOTE_FAMILIES = {
+  woody: ["sandalwood","cedar","vetiver","oud","cypress","rosewood","hinoki","birch","guaiac wood","driftwood","mahogany"],
+  resinous: ["myrrh","frankincense","labdanum","amber","benzoin","incense","copal","styrax","resins","elemi"],
+  earthy: ["patchouli","oakmoss","moss","earth","mushroom","musk","ambrette"],
+  smoky: ["smoke","leather","suede","tobacco","birch tar","cade","gunpowder"],
+  spicy: ["cardamom","pepper","pink pepper","cinnamon","saffron","nutmeg","ginger","clove","cumin"],
+  floral: ["rose","jasmine","iris","tuberose","violet","magnolia","ylang-ylang","orange blossom","geranium","lily","orchid","heliotrope"],
+  citrus: ["bergamot","lemon","orange","grapefruit","neroli","lime","mandarin","petitgrain"],
+  green: ["basil","sage","mint","green notes","ivy","herbs","fig","tea","green tea","mate","tomato leaf"],
+  sweet: ["vanilla","tonka","honey","chocolate","cacao","almond","coconut","caramel"],
+  aquatic: ["sea salt","sea notes","seaweed","rain","ozone"],
+};
+
+const FAMILY_COLORS = {
+  woody: "#c5a46d", resinous: "#b5546a", earthy: "#7a927a", smoky: "#6b3a2a",
+  spicy: "#c98a3e", floral: "#d4b896", citrus: "#a3c47a", green: "#5e7a6e",
+  sweet: "#7a5073", aquatic: "#5a7a9a",
+};
+
+const FAMILY_ORDER = ["woody","resinous","smoky","earthy","spicy","sweet","floral","citrus","green","aquatic"];
+
+function getNoteFamily(note) {
+  const nl = note.toLowerCase();
+  for (const [family, notes] of Object.entries(NOTE_FAMILIES)) {
+    if (notes.includes(nl)) return family;
+  }
+  return "woody"; /* default */
+}
+
+function getBottleNotes(bottle) {
+  return (bottle.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+}
+
+function calcPairScore(a, b) {
+  const notesA = new Set(getBottleNotes(a));
+  const notesB = new Set(getBottleNotes(b));
+  if (notesA.size === 0 || notesB.size === 0) return { score: 0, shared: [], unique: [] };
+  const shared = [...notesA].filter(n => notesB.has(n));
+  const uniqueA = [...notesA].filter(n => !notesB.has(n));
+  const uniqueB = [...notesB].filter(n => !notesA.has(n));
+  /* Best pairings: some overlap (coherence) + some contrast (interest) */
+  const overlap = shared.length;
+  const contrast = uniqueA.length + uniqueB.length;
+  /* Sweet spot: 1-3 shared notes, with at least 2 different notes */
+  let score = 0;
+  if (overlap >= 1 && overlap <= 3) score = overlap * 20 + contrast * 8;
+  else if (overlap > 3) score = 30 + contrast * 5; /* too similar, lower score */
+  else score = contrast * 3; /* no overlap, risky pairing */
+  /* Bonus for complementary families */
+  const familiesA = new Set([...notesA].map(getNoteFamily));
+  const familiesB = new Set([...notesB].map(getNoteFamily));
+  const sharedFamilies = [...familiesA].filter(f => familiesB.has(f)).length;
+  const uniqueFamilies = [...new Set([...familiesA, ...familiesB])].length;
+  if (uniqueFamilies >= 3) score += 15;
+  return { score: Math.min(100, score), shared, uniqueA, uniqueB, sharedFamilies, uniqueFamilies };
+}
+
+const PairingWheel = ({ bottles }) => {
+  const [selectedPair, setSelectedPair] = useState(null);
+  const [hoveredFrag, setHoveredFrag] = useState(null);
+
+  const owned = useMemo(() => bottles.filter(b => b.status === "owned" && getBottleNotes(b).length > 0), [bottles]);
+
+  /* Collect all notes and organize by family */
+  const notePositions = useMemo(() => {
+    const allNotes = new Set();
+    owned.forEach(b => getBottleNotes(b).forEach(n => allNotes.add(n)));
+    /* Sort notes by family so related notes cluster together */
+    const sorted = [...allNotes].sort((a, b) => {
+      const fa = FAMILY_ORDER.indexOf(getNoteFamily(a));
+      const fb = FAMILY_ORDER.indexOf(getNoteFamily(b));
+      return fa - fb || a.localeCompare(b);
+    });
+    const positions = {};
+    sorted.forEach((note, i) => {
+      const angle = (i / sorted.length) * Math.PI * 2 - Math.PI / 2;
+      positions[note] = { angle, x: Math.cos(angle), y: Math.sin(angle) };
+    });
+    return positions;
+  }, [owned]);
+
+  /* Position each fragrance on the wheel based on its notes */
+  const fragPositions = useMemo(() => {
+    return owned.map(b => {
+      const notes = getBottleNotes(b);
+      let x = 0, y = 0;
+      notes.forEach(n => {
+        const pos = notePositions[n];
+        if (pos) { x += pos.x; y += pos.y; }
+      });
+      if (notes.length > 0) { x /= notes.length; y /= notes.length; }
+      /* Normalize to 0.4-0.85 of wheel radius so dots don't overlap center/edge */
+      const mag = Math.sqrt(x * x + y * y) || 1;
+      const norm = 0.4 + (mag / 1.5) * 0.45;
+      return { bottle: b, x: (x / mag) * norm, y: (y / mag) * norm, notes };
+    });
+  }, [owned, notePositions]);
+
+  /* Calculate all pairings and sort by score */
+  const pairings = useMemo(() => {
+    const pairs = [];
+    for (let i = 0; i < owned.length; i++) {
+      for (let j = i + 1; j < owned.length; j++) {
+        const result = calcPairScore(owned[i], owned[j]);
+        if (result.score > 20) {
+          pairs.push({ a: owned[i], b: owned[j], ...result });
+        }
+      }
+    }
+    return pairs.sort((a, b) => b.score - a.score).slice(0, 15);
+  }, [owned]);
+
+  const size = 340;
+  const cx = size / 2, cy = size / 2, radius = size / 2 - 50;
+  const noteList = Object.entries(notePositions);
+
+  if (owned.length < 2) {
+    return (
+      <div style={{ textAlign: "center", padding: "40px 20px" }}>
+        <div style={{ fontSize: 36, marginBottom: 12, opacity: .4 }}>🔗</div>
+        <p style={{ fontFamily: ff.display, fontSize: 17, color: PAL.cream }}>Add notes to at least 2 owned fragrances</p>
+        <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, marginTop: 6, lineHeight: 1.6 }}>
+          Open Edit Collection and add comma-separated notes to your bottles. Pairings are calculated from note overlap and contrast.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Wheel SVG */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+        <svg viewBox={`0 0 ${size} ${size}`} width="100%" style={{ maxWidth: size }}>
+          {/* Background circles */}
+          {[0.33, 0.66, 1].map(r => (
+            <circle key={r} cx={cx} cy={cy} r={radius * r} fill="none" stroke={PAL.border} strokeWidth=".5" opacity=".4" />
+          ))}
+
+          {/* Note labels around perimeter */}
+          {noteList.map(([note, pos], i) => {
+            const family = getNoteFamily(note);
+            const lx = cx + pos.x * (radius + 20);
+            const ly = cy + pos.y * (radius + 20);
+            const angle = pos.angle * (180 / Math.PI);
+            const rotate = angle > 90 || angle < -90 ? angle + 180 : angle;
+            return (
+              <text key={note} x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
+                transform={`rotate(${rotate}, ${lx}, ${ly})`}
+                fill={FAMILY_COLORS[family]} fontSize="6.5" fontFamily="DM Sans, sans-serif" letterSpacing="0.5" opacity=".7">
+                {note}
+              </text>
+            );
+          })}
+
+          {/* Family arc segments */}
+          {(() => {
+            const familyCounts = {};
+            noteList.forEach(([note]) => {
+              const f = getNoteFamily(note);
+              familyCounts[f] = (familyCounts[f] || 0) + 1;
+            });
+            let offset = 0;
+            return FAMILY_ORDER.filter(f => familyCounts[f]).map(f => {
+              const count = familyCounts[f];
+              const startAngle = (offset / noteList.length) * Math.PI * 2 - Math.PI / 2;
+              const endAngle = ((offset + count) / noteList.length) * Math.PI * 2 - Math.PI / 2;
+              offset += count;
+              const r = radius + 8;
+              const x1 = cx + Math.cos(startAngle) * r, y1 = cy + Math.sin(startAngle) * r;
+              const x2 = cx + Math.cos(endAngle) * r, y2 = cy + Math.sin(endAngle) * r;
+              const large = endAngle - startAngle > Math.PI ? 1 : 0;
+              return <path key={f} d={`M${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2}`}
+                fill="none" stroke={FAMILY_COLORS[f]} strokeWidth="2" opacity=".25" />;
+            });
+          })()}
+
+          {/* Pairing lines */}
+          {pairings.slice(0, 8).map((pair, i) => {
+            const posA = fragPositions.find(f => f.bottle === pair.a);
+            const posB = fragPositions.find(f => f.bottle === pair.b);
+            if (!posA || !posB) return null;
+            const isSelected = selectedPair && selectedPair.a === pair.a && selectedPair.b === pair.b;
+            const ax = cx + posA.x * radius, ay = cy + posA.y * radius;
+            const bx = cx + posB.x * radius, by = cy + posB.y * radius;
+            return (
+              <line key={i} x1={ax} y1={ay} x2={bx} y2={by}
+                stroke={isSelected ? PAL.gold : PAL.muted} strokeWidth={isSelected ? 1.5 : .5}
+                opacity={isSelected ? .8 : .15} strokeDasharray={isSelected ? "none" : "3,3"}
+                style={{ transition: "all .3s" }} />
+            );
+          })}
+
+          {/* Fragrance dots */}
+          {fragPositions.map((fp, i) => {
+            const x = cx + fp.x * radius;
+            const y = cy + fp.y * radius;
+            const dominantFamily = getNoteFamily(fp.notes[0] || "");
+            const isHovered = hoveredFrag === i;
+            const isInPair = selectedPair && (selectedPair.a === fp.bottle || selectedPair.b === fp.bottle);
+            return (
+              <g key={i} onMouseEnter={() => setHoveredFrag(i)} onMouseLeave={() => setHoveredFrag(null)}
+                style={{ cursor: "pointer" }}>
+                <circle cx={x} cy={y} r={isHovered || isInPair ? 7 : 5}
+                  fill={FAMILY_COLORS[dominantFamily]} opacity={isHovered || isInPair ? 1 : .7}
+                  stroke={isInPair ? PAL.gold : "none"} strokeWidth={isInPair ? 1.5 : 0}
+                  style={{ transition: "all .2s" }} />
+                {(isHovered || isInPair) && (
+                  <text x={x} y={y - 11} textAnchor="middle" fill={PAL.cream} fontSize="7.5"
+                    fontFamily="Playfair Display, serif" fontStyle="italic">
+                    {fp.bottle.name}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Pairing suggestions list */}
+      <h3 style={{ fontFamily: ff.display, fontSize: 18, fontWeight: 400, color: PAL.cream, margin: "0 0 4px" }}>Suggested Pairings</h3>
+      <p style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "0 0 14px" }}>
+        Based on note overlap & contrast · tap to highlight on wheel
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {pairings.map((pair, i) => {
+          const isSelected = selectedPair === pair;
+          const label = pair.score >= 70 ? "Excellent" : pair.score >= 50 ? "Great" : pair.score >= 35 ? "Good" : "Interesting";
+          const barColor = pair.score >= 70 ? PAL.sage : pair.score >= 50 ? PAL.gold : pair.score >= 35 ? "#c98a3e" : PAL.plum;
+          return (
+            <div key={i} onClick={() => setSelectedPair(isSelected ? null : pair)} style={{
+              display: "flex", gap: 12, padding: "12px 14px", borderRadius: 10, cursor: "pointer",
+              background: isSelected ? `${PAL.gold}08` : `${PAL.cream}03`,
+              border: `1px solid ${isSelected ? PAL.gold + "33" : PAL.border}`,
+              alignItems: "center", flexWrap: "wrap", transition: "all .2s",
+            }}>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontFamily: ff.display, fontSize: 14, color: PAL.cream }}>{pair.a.name}</span>
+                  <span style={{ fontFamily: ff.body, fontSize: 11, color: PAL.gold }}>+</span>
+                  <span style={{ fontFamily: ff.display, fontSize: 14, color: PAL.cream }}>{pair.b.name}</span>
+                </div>
+                {pair.shared.length > 0 && (
+                  <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 5 }}>
+                    <span style={{ fontFamily: ff.body, fontSize: 8, color: PAL.muted, letterSpacing: 1, marginRight: 2 }}>SHARED:</span>
+                    {pair.shared.slice(0, 4).map((n, j) => (
+                      <span key={j} style={{ fontFamily: ff.body, fontSize: 7, letterSpacing: 1, textTransform: "uppercase", color: PAL.sage, background: `${PAL.sage}12`, border: `1px solid ${PAL.sage}25`, borderRadius: 3, padding: "1px 5px" }}>{n}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ width: 75, flexShrink: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                  <span style={{ fontFamily: ff.body, fontSize: 8, color: barColor, letterSpacing: 1, textTransform: "uppercase" }}>{label}</span>
+                  <span style={{ fontFamily: ff.body, fontSize: 9, color: PAL.cream }}>{pair.score}%</span>
+                </div>
+                <div style={{ width: "100%", height: 3, borderRadius: 2, background: PAL.border }}>
+                  <div style={{ width: `${pair.score}%`, height: "100%", borderRadius: 2, background: `linear-gradient(90deg, ${barColor}88, ${barColor})` }} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {pairings.length === 0 && (
+          <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, textAlign: "center", padding: "20px 0" }}>
+            Add more notes to your owned fragrances to see pairing suggestions.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════
    MAIN DASHBOARD
    ═══════════════════════════════════════════════════════════ */
 
@@ -1757,6 +2033,7 @@ export default function ScentDashboard() {
   const [vis, setVis] = useState(false);
   const [trendView, setTrendView] = useState("chart");
   const [collectionFilter, setCollectionFilter] = useState(null);
+  const [collectionView, setCollectionView] = useState("breakdown"); /* breakdown | pairings */
   const [statsMenuOpen, setStatsMenuOpen] = useState(false);
 
   /* ─── Persistent state — localStorage only ─── */
@@ -1951,7 +2228,7 @@ export default function ScentDashboard() {
     /* 1. Check all bottles in your collection by their userNotes field */
     bottles.forEach(b => {
       if (!b.name.trim() || b.name.trim().toLowerCase() === "new fragrance") return;
-      const bName = b.fullName || (b.house ? `${b.name} — ${b.house}` : b.name);
+      const bName = b.house ? `${b.name} — ${b.house}` : b.name;
       const userNotesList = (b.userNotes || "").toLowerCase().split(",").map(n => n.trim()).filter(Boolean);
       if (userNotesList.includes(lowerNote)) {
         if (!seen.has(bName.toLowerCase())) { seen.add(bName.toLowerCase()); results.push(bName); }
@@ -2461,6 +2738,21 @@ export default function ScentDashboard() {
           {/* ═══ COLLECTION ═════════════════════════════ */}
           {tab === 2 && (
             <div>
+              {/* View toggle */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
+                {[{k:"breakdown",l:"Breakdown",ic:"▧"},{k:"pairings",l:"Pairings",ic:"🔗"}].map(v => (
+                  <button key={v.k} onClick={() => setCollectionView(v.k)} style={{
+                    background: collectionView === v.k ? `${PAL.gold}14` : "transparent",
+                    border: `1px solid ${collectionView === v.k ? PAL.gold + "44" : PAL.border}`,
+                    borderRadius: 20, padding: "7px 16px",
+                    fontFamily: ff.body, fontSize: 11, color: collectionView === v.k ? PAL.gold : PAL.muted,
+                    cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                  }}><span style={{ fontSize: 13 }}>{v.ic}</span>{v.l}</button>
+                ))}
+              </div>
+
+              {collectionView === "breakdown" && (
+                <div>
               <SectionTitle title="Collection Breakdown" sub="X: cost · Y: volume · bubble size: wear frequency" />
               {/* Status filter pills */}
               <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
@@ -2521,6 +2813,12 @@ export default function ScentDashboard() {
                 })}
               </div>
 
+                </div>
+              )}
+
+              {collectionView === "pairings" && (
+                <PairingWheel bottles={bottles} />
+              )}
             </div>
           )}
 
