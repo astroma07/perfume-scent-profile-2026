@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { PAL, ff, STATUS_COLORS } from "../constants.js";
 
 const BubbleChart = ({ data }) => {
