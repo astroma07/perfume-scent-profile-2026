@@ -1779,182 +1779,332 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles }) => {
 };
 
 /* ═══════════════════════════════════════════════════════════
-   PAIRING WHEEL — Note-based fragrance pairing visualization
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS PANEL — Tabs, Pairings, Themes
    ═══════════════════════════════════════════════════════════ */
 
-const NOTE_FAMILIES = {
-  /* ── CITRUS ── bright, zesty */
-  citrus: ["bergamot","lemon","orange","grapefruit","mandarin","lime","yuzu","blood orange","bitter orange","citrus","citrusy","kumquat","tangerine","petitgrain","clementine"],
-  /* ── FRUITY ── sweet, vibrant */
-  fruity: ["apple","pear","peach","plum","raspberry","blackberry","cherry","fig","mango","coconut","pineapple","blackcurrant","apricot","pomegranate","date","tamarind","quince","passion fruit","lychee","cassis","berry","african marigold","fruity","fruit","grape","melon","banana","strawberry"],
-  /* ── GREEN & HERBAL ── crisp, herbaceous */
-  green: ["green notes","green","grass","basil","mint","galbanum","ivy","tomato leaf","green tea","tea","herbs","herbal","herbaceous","violet leaf","mate","thyme","rosemary","sage","clary sage","bamboo","hemp","green pepper","bay leaf","tarragon","artemisia","wormwood","absinthe","black tea","pine","palm leaves","aromatic","lavender","fougere","conifer","eucalyptus","camphor"],
-  /* ── AQUATIC & FRESH ── clean, oceanic */
-  aquatic: ["sea salt","sea notes","ozone","seaweed","water","rain","marine","driftwood","ambergris","calone","fresh","clean","watery","ozonic","mineral","aldehyde","aldehydic","crisp","cool"],
-  /* ── FLORAL ── romantic, elegant */
-  floral: ["rose","jasmine","iris","tuberose","violet","magnolia","ylang-ylang","orange blossom","gardenia","lily","orchid","geranium","carnation","peony","freesia","heliotrope","osmanthus","chamomile","honeysuckle","neroli","davana","jasmine sambac","frangipani","mimosa","white floral","lotus","champaca","chrysanthemum","floral","powdery","soft","delicate"],
-  /* ── SPICY ── warm, piquant */
-  spicy: ["cardamom","pepper","pink pepper","black pepper","cinnamon","saffron","nutmeg","ginger","clove","cumin","coriander","anise","star anise","juniper","oregano","angelica","red pepper","sichuan pepper","spicy","spice","spices","hot","pungent","peppery"],
-  /* ── ORIENTAL & AMBER ── warm, sensual */
-  oriental: ["amber","vanilla","tonka","benzoin","labdanum","honey","resins","copal","styrax","balsam","ambrette","musk","cashmeran","iso e super","ambroxan","marshmallow","sweet","warm","creamy","musky","sensual","opulent","rich","velvety","balmy","ambery"],
-  /* ── RESINOUS & INCENSE ── sacred, deep */
-  resinous: ["frankincense","myrrh","incense","opopanax","olibanum","elemi","dragon's blood","balsamic","resinous","sacred"],
-  /* ── WOODY ── grounded, sophisticated */
-  woody: ["sandalwood","cedar","cedarwood","vetiver","oud","rosewood","hinoki","guaiac wood","cypress","birch","mahogany","teak","agarwood","amyris","akigalawood","palo santo","woody","wood","oakwood","dry"],
-  /* ── EARTHY & MOSSY ── forest floor */
-  earthy: ["patchouli","oakmoss","moss","earth","mushroom","soil","truffle","myrtle","helichrysum","immortelle","cave moss","stone","earthy","mossy","damp","loamy","petrichor","dirt"],
-  /* ── SMOKY & LEATHER ── rugged, dark */
-  smoky: ["leather","suede","smoke","tobacco","birch tar","cade","gunpowder","tar","civet","castoreum","cannabis","neon","copper","peat","smoky","smokey","leathery","metallic","animalic","dark","rugged","industrial"],
-  /* ── GOURMAND ── edible, comforting */
-  gourmand: ["chocolate","coffee","cacao","caramel","almond","praline","sugar","chestnut","whiskey","rum","bourbon","milk","sesame","popcorn","apple brandy","cookie","hazelnut","gourmand","edible","buttery","nutty","roasted","toasted","baked","syrupy","boozy","dessert"],
+const DEFAULT_OPPOSING = [
+  ["citrus", "smoky"],
+  ["floral", "earthy"],
+  ["green", "oriental"],
+  ["fruity", "resinous"],
+  ["aquatic", "gourmand"],
+];
+
+const THEME_PRESETS = {
+  apothecary: { label: "Dark Apothecary", bg: "#0f0d09", card: "#141109", cream: "#e8dfd0", muted: "#8a7e6b", border: "#2a2318", gold: "#c5a46d", rose: "#b5546a", sage: "#7a927a", plum: "#7a5073" },
+  midnight:   { label: "Midnight",        bg: "#0a0a12", card: "#10101a", cream: "#d8d8e8", muted: "#6a6a80", border: "#222235", gold: "#8a8acd", rose: "#b55a7a", sage: "#6a9a7a", plum: "#8a6aaa" },
+  parchment:  { label: "Parchment",       bg: "#f4efe6", card: "#ebe4d8", cream: "#2a2218", muted: "#8a7e6b", border: "#d4cbb8", gold: "#8a6a3a", rose: "#9a3a4a", sage: "#4a7a4a", plum: "#6a3a6a" },
+  forest:     { label: "Forest",          bg: "#0a100a", card: "#0f160f", cream: "#d0dfd0", muted: "#6b8a6b", border: "#1a2a1a", gold: "#a4c46d", rose: "#b5546a", sage: "#5a9a5a", plum: "#7a6a8a" },
+  ember:      { label: "Ember",           bg: "#120a06", card: "#180e08", cream: "#f0dcc8", muted: "#9a7a5a", border: "#2a1a10", gold: "#d4944a", rose: "#c4543a", sage: "#7a8a5a", plum: "#8a5a5a" },
 };
 
-const FAMILY_COLORS = {
-  citrus: "#a8c256", fruity: "#c49bd4", green: "#6b9e6b", aquatic: "#7bafc4",
-  floral: "#d4849a", spicy: "#d4944a", oriental: "#c47a6b", resinous: "#a35a5a",
-  woody: "#8a9e7a", earthy: "#7a8a5a", smoky: "#8a6a4a", gourmand: "#9a6a8a",
+const SettingsPanel = ({ onClose, visibleTabs, setVisibleTabs, opposingPairs, setOpposingPairs, theme, setTheme, tabLabels }) => {
+  const [section, setSection] = useState("tabs");
+  const [newA, setNewA] = useState("");
+  const [newB, setNewB] = useState("");
+  const mouseDownRef = useRef(null);
+
+  const currentPal = THEME_PRESETS[theme.preset] || THEME_PRESETS.apothecary;
+  const isCustom = theme.preset === "custom";
+
+  const sectionBtns = [
+    { k: "tabs", l: "Tabs", ic: "☰" },
+    { k: "pairings", l: "Pairings", ic: "🔗" },
+    { k: "theme", l: "Theme", ic: "◐" },
+  ];
+
+  const selectCss = {
+    background: `${PAL.cream}06`, border: `1px solid ${PAL.border}`,
+    borderRadius: 8, padding: "8px 28px 8px 10px", color: PAL.cream,
+    fontFamily: ff.body, fontSize: 12, outline: "none", appearance: "none",
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%238a7e6b' stroke-width='1.5'/%3E%3C/svg%3E")`,
+    backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
+  };
+
+  return (
+    <div
+      onMouseDown={e => { mouseDownRef.current = e.target; }}
+      onClick={e => { if (e.target === e.currentTarget && mouseDownRef.current === e.currentTarget) onClose(); }}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: PAL.bg, border: `1px solid ${PAL.border}`, borderRadius: 16,
+        padding: 24, width: "94%", maxWidth: 560, maxHeight: "85vh", overflowY: "auto",
+      }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h3 style={{ fontFamily: ff.display, fontSize: 20, color: PAL.cream, margin: 0 }}>Settings</h3>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: PAL.muted, fontSize: 22, cursor: "pointer" }}>✕</button>
+        </div>
+
+        {/* Section toggle */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
+          {sectionBtns.map(s => (
+            <button key={s.k} onClick={() => setSection(s.k)} style={{
+              flex: 1, padding: "8px 12px", borderRadius: 8, cursor: "pointer",
+              background: section === s.k ? `${PAL.gold}14` : "transparent",
+              border: `1px solid ${section === s.k ? PAL.gold + "44" : PAL.border}`,
+              fontFamily: ff.body, fontSize: 11, color: section === s.k ? PAL.gold : PAL.muted,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            }}><span style={{ fontSize: 14 }}>{s.ic}</span>{s.l}</button>
+          ))}
+        </div>
+
+        {/* ── TAB VISIBILITY ── */}
+        {section === "tabs" && (
+          <div>
+            <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, lineHeight: 1.6, marginBottom: 16 }}>
+              Choose which tabs appear in the navigation bar. Hidden tabs keep their data — you can always turn them back on.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {tabLabels.map((tab, i) => (
+                <label key={i} style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
+                  background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 10,
+                  cursor: "pointer",
+                }}>
+                  <div onClick={() => setVisibleTabs(prev => ({ ...prev, [i]: !prev[i] }))}
+                    style={{
+                      width: 20, height: 20, borderRadius: 5, flexShrink: 0, cursor: "pointer",
+                      border: `2px solid ${visibleTabs[i] !== false ? PAL.gold : PAL.border}`,
+                      background: visibleTabs[i] !== false ? PAL.gold : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      transition: "all .2s",
+                    }}>
+                    {visibleTabs[i] !== false && <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>✓</span>}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontFamily: ff.body, fontSize: 14, color: PAL.cream }}>{tab.icon} {tab.label}</span>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── OPPOSING PAIRS ── */}
+        {section === "pairings" && (
+          <div>
+            <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, lineHeight: 1.6, marginBottom: 16 }}>
+              Define which note families create interesting <span style={{ color: PAL.rose }}>opposing</span> pairings on the fragrance wheel.
+              <span style={{ color: PAL.sage }}> Complementary</span> pairings (shared notes) are always shown automatically.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+              {opposingPairs.map(([a, b], i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 8 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: FAMILY_COLORS[a] }} />
+                  <span style={{ fontFamily: ff.body, fontSize: 12, color: FAMILY_COLORS[a], flex: 1 }}>{FAMILY_LABELS[a] || a}</span>
+                  <span style={{ fontFamily: ff.display, fontSize: 14, color: PAL.rose }}>↔</span>
+                  <span style={{ fontFamily: ff.body, fontSize: 12, color: FAMILY_COLORS[b], flex: 1, textAlign: "right" }}>{FAMILY_LABELS[b] || b}</span>
+                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: FAMILY_COLORS[b] }} />
+                  <button onClick={() => setOpposingPairs(opposingPairs.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: PAL.rose, fontSize: 16, cursor: "pointer", opacity: .6 }}>×</button>
+                </div>
+              ))}
+              {opposingPairs.length === 0 && (
+                <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, textAlign: "center", padding: 12 }}>No opposing pairs defined.</p>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
+              <select value={newA} onChange={e => setNewA(e.target.value)} style={{ ...selectCss, flex: 1 }}>
+                <option value="" style={{ background: PAL.bg }}>Family A…</option>
+                {FAMILY_ORDER.map(f => <option key={f} value={f} style={{ background: PAL.bg, color: FAMILY_COLORS[f] }}>{FAMILY_LABELS[f]}</option>)}
+              </select>
+              <span style={{ fontFamily: ff.display, fontSize: 14, color: PAL.rose }}>↔</span>
+              <select value={newB} onChange={e => setNewB(e.target.value)} style={{ ...selectCss, flex: 1 }}>
+                <option value="" style={{ background: PAL.bg }}>Family B…</option>
+                {FAMILY_ORDER.map(f => <option key={f} value={f} style={{ background: PAL.bg, color: FAMILY_COLORS[f] }}>{FAMILY_LABELS[f]}</option>)}
+              </select>
+              <button onClick={() => {
+                if (newA && newB && newA !== newB && !opposingPairs.some(([a, b]) => (a === newA && b === newB) || (a === newB && b === newA))) {
+                  setOpposingPairs([...opposingPairs, [newA, newB]]);
+                }
+                setNewA(""); setNewB("");
+              }} disabled={!newA || !newB || newA === newB} style={{
+                background: `${PAL.gold}18`, border: `1px solid ${PAL.gold}44`, borderRadius: 8,
+                padding: "8px 14px", color: PAL.gold, fontFamily: ff.body, fontSize: 11, cursor: "pointer",
+                opacity: !newA || !newB || newA === newB ? .3 : 1,
+              }}>+ Add</button>
+            </div>
+
+            <button onClick={() => setOpposingPairs(DEFAULT_OPPOSING)} style={{
+              width: "100%", padding: "8px", background: "transparent", border: `1px solid ${PAL.border}`,
+              borderRadius: 8, color: PAL.muted, fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1,
+            }}>Reset to Defaults</button>
+          </div>
+        )}
+
+        {/* ── COLOR THEME ── */}
+        {section === "theme" && (
+          <div>
+            <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, lineHeight: 1.6, marginBottom: 16 }}>
+              Choose a preset theme or customize your own colors. Changes apply immediately.
+            </p>
+
+            {/* Preset grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 8, marginBottom: 18 }}>
+              {Object.entries(THEME_PRESETS).map(([key, t]) => (
+                <button key={key} onClick={() => setTheme({ preset: key })} style={{
+                  padding: "12px", borderRadius: 10, cursor: "pointer",
+                  background: t.bg, border: `2px solid ${theme.preset === key ? t.gold : t.border}`,
+                  textAlign: "left", transition: "border-color .2s",
+                }}>
+                  <div style={{ display: "flex", gap: 3, marginBottom: 6 }}>
+                    {[t.gold, t.rose, t.sage, t.plum, t.muted].map((c, i) => (
+                      <span key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />
+                    ))}
+                  </div>
+                  <span style={{ fontFamily: ff.body, fontSize: 11, color: t.cream, fontWeight: theme.preset === key ? 600 : 400 }}>{t.label}</span>
+                </button>
+              ))}
+              {/* Custom option */}
+              <button onClick={() => setTheme({ preset: "custom", bg: theme.customBg || "#0f0d09", text: theme.customText || "#e8dfd0" })} style={{
+                padding: "12px", borderRadius: 10, cursor: "pointer",
+                background: theme.preset === "custom" ? (theme.customBg || "#0f0d09") : `${PAL.cream}04`,
+                border: `2px solid ${theme.preset === "custom" ? PAL.gold : PAL.border}`,
+                textAlign: "left",
+              }}>
+                <div style={{ fontSize: 16, marginBottom: 4 }}>🎨</div>
+                <span style={{ fontFamily: ff.body, fontSize: 11, color: theme.preset === "custom" ? (theme.customText || PAL.cream) : PAL.muted }}>Custom</span>
+              </button>
+            </div>
+
+            {/* Custom color pickers */}
+            {theme.preset === "custom" && (
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <div style={{ flex: 1, minWidth: 120 }}>
+                  <label style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 6 }}>Background</label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input type="color" value={theme.customBg || "#0f0d09"}
+                      onChange={e => setTheme({ ...theme, customBg: e.target.value })}
+                      style={{ width: 36, height: 36, border: `1px solid ${PAL.border}`, borderRadius: 6, cursor: "pointer", background: "none", padding: 2 }} />
+                    <span style={{ fontFamily: ff.body, fontSize: 12, color: PAL.cream }}>{theme.customBg || "#0f0d09"}</span>
+                  </div>
+                </div>
+                <div style={{ flex: 1, minWidth: 120 }}>
+                  <label style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 6 }}>Text</label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input type="color" value={theme.customText || "#e8dfd0"}
+                      onChange={e => setTheme({ ...theme, customText: e.target.value })}
+                      style={{ width: 36, height: 36, border: `1px solid ${PAL.border}`, borderRadius: 6, cursor: "pointer", background: "none", padding: 2 }} />
+                    <span style={{ fontFamily: ff.body, fontSize: 12, color: PAL.cream }}>{theme.customText || "#e8dfd0"}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Done */}
+        <button onClick={onClose} style={{
+          marginTop: 20, width: "100%", padding: "12px",
+          background: `${PAL.gold}18`, border: `1px solid ${PAL.gold}44`, borderRadius: 8,
+          color: PAL.gold, fontFamily: ff.body, fontSize: 13, cursor: "pointer", fontWeight: 500,
+        }}>Done</button>
+      </div>
+    </div>
+  );
 };
 
-const FAMILY_LABELS = {
-  citrus: "Citrus", fruity: "Fruity", green: "Green & Herbal",
-  aquatic: "Aquatic & Fresh", floral: "Floral", spicy: "Spicy",
-  oriental: "Oriental & Amber", resinous: "Resinous & Incense",
-  woody: "Woody", earthy: "Earthy & Mossy",
-  smoky: "Smoky & Leather", gourmand: "Gourmand",
-};
 
-const FAMILY_ORDER = ["floral","oriental","resinous","spicy","smoky","woody","earthy","gourmand","fruity","citrus","green","aquatic"];
+const PairingWheel = ({ bottles, noteOverrides, opposingPairs }) => {
+  const [selected, setSelected] = useState(null);
+  const [hovered, setHovered] = useState(null);
+  const [pairMode, setPairMode] = useState("all"); /* all | complementary | opposing */
 
-function getNoteFamily(note, overrides) {
-  const nl = note.toLowerCase().trim();
-  if (overrides && overrides[nl]) return overrides[nl];
-  for (const [family, notes] of Object.entries(NOTE_FAMILIES)) {
-    if (notes.includes(nl)) return family;
-  }
-  for (const [family, notes] of Object.entries(NOTE_FAMILIES)) {
-    if (notes.some(n => nl.includes(n) || n.includes(nl))) return family;
-  }
-  return "oriental";
-}
+  const owned = useMemo(() => bottles.filter(b => b.status === "owned" && (b.userNotes || "").trim()), [bottles]);
 
-function getBottleNotes(bottle) {
-  return (bottle.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
-}
+  const getBottleNotes = (b) => (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+  const getBottleFamily = (b) => {
+    const notes = getBottleNotes(b);
+    const counts = {};
+    notes.forEach(n => { const f = getNoteFamily(n, noteOverrides); counts[f] = (counts[f] || 0) + 1; });
+    let best = "oriental", max = 0;
+    for (const [f, c] of Object.entries(counts)) { if (c > max) { max = c; best = f; } }
+    return best;
+  };
 
-function calcPairScore(a, b) {
-  const notesA = new Set(getBottleNotes(a));
-  const notesB = new Set(getBottleNotes(b));
-  if (notesA.size === 0 || notesB.size === 0) return { score: 0, shared: [], unique: [] };
-  const shared = [...notesA].filter(n => notesB.has(n));
-  const uniqueA = [...notesA].filter(n => !notesB.has(n));
-  const uniqueB = [...notesB].filter(n => !notesA.has(n));
-  /* Best pairings: some overlap (coherence) + some contrast (interest) */
-  const overlap = shared.length;
-  const contrast = uniqueA.length + uniqueB.length;
-  /* Sweet spot: 1-3 shared notes, with at least 2 different notes */
-  let score = 0;
-  if (overlap >= 1 && overlap <= 3) score = overlap * 20 + contrast * 8;
-  else if (overlap > 3) score = 30 + contrast * 5; /* too similar, lower score */
-  else score = contrast * 3; /* no overlap, risky pairing */
-  /* Bonus for complementary families */
-  const familiesA = new Set([...notesA].map(getNoteFamily));
-  const familiesB = new Set([...notesB].map(getNoteFamily));
-  const sharedFamilies = [...familiesA].filter(f => familiesB.has(f)).length;
-  const uniqueFamilies = [...new Set([...familiesA, ...familiesB])].length;
-  if (uniqueFamilies >= 3) score += 15;
-  return { score: Math.min(100, score), shared, uniqueA, uniqueB, sharedFamilies, uniqueFamilies };
-}
+  /* Group by family */
+  const grouped = useMemo(() => {
+    const g = {};
+    FAMILY_ORDER.forEach(f => { g[f] = []; });
+    owned.forEach((b, i) => { const f = getBottleFamily(b); g[f].push({ bottle: b, idx: i, family: f }); });
+    return g;
+  }, [owned, noteOverrides]);
 
-const PairingWheel = ({ bottles, noteOverrides }) => {
-  const [selectedPair, setSelectedPair] = useState(null);
-  const [hoveredFrag, setHoveredFrag] = useState(null);
-
-  const owned = useMemo(() => bottles.filter(b => b.status === "owned" && getBottleNotes(b).length > 0), [bottles]);
-
-  /* Collect all notes and organize by family */
-  const notePositions = useMemo(() => {
-    const allNotes = new Set();
-    owned.forEach(b => getBottleNotes(b).forEach(n => allNotes.add(n)));
-    /* Sort notes by family so related notes cluster together */
-    const sorted = [...allNotes].sort((a, b) => {
-      const fa = FAMILY_ORDER.indexOf(getNoteFamily(a, noteOverrides));
-      const fb = FAMILY_ORDER.indexOf(getNoteFamily(b, noteOverrides));
-      return fa - fb || a.localeCompare(b);
-    });
-    const positions = {};
-    sorted.forEach((note, i) => {
-      const angle = (i / sorted.length) * Math.PI * 2 - Math.PI / 2;
-      positions[note] = { angle, x: Math.cos(angle), y: Math.sin(angle) };
-    });
-    return positions;
-  }, [owned]);
-
-  /* Position each fragrance on the wheel based on its notes */
-  const fragPositions = useMemo(() => {
-    return owned.map(b => {
-      const notes = getBottleNotes(b);
-      let x = 0, y = 0;
-      notes.forEach(n => {
-        const pos = notePositions[n];
-        if (pos) { x += pos.x; y += pos.y; }
+  /* Layout angles */
+  const layout = useMemo(() => {
+    const total = owned.length;
+    if (total === 0) return { families: {}, frags: {} };
+    const GAP = 0.03;
+    const active = FAMILY_ORDER.filter(f => grouped[f].length > 0);
+    const totalGaps = active.length * GAP;
+    const usable = Math.PI * 2 - totalGaps;
+    let angle = -Math.PI / 2;
+    const families = {}, frags = {};
+    active.forEach(fam => {
+      const count = grouped[fam].length;
+      const sweep = (count / total) * usable;
+      families[fam] = { start: angle, end: angle + sweep, mid: angle + sweep / 2, count };
+      grouped[fam].forEach((item, i) => {
+        frags[item.idx] = { angle: angle + ((i + 0.5) / count) * sweep, family: fam };
       });
-      if (notes.length > 0) { x /= notes.length; y /= notes.length; }
-      /* Normalize to 0.4-0.85 of wheel radius so dots don't overlap center/edge */
-      const mag = Math.sqrt(x * x + y * y) || 1;
-      const norm = 0.4 + (mag / 1.5) * 0.45;
-      return { bottle: b, x: (x / mag) * norm, y: (y / mag) * norm, notes };
+      angle += sweep + GAP;
     });
-  }, [owned, notePositions]);
+    return { families, frags };
+  }, [owned, grouped]);
 
-  /* Calculate all pairings and sort by score */
+  /* Compute pairings */
   const pairings = useMemo(() => {
-    const pairs = [];
-    for (let i = 0; i < owned.length; i++) {
-      for (let j = i + 1; j < owned.length; j++) {
-        const result = calcPairScore(owned[i], owned[j]);
-        if (result.score > 20) {
-          pairs.push({ a: owned[i], b: owned[j], ...result });
-        }
-      }
-    }
-    return pairs.sort((a, b) => b.score - a.score).slice(0, 15);
-  }, [owned]);
+    if (selected === null) return [];
+    const sel = owned[selected];
+    const selNotes = getBottleNotes(sel);
+    const selFamily = getBottleFamily(sel);
 
-  const size = 420;
+    return owned.map((b, i) => {
+      if (i === selected) return null;
+      const bNotes = getBottleNotes(b);
+      const bFamily = getBottleFamily(b);
+      const shared = selNotes.filter(n => bNotes.includes(n));
+      const isOpposing = opposingPairs.some(([a, bb]) => (a === selFamily && bb === bFamily) || (a === bFamily && bb === selFamily));
+      if (shared.length === 0 && !isOpposing) return null;
+      return { idx: i, bottle: b, shared, strength: shared.length, isOpposing, isComplementary: shared.length > 0, family: bFamily };
+    }).filter(Boolean).sort((a, b) => b.strength - a.strength);
+  }, [selected, owned, opposingPairs, noteOverrides]);
+
+  const filteredPairings = useMemo(() => {
+    if (pairMode === "complementary") return pairings.filter(p => p.isComplementary);
+    if (pairMode === "opposing") return pairings.filter(p => p.isOpposing);
+    return pairings;
+  }, [pairings, pairMode]);
+
+  const pairedIndices = useMemo(() => new Set(filteredPairings.map(p => p.idx)), [filteredPairings]);
+
+  const size = 600;
   const cx = size / 2, cy = size / 2;
-  const outerR = size / 2 - 10;
-  const innerR = outerR * 0.38;
-  const midR = outerR * 0.68;
-  const noteList = Object.entries(notePositions);
+  const catOuterR = 120, catInnerR = 72;
+  const fragR = 175, fragDotR = 7;
 
-  /* Build pie slices grouped by family */
-  const familySlices = useMemo(() => {
-    const familyCounts = {};
-    noteList.forEach(([note]) => {
-      const f = getNoteFamily(note, noteOverrides);
-      familyCounts[f] = (familyCounts[f] || 0) + 1;
-    });
-    const slices = [];
-    let offset = 0;
-    FAMILY_ORDER.filter(f => familyCounts[f]).forEach(f => {
-      const count = familyCounts[f];
-      const startAngle = (offset / noteList.length) * Math.PI * 2 - Math.PI / 2;
-      const endAngle = ((offset + count) / noteList.length) * Math.PI * 2 - Math.PI / 2;
-      slices.push({ family: f, startAngle, endAngle, count, startIdx: offset });
-      offset += count;
-    });
-    return slices;
-  }, [noteList]);
-
-  /* Helper: SVG arc path */
-  const arcPath = (cx, cy, r1, r2, a1, a2) => {
+  const arcPath = useCallback((r1, r2, a1, a2) => {
     const x1o = cx + Math.cos(a1) * r2, y1o = cy + Math.sin(a1) * r2;
     const x2o = cx + Math.cos(a2) * r2, y2o = cy + Math.sin(a2) * r2;
     const x1i = cx + Math.cos(a2) * r1, y1i = cy + Math.sin(a2) * r1;
     const x2i = cx + Math.cos(a1) * r1, y2i = cy + Math.sin(a1) * r1;
     const large = a2 - a1 > Math.PI ? 1 : 0;
     return `M${x1o},${y1o} A${r2},${r2} 0 ${large},1 ${x2o},${y2o} L${x1i},${y1i} A${r1},${r1} 0 ${large},0 ${x2i},${y2i} Z`;
-  };
+  }, [cx, cy]);
+
+  const chordPath = useCallback((i1, i2) => {
+    if (!layout.frags[i1] || !layout.frags[i2]) return "";
+    const a1 = layout.frags[i1].angle, a2 = layout.frags[i2].angle;
+    const x1 = cx + Math.cos(a1) * fragR, y1 = cy + Math.sin(a1) * fragR;
+    const x2 = cx + Math.cos(a2) * fragR, y2 = cy + Math.sin(a2) * fragR;
+    const pull = 0.08;
+    const mx = cx + ((x1 - cx) + (x2 - cx)) * pull;
+    const my = cy + ((y1 - cy) + (y2 - cy)) * pull;
+    return `M${x1},${y1} Q${mx},${my} ${x2},${y2}`;
+  }, [layout, cx, cy, fragR]);
 
   if (owned.length < 2) {
     return (
@@ -1962,179 +2112,230 @@ const PairingWheel = ({ bottles, noteOverrides }) => {
         <div style={{ fontSize: 36, marginBottom: 12, opacity: .4 }}>🔗</div>
         <p style={{ fontFamily: ff.display, fontSize: 17, color: PAL.cream }}>Add notes to at least 2 owned fragrances</p>
         <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, marginTop: 6, lineHeight: 1.6 }}>
-          Open Edit Collection and add comma-separated notes to your bottles. Pairings are calculated from note overlap and contrast.
+          Open Edit Collection and add comma-separated notes to your bottles.
         </p>
       </div>
     );
   }
 
+  const activeIdx = hovered ?? selected;
+  const showPairings = selected !== null;
+
   return (
     <div>
-      {/* Wheel SVG — clean, no cramped text */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-        <svg viewBox={`0 0 ${size} ${size}`} width="100%" style={{ maxWidth: size }}>
-          {/* Family pie slices — outer ring */}
-          {familySlices.map(slice => (
-            <path key={`outer-${slice.family}`}
-              d={arcPath(cx, cy, midR, outerR, slice.startAngle, slice.endAngle)}
-              fill={FAMILY_COLORS[slice.family]} opacity=".14" stroke={PAL.bg} strokeWidth="1.5" />
+      {/* Pairing mode toggle */}
+      {showPairings && (
+        <div style={{ display: "flex", gap: 4, justifyContent: "center", marginBottom: 14 }}>
+          {[{k:"all",l:"All Pairings"},{k:"complementary",l:"Complementary",c:PAL.sage},{k:"opposing",l:"Opposing",c:PAL.rose}].map(m => (
+            <button key={m.k} onClick={() => setPairMode(m.k)} style={{
+              background: pairMode === m.k ? `${m.c || PAL.gold}14` : "transparent",
+              border: `1px solid ${pairMode === m.k ? (m.c || PAL.gold) + "44" : PAL.border}`,
+              borderRadius: 20, padding: "5px 14px",
+              fontFamily: ff.body, fontSize: 10, color: pairMode === m.k ? (m.c || PAL.gold) : PAL.muted,
+              cursor: "pointer",
+            }}>{m.l}</button>
           ))}
+        </div>
+      )}
 
-          {/* Individual note slices — inner ring */}
-          {noteList.map(([note], i) => {
-            const a1 = (i / noteList.length) * Math.PI * 2 - Math.PI / 2;
-            const a2 = ((i + 1) / noteList.length) * Math.PI * 2 - Math.PI / 2;
-            const family = getNoteFamily(note, noteOverrides);
+      {/* Wheel */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+        <svg viewBox={`0 0 ${size} ${size}`} width="100%" style={{ maxWidth: size, overflow: "visible" }}>
+          {/* Category arcs */}
+          {Object.entries(layout.families).map(([fam, pos]) => {
+            const color = FAMILY_COLORS[fam];
+            const isActive = activeIdx !== null && layout.frags[activeIdx]?.family === fam;
+            const midA = pos.mid;
+            const labelR = (catInnerR + catOuterR) / 2;
+            const lx = cx + Math.cos(midA) * labelR;
+            const ly = cy + Math.sin(midA) * labelR;
+            const deg = midA * (180 / Math.PI);
+            const flip = deg > 90 || deg < -90;
             return (
-              <path key={`note-${i}`}
-                d={arcPath(cx, cy, innerR, midR, a1, a2)}
-                fill={FAMILY_COLORS[family]} opacity=".08" stroke={PAL.bg} strokeWidth="0.5" />
+              <g key={`cat-${fam}`}>
+                <path d={arcPath(catInnerR, catOuterR, pos.start, pos.end)}
+                  fill={color} opacity={activeIdx !== null ? (isActive ? 0.35 : 0.06) : 0.18}
+                  stroke={PAL.bg} strokeWidth="2" style={{ transition: "opacity .4s" }} />
+                <text x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
+                  transform={`rotate(${flip ? deg + 180 : deg}, ${lx}, ${ly})`}
+                  fill={isActive || activeIdx === null ? color : "#2a2318"}
+                  fontSize={pos.count > 3 ? "10" : "9"} fontFamily={ff.body}
+                  fontWeight="600" letterSpacing="1.5"
+                  style={{ textTransform: "uppercase", transition: "fill .3s" }}>
+                  {FAMILY_LABELS[fam] || fam}
+                </text>
+              </g>
             );
           })}
 
-          {/* Family label arcs — small colored marks on outer edge */}
-          {familySlices.map(slice => {
-            const midAngle = (slice.startAngle + slice.endAngle) / 2;
-            const lx = cx + Math.cos(midAngle) * (outerR + 2);
-            const ly = cy + Math.sin(midAngle) * (outerR + 2);
-            return (
-              <circle key={`mark-${slice.family}`} cx={lx} cy={ly} r="3"
-                fill={FAMILY_COLORS[slice.family]} opacity=".6" />
-            );
+          {/* Spokes */}
+          {owned.map((b, i) => {
+            if (!layout.frags[i]) return null;
+            const a = layout.frags[i].angle;
+            const fam = layout.frags[i].family;
+            const x1 = cx + Math.cos(a) * catOuterR, y1 = cy + Math.sin(a) * catOuterR;
+            const x2 = cx + Math.cos(a) * (fragR - fragDotR - 2), y2 = cy + Math.sin(a) * (fragR - fragDotR - 2);
+            const isAct = activeIdx === i || (showPairings && pairedIndices.has(i));
+            return <line key={`sp-${i}`} x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke={FAMILY_COLORS[fam]} strokeWidth={isAct ? 1 : 0.4}
+              opacity={activeIdx !== null ? (isAct ? 0.4 : 0.03) : 0.1}
+              style={{ transition: "opacity .3s" }} />;
           })}
 
-          {/* Center */}
-          <circle cx={cx} cy={cy} r={innerR - 2} fill={PAL.bg} stroke={PAL.border} strokeWidth=".5" />
-          <text x={cx} y={cy - 8} textAnchor="middle" fill={PAL.cream} fontSize="7" fontFamily="DM Sans, sans-serif" letterSpacing="3" opacity=".4">PAIRING</text>
-          <text x={cx} y={cy + 8} textAnchor="middle" fill={PAL.cream} fontSize="12" fontFamily="Playfair Display, serif" fontStyle="italic">Wheel</text>
-
-          {/* Pairing lines */}
-          {pairings.slice(0, 8).map((pair, i) => {
-            const posA = fragPositions.find(f => f.bottle === pair.a);
-            const posB = fragPositions.find(f => f.bottle === pair.b);
-            if (!posA || !posB) return null;
-            const isSelected = selectedPair && selectedPair.a === pair.a && selectedPair.b === pair.b;
-            const plotR = midR * 0.85;
-            const ax = cx + posA.x * plotR, ay = cy + posA.y * plotR;
-            const bx = cx + posB.x * plotR, by = cy + posB.y * plotR;
+          {/* Pairing chords */}
+          {showPairings && filteredPairings.map((p, i) => {
+            const isHovPair = hovered === p.idx;
+            const maxW = Math.max(...filteredPairings.map(pp => pp.strength), 1);
+            const width = p.isOpposing && !p.isComplementary ? 2 : 1.5 + (p.strength / maxW) * 3.5;
+            const color = p.isOpposing && !p.isComplementary ? PAL.rose : p.isComplementary ? PAL.sage : PAL.gold;
             return (
-              <line key={`pair-${i}`} x1={ax} y1={ay} x2={bx} y2={by}
-                stroke={isSelected ? PAL.gold : PAL.muted} strokeWidth={isSelected ? 2 : .6}
-                opacity={isSelected ? .9 : .12} strokeDasharray={isSelected ? "none" : "4,3"}
-                style={{ transition: "all .3s" }} />
+              <path key={`ch-${i}`} d={chordPath(selected, p.idx)} fill="none"
+                stroke={isHovPair ? "#e8dfd0" : color}
+                strokeWidth={isHovPair ? width + 1.5 : width}
+                strokeDasharray={p.isOpposing && !p.isComplementary ? "6,4" : "none"}
+                opacity={hovered !== null ? (isHovPair ? 0.9 : 0.06) : 0.45}
+                strokeLinecap="round" style={{ transition: "opacity .3s" }} />
             );
           })}
 
           {/* Fragrance dots */}
-          {fragPositions.map((fp, i) => {
-            const plotR = midR * 0.85;
-            const x = cx + fp.x * plotR;
-            const y = cy + fp.y * plotR;
-            const dominantFamily = getNoteFamily(fp.notes[0] || "", noteOverrides);
-            const isHovered = hoveredFrag === i;
-            const isInPair = selectedPair && (selectedPair.a === fp.bottle || selectedPair.b === fp.bottle);
+          {owned.map((b, i) => {
+            if (!layout.frags[i]) return null;
+            const a = layout.frags[i].angle;
+            const fam = layout.frags[i].family;
+            const x = cx + Math.cos(a) * fragR, y = cy + Math.sin(a) * fragR;
+            const color = FAMILY_COLORS[fam];
+            const isSel = selected === i, isHov = hovered === i;
+            const isPaired = showPairings && pairedIndices.has(i);
+            const dimmed = activeIdx !== null && !isSel && !isPaired && !isHov;
+            const pair = isPaired ? filteredPairings.find(p => p.idx === i) : null;
             return (
-              <g key={`frag-${i}`} onMouseEnter={() => setHoveredFrag(i)} onMouseLeave={() => setHoveredFrag(null)}
+              <g key={`f-${i}`} onClick={() => setSelected(selected === i ? null : i)}
+                onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}
                 style={{ cursor: "pointer" }}>
-                {(isHovered || isInPair) && (
-                  <circle cx={x} cy={y} r={14} fill={FAMILY_COLORS[dominantFamily]} opacity=".15" />
-                )}
-                <circle cx={x} cy={y} r={isHovered || isInPair ? 8 : 5.5}
-                  fill={FAMILY_COLORS[dominantFamily]}
-                  opacity={isHovered || isInPair ? 1 : .8}
-                  stroke={isInPair ? PAL.gold : PAL.bg} strokeWidth={isInPair ? 2 : 1}
+                {isSel && <circle cx={x} cy={y} r={fragDotR + 5} fill="none" stroke={color} strokeWidth="1" opacity=".3">
+                  <animate attributeName="r" values={`${fragDotR+3};${fragDotR+7};${fragDotR+3}`} dur="2.5s" repeatCount="indefinite" />
+                </circle>}
+                {(isHov || isSel) && <circle cx={x} cy={y} r={fragDotR + 3} fill={color} opacity=".12" />}
+                <circle cx={x} cy={y} r={isSel ? fragDotR + 2 : isHov ? fragDotR + 1 : fragDotR}
+                  fill={dimmed ? "#1a1710" : color}
+                  stroke={isSel ? PAL.cream : isHov ? color : PAL.bg}
+                  strokeWidth={isSel ? 2 : 1.5}
+                  opacity={dimmed ? 0.15 : 1}
                   style={{ transition: "all .25s" }} />
-                {(isHovered || isInPair) && (
-                  <>
-                    <rect x={x - 45} y={y - 24} width="90" height="16" rx="4"
-                      fill={PAL.bg} opacity=".9" stroke={FAMILY_COLORS[dominantFamily]} strokeWidth=".5" />
-                    <text x={x} y={y - 14} textAnchor="middle" fill={PAL.cream}
-                      fontSize="8" fontFamily="Playfair Display, serif" fontStyle="italic">
-                      {fp.bottle.name.length > 16 ? fp.bottle.name.slice(0, 15) + "…" : fp.bottle.name}
-                    </text>
-                  </>
+                {isPaired && pair && (
+                  <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="middle"
+                    fill={PAL.bg} fontSize="7" fontWeight="600" fontFamily={ff.body}>{pair.strength || "↔"}</text>
                 )}
+                {(isHov || isSel) && (() => {
+                  const ld = fragR + fragDotR + 12;
+                  const lx = cx + Math.cos(a) * ld, ly = cy + Math.sin(a) * ld;
+                  const deg = a * (180 / Math.PI), flip = deg > 90 || deg < -90;
+                  return (
+                    <g>
+                      <text x={lx} y={ly - 1} textAnchor={flip ? "end" : "start"} dominantBaseline="middle"
+                        transform={`rotate(${flip ? deg + 180 : deg}, ${lx}, ${ly})`}
+                        fill={PAL.cream} fontSize="10" fontFamily={ff.display} fontStyle="italic">{b.name}</text>
+                      <text x={lx} y={ly + 10} textAnchor={flip ? "end" : "start"} dominantBaseline="middle"
+                        transform={`rotate(${flip ? deg + 180 : deg}, ${lx}, ${ly})`}
+                        fill={PAL.muted} fontSize="7" fontFamily={ff.body}>{b.house}</text>
+                    </g>
+                  );
+                })()}
               </g>
             );
           })}
+
+          {/* Center */}
+          <circle cx={cx} cy={cy} r={catInnerR - 4} fill={PAL.bg} />
+          {selected !== null ? (
+            <>
+              <text x={cx} y={cy - 12} textAnchor="middle" fill={PAL.muted} fontSize="6" letterSpacing="3" style={{ textTransform: "uppercase" }}>Selected</text>
+              <text x={cx} y={cy + 4} textAnchor="middle" fill={PAL.cream} fontSize="13" fontFamily={ff.display} fontStyle="italic">
+                {owned[selected]?.name?.length > 14 ? owned[selected].name.slice(0, 13) + "…" : owned[selected]?.name}
+              </text>
+              <text x={cx} y={cy + 18} textAnchor="middle" fill={PAL.gold} fontSize="8" fontFamily={ff.body}>
+                {filteredPairings.filter(p => p.isComplementary).length} complementary · {filteredPairings.filter(p => p.isOpposing).length} opposing
+              </text>
+              <text x={cx} y={cy + 33} textAnchor="middle" fill={PAL.muted} fontSize="8" fontFamily={ff.body}
+                style={{ cursor: "pointer" }} onClick={e => { e.stopPropagation(); setSelected(null); }}>✕ clear</text>
+            </>
+          ) : (
+            <>
+              <text x={cx} y={cy - 6} textAnchor="middle" fill={PAL.muted} fontSize="6" letterSpacing="4" style={{ textTransform: "uppercase" }}>Your</text>
+              <text x={cx} y={cy + 10} textAnchor="middle" fill={PAL.cream} fontSize="14" fontFamily={ff.display} fontStyle="italic">Collection</text>
+              <text x={cx} y={cy + 24} textAnchor="middle" fill={PAL.muted} fontSize="8">{owned.length} fragrances</text>
+            </>
+          )}
         </svg>
       </div>
 
-      {/* Legend — families with their notes, always legible */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8, marginBottom: 24 }}>
-        {familySlices.map(slice => {
-          const color = FAMILY_COLORS[slice.family];
-          const familyNotes = noteList
-            .filter(([n]) => getNoteFamily(n, noteOverrides) === slice.family)
-            .map(([n]) => n);
-          return (
-            <div key={slice.family} style={{
-              background: `${color}08`, border: `1px solid ${color}25`,
-              borderRadius: 8, padding: "8px 10px",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
-                <span style={{ fontFamily: ff.body, fontSize: 10, fontWeight: 600, color: color, letterSpacing: 1, textTransform: "uppercase" }}>
-                  {FAMILY_LABELS[slice.family]}
-                </span>
-              </div>
-              <div style={{ fontFamily: ff.body, fontSize: 10, color: PAL.cream, lineHeight: 1.6, opacity: .7 }}>
-                {familyNotes.map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(", ")}
-              </div>
-            </div>
-          );
-        })}
+      {/* Legend */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", marginBottom: 16 }}>
+        {FAMILY_ORDER.filter(f => grouped[f].length > 0).map(f => (
+          <div key={f} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: FAMILY_COLORS[f] }} />
+            <span style={{ fontSize: 8, letterSpacing: 1, textTransform: "uppercase", color: FAMILY_COLORS[f] }}>{FAMILY_LABELS[f]}</span>
+          </div>
+        ))}
+        {showPairings && <>
+          <span style={{ width: 1, height: 14, background: PAL.border, margin: "0 4px" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 14, height: 2, background: PAL.sage, borderRadius: 1 }} />
+            <span style={{ fontSize: 8, letterSpacing: 1, textTransform: "uppercase", color: PAL.sage }}>Complementary</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 14, height: 2, background: PAL.rose, borderRadius: 1, borderTop: `1px dashed ${PAL.rose}` }} />
+            <span style={{ fontSize: 8, letterSpacing: 1, textTransform: "uppercase", color: PAL.rose }}>Opposing</span>
+          </div>
+        </>}
       </div>
-      {/* Pairing suggestions list */}
-      <h3 style={{ fontFamily: ff.display, fontSize: 18, fontWeight: 400, color: PAL.cream, margin: "0 0 4px" }}>Suggested Pairings</h3>
-      <p style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "0 0 14px" }}>
-        Based on note overlap & contrast · tap to highlight on wheel
-      </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {pairings.map((pair, i) => {
-          const isSelected = selectedPair === pair;
-          const label = pair.score >= 70 ? "Excellent" : pair.score >= 50 ? "Great" : pair.score >= 35 ? "Good" : "Interesting";
-          const barColor = pair.score >= 70 ? PAL.sage : pair.score >= 50 ? PAL.gold : pair.score >= 35 ? "#c98a3e" : PAL.plum;
-          return (
-            <div key={i} onClick={() => setSelectedPair(isSelected ? null : pair)} style={{
-              display: "flex", gap: 12, padding: "12px 14px", borderRadius: 10, cursor: "pointer",
-              background: isSelected ? `${PAL.gold}08` : `${PAL.cream}03`,
-              border: `1px solid ${isSelected ? PAL.gold + "33" : PAL.border}`,
-              alignItems: "center", flexWrap: "wrap", transition: "all .2s",
-            }}>
-              <div style={{ flex: 1, minWidth: 160 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                  <span style={{ fontFamily: ff.display, fontSize: 14, color: PAL.cream }}>{pair.a.name}</span>
-                  <span style={{ fontFamily: ff.body, fontSize: 11, color: PAL.gold }}>+</span>
-                  <span style={{ fontFamily: ff.display, fontSize: 14, color: PAL.cream }}>{pair.b.name}</span>
-                </div>
-                {pair.shared.length > 0 && (
-                  <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 5 }}>
-                    <span style={{ fontFamily: ff.body, fontSize: 8, color: PAL.muted, letterSpacing: 1, marginRight: 2 }}>SHARED:</span>
-                    {pair.shared.slice(0, 4).map((n, j) => (
-                      <span key={j} style={{ fontFamily: ff.body, fontSize: 7, letterSpacing: 1, textTransform: "uppercase", color: PAL.sage, background: `${PAL.sage}12`, border: `1px solid ${PAL.sage}25`, borderRadius: 3, padding: "1px 5px" }}>{n}</span>
-                    ))}
+
+      {/* Detail panel */}
+      {showPairings && (
+        <div style={{ background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 14, padding: "16px 18px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: FAMILY_COLORS[layout.frags[selected]?.family] }} />
+            <span style={{ fontFamily: ff.display, fontSize: 18, fontStyle: "italic", color: PAL.cream }}>{owned[selected]?.name}</span>
+            <span style={{ fontSize: 11, color: PAL.muted }}>{owned[selected]?.house}</span>
+          </div>
+          <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginBottom: 14 }}>
+            {getBottleNotes(owned[selected]).map((n, i) => {
+              const nc = FAMILY_COLORS[getNoteFamily(n, noteOverrides)];
+              return <span key={i} style={{ fontSize: 8, letterSpacing: 1, textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, color: nc, background: `${nc}12`, border: `1px solid ${nc}22` }}>{n}</span>;
+            })}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {filteredPairings.map((p, i) => {
+              const isHov = hovered === p.idx;
+              const typeColor = p.isOpposing && !p.isComplementary ? PAL.rose : p.isComplementary ? PAL.sage : PAL.gold;
+              const typeLabel = p.isComplementary && p.isOpposing ? "Both" : p.isOpposing ? "Opposing" : "Complementary";
+              return (
+                <div key={i} onMouseEnter={() => setHovered(p.idx)} onMouseLeave={() => setHovered(null)}
+                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, cursor: "pointer",
+                    background: isHov ? `${PAL.cream}06` : "transparent", border: `1px solid ${isHov ? PAL.border : "transparent"}`,
+                    transition: "all .2s" }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: FAMILY_COLORS[p.family], flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontFamily: ff.display, fontSize: 13, fontStyle: "italic", color: PAL.cream }}>{p.bottle.name}</span>
+                    <span style={{ fontSize: 9, color: PAL.muted, marginLeft: 6 }}>{p.bottle.house}</span>
                   </div>
-                )}
-              </div>
-              <div style={{ width: 75, flexShrink: 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                  <span style={{ fontFamily: ff.body, fontSize: 8, color: barColor, letterSpacing: 1, textTransform: "uppercase" }}>{label}</span>
-                  <span style={{ fontFamily: ff.body, fontSize: 9, color: PAL.cream }}>{pair.score}%</span>
+                  <span style={{ fontSize: 7, letterSpacing: 1, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3, color: typeColor, background: `${typeColor}12`, border: `1px solid ${typeColor}25` }}>{typeLabel}</span>
+                  {p.shared.length > 0 && (
+                    <div style={{ display: "flex", gap: 2 }}>
+                      {p.shared.slice(0, 3).map((n, j) => {
+                        const nc = FAMILY_COLORS[getNoteFamily(n, noteOverrides)];
+                        return <span key={j} style={{ fontSize: 6, letterSpacing: 1, textTransform: "uppercase", padding: "1px 5px", borderRadius: 2, color: nc, background: `${nc}10`, border: `1px solid ${nc}18` }}>{n}</span>;
+                      })}
+                    </div>
+                  )}
+                  <span style={{ fontFamily: ff.display, fontSize: 15, color: PAL.gold, minWidth: 20, textAlign: "right" }}>{p.strength || "↔"}</span>
                 </div>
-                <div style={{ width: "100%", height: 3, borderRadius: 2, background: PAL.border }}>
-                  <div style={{ width: `${pair.score}%`, height: "100%", borderRadius: 2, background: `linear-gradient(90deg, ${barColor}88, ${barColor})` }} />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-        {pairings.length === 0 && (
-          <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, textAlign: "center", padding: "20px 0" }}>
-            Add more notes to your owned fragrances to see pairing suggestions.
-          </p>
-        )}
-      </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -2168,6 +2369,10 @@ export default function ScentDashboard() {
 
   const [visibleStats, setVisibleStats] = useState(() => loadStored("visibleStats", { collection: true, invested: true, daysWorn: true, signature: true }));
   const [noteOverrides, setNoteOverrides] = useState(() => loadStored("noteOverrides", {}));
+  const [opposingPairs, setOpposingPairs] = useState(() => loadStored("opposingPairs", DEFAULT_OPPOSING));
+  const [showSettings, setShowSettings] = useState(false);
+  const [visibleTabs, setVisibleTabs] = useState(() => loadStored("visibleTabs", { 0: true, 1: true, 2: true, 3: true, 4: true }));
+  const [theme, setTheme] = useState(() => loadStored("theme", { preset: "apothecary" }));
 
   const isFirstVisit = (() => {
     try {
@@ -2224,6 +2429,7 @@ export default function ScentDashboard() {
         if (data.wearRatings) setWearRatings(data.wearRatings);
         if (data.testedScents) setTestedScents(data.testedScents);
         if (data.noteOverrides) setNoteOverrides(data.noteOverrides);
+        if (data.opposingPairs) setOpposingPairs(data.opposingPairs);
         try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
         setShowWelcome(false);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
@@ -2241,11 +2447,14 @@ export default function ScentDashboard() {
   useEffect(() => { try { localStorage.setItem("scent_testedScents", JSON.stringify(testedScents)); } catch {} }, [testedScents]);
   useEffect(() => { try { localStorage.setItem("scent_visibleStats", JSON.stringify(visibleStats)); } catch {} }, [visibleStats]);
   useEffect(() => { try { localStorage.setItem("scent_noteOverrides", JSON.stringify(noteOverrides)); } catch {} }, [noteOverrides]);
+  useEffect(() => { try { localStorage.setItem("scent_opposingPairs", JSON.stringify(opposingPairs)); } catch {} }, [opposingPairs]);
+  useEffect(() => { try { localStorage.setItem("scent_visibleTabs", JSON.stringify(visibleTabs)); } catch {} }, [visibleTabs]);
+  useEffect(() => { try { localStorage.setItem("scent_theme", JSON.stringify(theme)); } catch {} }, [theme]);
 
   /* ─── Export / Import ─── */
 
   const exportData = () => {
-    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, exportedAt: new Date().toISOString() };
+    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, opposingPairs, exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -2269,6 +2478,7 @@ export default function ScentDashboard() {
         if (data.wearRatings) setWearRatings(data.wearRatings);
         if (data.testedScents) setTestedScents(data.testedScents);
         if (data.noteOverrides) setNoteOverrides(data.noteOverrides);
+        if (data.opposingPairs) setOpposingPairs(data.opposingPairs);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
     };
     input.click();
@@ -2316,6 +2526,17 @@ export default function ScentDashboard() {
     { icon: "✦", label: "Discover" },
     { icon: "◉", label: "Tested" },
   ];
+
+  /* Filter tabs by visibility settings */
+  const filteredTabs = tabs.map((t, i) => ({ ...t, origIdx: i })).filter((_, i) => visibleTabs[i] !== false);
+
+  /* Compute active theme colors */
+  const activeTheme = useMemo(() => {
+    if (theme.preset === "custom") {
+      return { ...THEME_PRESETS.apothecary, bg: theme.customBg || "#0f0d09", cream: theme.customText || "#e8dfd0" };
+    }
+    return THEME_PRESETS[theme.preset] || THEME_PRESETS.apothecary;
+  }, [theme]);
 
   const axisTick = { fill: PAL.muted, fontFamily: ff.body, fontSize: 11 };
 
@@ -2438,7 +2659,7 @@ export default function ScentDashboard() {
 
   /* ═══ Main Dashboard ═══════════════════════════ */
   return (
-    <div style={{ fontFamily: ff.body, background: PAL.bg, minHeight: "100vh", color: PAL.cream, position: "relative", overflow: "hidden" }}>
+    <div style={{ fontFamily: ff.body, background: activeTheme.bg, minHeight: "100vh", color: activeTheme.cream, position: "relative", overflow: "hidden", transition: "background .4s, color .4s" }}>
       <link href={FONT_LINK} rel="stylesheet" />
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 1, backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, opacity: 0.03 }} />
       <div style={{ position: "fixed", top: -180, left: "30%", width: 500, height: 500, background: `radial-gradient(circle, ${PAL.gold}08 0%, transparent 70%)`, pointerEvents: "none" }} />
@@ -2457,6 +2678,7 @@ export default function ScentDashboard() {
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <button onClick={exportData} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "7px 12px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer" }}>↓ Export</button>
               <button onClick={importData} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "7px 12px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer" }}>↑ Import</button>
+              <button onClick={() => setShowSettings(true)} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "9px 14px", color: PAL.muted, fontFamily: ff.body, fontSize: 11, letterSpacing: 1.8, textTransform: "uppercase", cursor: "pointer" }}>⚙ Settings</button>
               <button onClick={() => setEditing(true)} style={{ background: `${PAL.gold}12`, border: `1px solid ${PAL.gold}33`, borderRadius: 8, padding: "9px 18px", color: PAL.gold, fontFamily: ff.body, fontSize: 11, letterSpacing: 1.8, textTransform: "uppercase", cursor: "pointer" }}>✎ Edit Collection</button>
             </div>
           </div>
@@ -2505,15 +2727,15 @@ export default function ScentDashboard() {
         </header>
 
         {/* Tabs */}
-        <nav style={{ display: "flex", gap: 8, paddingTop: 28, opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .2s" }} onClick={() => setStatsMenuOpen(false)}>
-          {tabs.map((t, i) => (
-            <button key={i} onClick={() => setTab(i)} style={{
-              background: tab === i ? `${PAL.gold}14` : "transparent",
-              border: `1px solid ${tab === i ? PAL.gold + "44" : PAL.border}`,
+        <nav style={{ display: "flex", gap: 8, paddingTop: 28, flexWrap: "wrap", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .2s" }}>
+          {filteredTabs.map((t) => (
+            <button key={t.origIdx} onClick={() => setTab(t.origIdx)} style={{
+              background: tab === t.origIdx ? `${PAL.gold}14` : "transparent",
+              border: `1px solid ${tab === t.origIdx ? PAL.gold + "44" : PAL.border}`,
               borderRadius: 28, padding: "9px 20px",
-              fontFamily: ff.body, fontSize: 11, fontWeight: tab === i ? 500 : 400,
+              fontFamily: ff.body, fontSize: 11, fontWeight: tab === t.origIdx ? 500 : 400,
               letterSpacing: 1.8, textTransform: "uppercase",
-              color: tab === i ? PAL.gold : PAL.muted,
+              color: tab === t.origIdx ? PAL.gold : PAL.muted,
               cursor: "pointer", transition: "all .3s",
               display: "flex", alignItems: "center", gap: 7,
             }}>
@@ -2941,7 +3163,7 @@ export default function ScentDashboard() {
               )}
 
               {collectionView === "pairings" && (
-                <PairingWheel bottles={bottles} noteOverrides={noteOverrides} />
+                <PairingWheel bottles={bottles} noteOverrides={noteOverrides} opposingPairs={opposingPairs} />
               )}
             </div>
           )}
@@ -2960,6 +3182,15 @@ export default function ScentDashboard() {
 
       {editing && (
         <EditPanel bottles={bottles} setBottles={setBottles} onClose={() => setEditing(false)} onReset={resetAll} noteOverrides={noteOverrides} setNoteOverrides={setNoteOverrides} />
+      )}
+      {showSettings && (
+        <SettingsPanel
+          onClose={() => setShowSettings(false)}
+          visibleTabs={visibleTabs} setVisibleTabs={setVisibleTabs}
+          opposingPairs={opposingPairs} setOpposingPairs={setOpposingPairs}
+          theme={theme} setTheme={setTheme}
+          tabLabels={tabs}
+        />
       )}
     </div>
   );
