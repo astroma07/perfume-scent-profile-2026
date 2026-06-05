@@ -1779,6 +1779,52 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles }) => {
 };
 
 /* ═══════════════════════════════════════════════════════════
+   NOTE CATEGORIZATION
+   ═══════════════════════════════════════════════════════════ */
+
+const NOTE_FAMILIES = {
+  citrus: ["bergamot","lemon","orange","grapefruit","mandarin","lime","yuzu","blood orange","bitter orange","citrus","citrusy","kumquat","tangerine","petitgrain","clementine"],
+  fruity: ["apple","pear","peach","plum","raspberry","blackberry","cherry","fig","mango","coconut","pineapple","blackcurrant","apricot","pomegranate","date","tamarind","quince","passion fruit","lychee","cassis","berry","african marigold","fruity","fruit","grape","melon","banana","strawberry"],
+  green: ["green notes","green","grass","basil","mint","galbanum","ivy","tomato leaf","green tea","tea","herbs","herbal","herbaceous","violet leaf","mate","thyme","rosemary","sage","clary sage","bamboo","hemp","green pepper","bay leaf","tarragon","artemisia","wormwood","absinthe","black tea","pine","palm leaves","aromatic","lavender","fougere","conifer","eucalyptus","camphor"],
+  aquatic: ["sea salt","sea notes","ozone","seaweed","water","rain","marine","driftwood","ambergris","calone","fresh","clean","watery","ozonic","mineral","aldehyde","aldehydic","crisp","cool"],
+  floral: ["rose","jasmine","iris","tuberose","violet","magnolia","ylang-ylang","orange blossom","gardenia","lily","orchid","geranium","carnation","peony","freesia","heliotrope","osmanthus","chamomile","honeysuckle","neroli","davana","jasmine sambac","frangipani","mimosa","white floral","lotus","champaca","chrysanthemum","floral","powdery","soft","delicate"],
+  spicy: ["cardamom","pepper","pink pepper","black pepper","cinnamon","saffron","nutmeg","ginger","clove","cumin","coriander","anise","star anise","juniper","oregano","angelica","red pepper","sichuan pepper","spicy","spice","spices","hot","pungent","peppery"],
+  oriental: ["amber","vanilla","tonka","benzoin","labdanum","honey","resins","copal","styrax","balsam","ambrette","musk","cashmeran","iso e super","ambroxan","marshmallow","sweet","warm","creamy","musky","sensual","opulent","rich","velvety","balmy","ambery"],
+  resinous: ["frankincense","myrrh","incense","opopanax","olibanum","elemi","dragon's blood","balsamic","resinous","sacred"],
+  woody: ["sandalwood","cedar","cedarwood","vetiver","oud","rosewood","hinoki","guaiac wood","cypress","birch","mahogany","teak","agarwood","amyris","akigalawood","palo santo","woody","wood","oakwood","dry"],
+  earthy: ["patchouli","oakmoss","moss","earth","mushroom","soil","truffle","myrtle","helichrysum","immortelle","cave moss","stone","earthy","mossy","damp","loamy","petrichor","dirt"],
+  smoky: ["leather","suede","smoke","tobacco","birch tar","cade","gunpowder","tar","civet","castoreum","cannabis","neon","copper","peat","smoky","smokey","leathery","metallic","animalic","dark","rugged","industrial"],
+  gourmand: ["chocolate","coffee","cacao","caramel","almond","praline","sugar","chestnut","whiskey","rum","bourbon","milk","sesame","popcorn","apple brandy","cookie","hazelnut","gourmand","edible","buttery","nutty","roasted","toasted","baked","syrupy","boozy","dessert"],
+};
+
+const FAMILY_COLORS = {
+  citrus: "#a8c256", fruity: "#c49bd4", green: "#6b9e6b", aquatic: "#7bafc4",
+  floral: "#d4849a", spicy: "#d4944a", oriental: "#c47a6b", resinous: "#a35a5a",
+  woody: "#8a9e7a", earthy: "#7a8a5a", smoky: "#8a6a4a", gourmand: "#9a6a8a",
+};
+
+const FAMILY_LABELS = {
+  citrus: "Citrus", fruity: "Fruity", green: "Green & Herbal",
+  aquatic: "Aquatic & Fresh", floral: "Floral", spicy: "Spicy",
+  oriental: "Oriental & Amber", resinous: "Resinous & Incense",
+  woody: "Woody", earthy: "Earthy & Mossy",
+  smoky: "Smoky & Leather", gourmand: "Gourmand",
+};
+
+const FAMILY_ORDER = ["floral","oriental","resinous","spicy","smoky","woody","earthy","gourmand","fruity","citrus","green","aquatic"];
+
+function getNoteFamily(note, overrides) {
+  const nl = note.toLowerCase().trim();
+  if (overrides && overrides[nl]) return overrides[nl];
+  for (const [family, notes] of Object.entries(NOTE_FAMILIES)) {
+    if (notes.includes(nl)) return family;
+  }
+  for (const [family, notes] of Object.entries(NOTE_FAMILIES)) {
+    if (notes.some(n => nl.includes(n) || n.includes(nl))) return family;
+  }
+  return "oriental";
+}
+
 /* ═══════════════════════════════════════════════════════════
    SETTINGS PANEL — Tabs, Pairings, Themes
    ═══════════════════════════════════════════════════════════ */
