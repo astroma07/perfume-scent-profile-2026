@@ -75,10 +75,10 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs }) => {
 
   const pairedIndices = useMemo(() => new Set(filteredPairings.map(p => p.idx)), [filteredPairings]);
 
-  const size = 600;
+  const size = 800;
   const cx = size / 2, cy = size / 2;
-  const catOuterR = 120, catInnerR = 72;
-  const fragR = 175, fragDotR = 7;
+  const catOuterR = 160, catInnerR = 95;
+  const fragR = 235, fragDotR = 8;
 
   const arcPath = useCallback((r1, r2, a1, a2) => {
     const x1o = cx + Math.cos(a1) * r2, y1o = cy + Math.sin(a1) * r2;
@@ -134,7 +134,7 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs }) => {
 
       {/* Wheel */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-        <svg viewBox={`0 0 ${size} ${size}`} width="100%" style={{ maxWidth: size, overflow: "visible" }}>
+        <svg viewBox={`-60 -60 ${size + 120} ${size + 120}`} width="100%" style={{ maxWidth: size + 120 }}>
           {/* Category arcs */}
           {Object.entries(layout.families).map(([fam, pos]) => {
             const color = FAMILY_COLORS[fam];
@@ -153,7 +153,7 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs }) => {
                 <text x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
                   transform={`rotate(${flip ? deg + 180 : deg}, ${lx}, ${ly})`}
                   fill={isActive || activeIdx === null ? color : "#2a2318"}
-                  fontSize={pos.count > 3 ? "10" : "9"} fontFamily={ff.body}
+                  fontSize={pos.count > 3 ? "12" : "11"} fontFamily={ff.body}
                   fontWeight="600" letterSpacing="1.5"
                   style={{ textTransform: "uppercase", transition: "fill .3s" }}>
                   {FAMILY_LABELS[fam] || fam}
@@ -222,17 +222,17 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs }) => {
                     fill={PAL.bg} fontSize="7" fontWeight="600" fontFamily={ff.body}>{pair.strength || "↔"}</text>
                 )}
                 {(isHov || isSel) && (() => {
-                  const ld = fragR + fragDotR + 12;
+                  const ld = fragR + fragDotR + 18;
                   const lx = cx + Math.cos(a) * ld, ly = cy + Math.sin(a) * ld;
                   const deg = a * (180 / Math.PI), flip = deg > 90 || deg < -90;
                   return (
                     <g>
                       <text x={lx} y={ly - 1} textAnchor={flip ? "end" : "start"} dominantBaseline="middle"
                         transform={`rotate(${flip ? deg + 180 : deg}, ${lx}, ${ly})`}
-                        fill={PAL.cream} fontSize="10" fontFamily={ff.display} fontStyle="italic">{b.name}</text>
-                      <text x={lx} y={ly + 10} textAnchor={flip ? "end" : "start"} dominantBaseline="middle"
+                        fill={PAL.cream} fontSize="12" fontFamily={ff.display} fontStyle="italic">{b.name}</text>
+                      <text x={lx} y={ly + 12} textAnchor={flip ? "end" : "start"} dominantBaseline="middle"
                         transform={`rotate(${flip ? deg + 180 : deg}, ${lx}, ${ly})`}
-                        fill={PAL.muted} fontSize="7" fontFamily={ff.body}>{b.house}</text>
+                        fill={PAL.muted} fontSize="9" fontFamily={ff.body}>{b.house}</text>
                     </g>
                   );
                 })()}

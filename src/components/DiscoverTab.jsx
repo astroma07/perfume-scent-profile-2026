@@ -130,7 +130,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
             {exists || justAdded ? (
               <div style={{ padding: "10px 16px", borderRadius: 8, textAlign: "center", background: `${PAL.sage}15`, border: `1px solid ${PAL.sage}40`, fontFamily: ff.body, fontSize: 11, color: PAL.sage }}>✓ {justAdded ? "Added" : "In collection"}</div>
             ) : (
-              [{s:"owned",l:"Add as Owned",c:STATUS_COLORS["owned"]},{s:"want",l:"Add to Wishlist",c:STATUS_COLORS["want"]},{s:"want to try",l:"Want to Try",c:STATUS_COLORS["want to try"]}].map(opt => (
+              [{s:"owned",l:"Add as Owned",c:STATUS_COLORS["owned"]},{s:"wishlist",l:"Wishlist",c:STATUS_COLORS["wishlist"]},{s:"to test",l:"To Test",c:STATUS_COLORS["to test"]}].map(opt => (
                 <button key={opt.s} onClick={() => addToCollection(frag, opt.s)} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer", background: `${opt.c}12`, border: `1px solid ${opt.c}40`, fontFamily: ff.body, fontSize: 11, color: opt.c, letterSpacing: 1, textTransform: "uppercase", textAlign: "center" }}>{opt.l}</button>
               ))
             )}

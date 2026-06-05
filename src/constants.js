@@ -6,8 +6,8 @@ export const NOTE_COLORS = ["#c5a46d","#b5546a","#d4b896","#7a927a","#7a5073","#
 export const FONT_LINK = "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap";
 export const ff = { display: "'Playfair Display', Georgia, serif", body: "'DM Sans', sans-serif" };
 
-export const STATUS_COLORS = { "owned": "#7a927a", "had": "#8a7e6b", "want": "#c5a46d", "want to try": "#7a5073" };
-export const STATUSES = ["owned", "had", "want", "want to try"];
+export const STATUS_COLORS = { "owned": "#7a927a", "had": "#8a7e6b", "wishlist": "#c5a46d", "to test": "#7a5073", "tester": "#5a7a9a" };
+export const STATUSES = ["owned", "had", "tester", "wishlist", "to test"];
 
 export const sum = (arr, k) => arr.reduce((s, x) => s + (x[k] || 0), 0);
 export const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];

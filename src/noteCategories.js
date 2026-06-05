@@ -52,7 +52,7 @@ export function computeNotesProfile(bottles, testedScents) {
       counts[n] = (counts[n] || 0) + 3;
     });
   });
-  bottles.filter(b => (b.status === "want" || b.status === "want to try") && isValidBottle(b)).forEach(b => {
+  bottles.filter(b => (b.status === "wishlist" || b.status === "to test") && isValidBottle(b)).forEach(b => {
     (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean).forEach(n => {
       counts[n] = (counts[n] || 0) + 1;
     });
@@ -120,7 +120,7 @@ export function scoreFragranceFit(bottle, ownedBottles, notesProfile) {
   if (bottle.house && ownedBottles.some(ob => ob.house && ob.house.toLowerCase() === bottle.house.toLowerCase())) {
     score += 15; reasons.push("You already love " + bottle.house);
   }
-  if (bottle.status === "want") score += 5;
+  if (bottle.status === "wishlist") score += 5;
   return { score: Math.min(100, Math.round(score)), matchedNotes: [...new Set(matchedNotes)], reason: reasons.length > 0 ? reasons[0] : "Expand your horizons", isWildcard: score < 20 };
 }
 

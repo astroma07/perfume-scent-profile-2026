@@ -188,7 +188,7 @@ export default function ScentDashboard() {
   /* Rank want/want-to-try bottles by fit score */
   const rankedWishlist = useMemo(() => {
     const ownedBottles = bottles.filter(b => b.status === "owned");
-    const wishlist = bottles.filter(b => b.status === "want" || b.status === "want to try");
+    const wishlist = bottles.filter(b => b.status === "wishlist" || b.status === "to test");
     return wishlist
       .map(b => ({ ...b, fit: scoreFragranceFit(b, ownedBottles, notes) }))
       .sort((a, b) => b.fit.score - a.fit.score);
