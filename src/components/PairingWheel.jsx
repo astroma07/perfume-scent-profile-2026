@@ -2,10 +2,11 @@ import { useState, useMemo, useCallback } from "react";
 import { PAL, ff } from "../constants.js";
 import { FAMILY_ORDER, FAMILY_COLORS, FAMILY_LABELS, getNoteFamily } from "../noteCategories.js";
 
-const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, setPairingNotes }) => {
+const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, setPairingNotes, pairingRatings, setPairingRatings, rejectedPairings, setRejectedPairings }) => {
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
   const [pairMode, setPairMode] = useState("all");
+  const [showRejected, setShowRejected] = useState(false);
 
   const owned = useMemo(() => bottles.filter(b => b.status === "owned" && (b.userNotes || "").trim()), [bottles]);
 
@@ -63,11 +64,21 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
     }).filter(Boolean).sort((a, b) => b.strength - a.strength);
   }, [selected, owned, opposingPairs, noteOverrides]);
 
+  const rejectedSet = useMemo(() => new Set(rejectedPairings || []), [rejectedPairings]);
+
+  const getPairKey = (nameA, nameB) => [nameA, nameB].sort().join("||");
+
   const filteredPairings = useMemo(() => {
-    if (pairMode === "complementary") return pairings.filter(p => p.isComplementary);
-    if (pairMode === "opposing") return pairings.filter(p => p.isOpposing);
-    return pairings;
-  }, [pairings, pairMode]);
+    let list = pairings;
+    if (pairMode === "complementary") list = list.filter(p => p.isComplementary);
+    if (pairMode === "opposing") list = list.filter(p => p.isOpposing);
+    return list.filter(p => !rejectedSet.has(getPairKey(owned[selected]?.name, p.bottle.name)));
+  }, [pairings, pairMode, rejectedSet, selected, owned]);
+
+  const rejectedFromSelected = useMemo(() => {
+    if (selected === null) return [];
+    return pairings.filter(p => rejectedSet.has(getPairKey(owned[selected]?.name, p.bottle.name)));
+  }, [pairings, rejectedSet, selected, owned]);
 
   const pairedIndices = useMemo(() => new Set(filteredPairings.map(p => p.idx)), [filteredPairings]);
 
@@ -310,7 +321,8 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
               const isHov = hovered === p.idx;
               const typeColor = p.isOpposing && !p.isComplementary ? PAL.rose : p.isComplementary ? PAL.sage : PAL.gold;
               const typeLabel = p.isComplementary && p.isOpposing ? "Both" : p.isOpposing ? "Opposing" : "Complementary";
-              const pairKey = [owned[selected]?.name, p.bottle.name].sort().join("||");
+              const pairKey = getPairKey(owned[selected]?.name, p.bottle.name);
+              const rating = (pairingRatings && pairingRatings[pairKey]) || 0;
               return (
                 <div key={i} onMouseEnter={() => setHovered(p.idx)} onMouseLeave={() => setHovered(null)}
                   style={{ padding: "10px 12px", borderRadius: 10, cursor: "pointer",
@@ -334,6 +346,19 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
                     )}
                     <span style={{ fontFamily: ff.display, fontSize: 18, color: PAL.gold, minWidth: 24, textAlign: "right" }}>{p.strength || "↔"}</span>
                   </div>
+                  {/* Rating slider */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                    <span style={{ fontFamily: ff.body, fontSize: 9, color: PAL.muted, letterSpacing: 1.5, textTransform: "uppercase", minWidth: 42 }}>Rating</span>
+                    <input type="range" min="0" max="10" step="0.5" value={rating}
+                      onChange={e => { e.stopPropagation(); setPairingRatings(prev => ({ ...prev, [pairKey]: parseFloat(e.target.value) })); }}
+                      onClick={e => e.stopPropagation()}
+                      style={{ flex: 1, height: 4, appearance: "none", background: PAL.border, borderRadius: 2, outline: "none", cursor: "pointer", accentColor: PAL.gold }} />
+                    <span style={{ fontFamily: ff.display, fontSize: 14, color: rating > 0 ? PAL.gold : PAL.muted, minWidth: 24, textAlign: "right" }}>{rating > 0 ? rating : "—"}</span>
+                    <button onClick={e => { e.stopPropagation(); setRejectedPairings(prev => [...prev, pairKey]); }}
+                      title="Reject this pairing"
+                      style={{ background: `${PAL.rose}10`, border: `1px solid ${PAL.rose}25`, borderRadius: 6, padding: "4px 8px", color: PAL.rose, fontFamily: ff.body, fontSize: 9, cursor: "pointer", letterSpacing: 1, flexShrink: 0 }}>✕</button>
+                  </div>
+                  {/* Notes */}
                   <input value={(pairingNotes && pairingNotes[pairKey]) || ""}
                     onChange={e => { e.stopPropagation(); setPairingNotes(prev => ({ ...prev, [pairKey]: e.target.value })); }}
                     onClick={e => e.stopPropagation()}
@@ -343,6 +368,42 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
               );
             })}
           </div>
+
+          {/* Rejected pile */}
+          {rejectedFromSelected.length > 0 && (
+            <div style={{ marginTop: 16, borderTop: `1px solid ${PAL.border}`, paddingTop: 12 }}>
+              <button onClick={() => setShowRejected(!showRejected)} style={{
+                background: "transparent", border: "none", cursor: "pointer",
+                fontFamily: ff.body, fontSize: 11, color: PAL.muted, letterSpacing: 1.5,
+                textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, padding: 0,
+              }}>
+                <span style={{ fontSize: 8, transform: showRejected ? "rotate(90deg)" : "none", transition: "transform .2s" }}>▶</span>
+                Rejected ({rejectedFromSelected.length})
+              </button>
+              {showRejected && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8 }}>
+                  {rejectedFromSelected.map((p, i) => {
+                    const pairKey = getPairKey(owned[selected]?.name, p.bottle.name);
+                    return (
+                      <div key={i} style={{
+                        display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
+                        borderRadius: 8, background: `${PAL.rose}04`, border: `1px solid ${PAL.rose}12`,
+                        opacity: .6,
+                      }}>
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: FAMILY_COLORS[p.family], flexShrink: 0 }} />
+                        <span style={{ fontFamily: ff.display, fontSize: 13, fontStyle: "italic", color: PAL.cream, flex: 1 }}>{p.bottle.name}</span>
+                        <span style={{ fontSize: 9, color: PAL.muted }}>{p.bottle.house}</span>
+                        <button onClick={e => { e.stopPropagation(); setRejectedPairings(prev => prev.filter(k => k !== pairKey)); }}
+                          style={{ background: `${PAL.sage}12`, border: `1px solid ${PAL.sage}30`, borderRadius: 6, padding: "3px 10px", color: PAL.sage, fontFamily: ff.body, fontSize: 9, cursor: "pointer", letterSpacing: 1 }}>Restore</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+export default PairingWheel;
         </div>
       )}
     </div>

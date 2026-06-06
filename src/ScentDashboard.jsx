@@ -47,6 +47,8 @@ export default function ScentDashboard() {
   const [opposingPairs, setOpposingPairs] = useState(() => loadStored("opposingPairs", DEFAULT_OPPOSING));
   const [showSettings, setShowSettings] = useState(false);
   const [pairingNotes, setPairingNotes] = useState(() => loadStored("pairingNotes", {}));
+  const [pairingRatings, setPairingRatings] = useState(() => loadStored("pairingRatings", {}));
+  const [rejectedPairings, setRejectedPairings] = useState(() => loadStored("rejectedPairings", []));
   const [visibleTabs, setVisibleTabs] = useState(() => loadStored("visibleTabs", { 0: true, 1: true, 2: true, 3: true, 4: true }));
   const [theme, setTheme] = useState(() => loadStored("theme", { preset: "apothecary" }));
 
@@ -107,6 +109,8 @@ export default function ScentDashboard() {
         if (data.noteOverrides) setNoteOverrides(data.noteOverrides);
         if (data.opposingPairs) setOpposingPairs(data.opposingPairs);
         if (data.pairingNotes) setPairingNotes(data.pairingNotes);
+        if (data.pairingRatings) setPairingRatings(data.pairingRatings);
+        if (data.rejectedPairings) setRejectedPairings(data.rejectedPairings);
         try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
         setShowWelcome(false);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
@@ -128,11 +132,13 @@ export default function ScentDashboard() {
   useEffect(() => { try { localStorage.setItem("scent_visibleTabs", JSON.stringify(visibleTabs)); } catch {} }, [visibleTabs]);
   useEffect(() => { try { localStorage.setItem("scent_theme", JSON.stringify(theme)); } catch {} }, [theme]);
   useEffect(() => { try { localStorage.setItem("scent_pairingNotes", JSON.stringify(pairingNotes)); } catch {} }, [pairingNotes]);
+  useEffect(() => { try { localStorage.setItem("scent_pairingRatings", JSON.stringify(pairingRatings)); } catch {} }, [pairingRatings]);
+  useEffect(() => { try { localStorage.setItem("scent_rejectedPairings", JSON.stringify(rejectedPairings)); } catch {} }, [rejectedPairings]);
 
   /* ─── Export / Import ─── */
 
   const exportData = () => {
-    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, opposingPairs, pairingNotes, exportedAt: new Date().toISOString() };
+    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, opposingPairs, pairingNotes, pairingRatings, rejectedPairings, exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -158,6 +164,8 @@ export default function ScentDashboard() {
         if (data.noteOverrides) setNoteOverrides(data.noteOverrides);
         if (data.opposingPairs) setOpposingPairs(data.opposingPairs);
         if (data.pairingNotes) setPairingNotes(data.pairingNotes);
+        if (data.pairingRatings) setPairingRatings(data.pairingRatings);
+        if (data.rejectedPairings) setRejectedPairings(data.rejectedPairings);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
     };
     input.click();
@@ -842,7 +850,7 @@ export default function ScentDashboard() {
               )}
 
               {collectionView === "pairings" && (
-                <PairingWheel bottles={bottles} noteOverrides={noteOverrides} opposingPairs={opposingPairs} pairingNotes={pairingNotes} setPairingNotes={setPairingNotes} />
+                <PairingWheel bottles={bottles} noteOverrides={noteOverrides} opposingPairs={opposingPairs} pairingNotes={pairingNotes} setPairingNotes={setPairingNotes} pairingRatings={pairingRatings} setPairingRatings={setPairingRatings} rejectedPairings={rejectedPairings} setRejectedPairings={setRejectedPairings} />
               )}
             </div>
           )}
