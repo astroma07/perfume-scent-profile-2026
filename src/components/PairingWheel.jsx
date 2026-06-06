@@ -75,8 +75,8 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
   const viewSize = 1200;
   const pad = 140;
   const cx = viewSize / 2, cy = viewSize / 2;
-  const catOuterR = 320, catInnerR = 180;
-  const fragR = 400, fragDotR = 14;
+  const catOuterR = 360, catInnerR = 150;
+  const fragR = 430, fragDotR = 14;
   const labelR = fragR + 28;
 
   const arcPath = useCallback((r1, r2, a1, a2) => {
@@ -145,6 +145,9 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
             const lr = (catInnerR + catOuterR) / 2;
             const lx = cx + Math.cos(midA) * lr, ly = cy + Math.sin(midA) * lr;
             const deg = midA * (180 / Math.PI), flip = deg > 90 || deg < -90;
+            const label = FAMILY_LABELS[fam] || fam;
+            const parts = label.includes("&") ? label.split(" & ") : label.includes(" ") && label.length > 8 ? [label.split(" ")[0], label.split(" ").slice(1).join(" ")] : [label];
+            const isTwoLine = parts.length > 1;
             return (
               <g key={`cat-${fam}`}>
                 <path d={arcPath(catInnerR, catOuterR, pos.start, pos.end)}
@@ -153,9 +156,16 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
                 <text x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
                   transform={`rotate(${flip ? deg + 180 : deg}, ${lx}, ${ly})`}
                   fill={isActive || activeIdx === null ? color : "#2a2318"}
-                  fontSize="22" fontFamily={ff.body} fontWeight="600" letterSpacing="3"
+                  fontSize="20" fontFamily={ff.body} fontWeight="600" letterSpacing="2.5"
                   style={{ textTransform: "uppercase", transition: "fill .3s" }}>
-                  {FAMILY_LABELS[fam] || fam}
+                  {isTwoLine ? (
+                    <>
+                      <tspan x={lx} dy="-12">{parts[0]}</tspan>
+                      <tspan x={lx} dy="24">{"& " + parts[1]}</tspan>
+                    </>
+                  ) : (
+                    parts[0]
+                  )}
                 </text>
               </g>
             );
