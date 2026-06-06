@@ -68,7 +68,16 @@ export default function ScentDashboard() {
   const [showWelcome, setShowWelcome] = useState(isFirstVisit);
 
   const [notes, setNotes] = useState(() => isFirstVisit ? [] : loadStored("notes", []));
-  const [bottles, setBottles] = useState(() => isFirstVisit ? [] : loadStored("bottles", INITIAL_BOTTLES));
+  /* Migrate old status names */
+  const migrateStatuses = (list) => list.map(b => ({
+    ...b,
+    status: b.status === "want to try" ? "to test" : b.status === "want" ? "wishlist" : b.status,
+  }));
+
+  const [bottles, setBottles] = useState(() => {
+    const raw = isFirstVisit ? [] : loadStored("bottles", INITIAL_BOTTLES);
+    return migrateStatuses(raw);
+  });
   const [wearLog, setWearLog] = useState(() => isFirstVisit ? {} : loadStored("wearLog", {}));
   const [bottleRatings, setBottleRatings] = useState(() => isFirstVisit ? {} : loadStored("bottleRatings", {}));
   const [wearRatings, setWearRatings] = useState(() => isFirstVisit ? {} : loadStored("wearRatings", {}));
@@ -86,7 +95,7 @@ export default function ScentDashboard() {
   };
 
   const startWithDemo = () => {
-    setBottles(INITIAL_BOTTLES);
+    setBottles(migrateStatuses(INITIAL_BOTTLES));
     setNotes([]);
     try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
     setShowWelcome(false);
@@ -101,7 +110,7 @@ export default function ScentDashboard() {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        if (data.bottles) setBottles(data.bottles);
+        if (data.bottles) setBottles(migrateStatuses(data.bottles));
         if (data.notes) setNotes(data.notes);
         if (data.wearLog) setWearLog(data.wearLog);
         if (data.bottleRatings) setBottleRatings(data.bottleRatings);
@@ -156,7 +165,7 @@ export default function ScentDashboard() {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        if (data.bottles) setBottles(data.bottles);
+        if (data.bottles) setBottles(migrateStatuses(data.bottles));
         if (data.notes) setNotes(data.notes);
         if (data.wearLog) setWearLog(data.wearLog);
         if (data.bottleRatings) setBottleRatings(data.bottleRatings);
@@ -232,7 +241,7 @@ export default function ScentDashboard() {
   const topNote = useMemo(() => displayNotes.length > 0 ? [...displayNotes].sort((a, b) => b.pct - a.pct)[0]?.name || "—" : "—", [displayNotes]);
 
   const resetAll = () => {
-    setBottles(INITIAL_BOTTLES);
+    setBottles(migrateStatuses(INITIAL_BOTTLES));
     setWearLog({});
     setBottleRatings({});
     setWearRatings({});
