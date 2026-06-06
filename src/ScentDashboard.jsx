@@ -219,7 +219,7 @@ export default function ScentDashboard() {
   const tabs = [
     { icon: "❋", label: "Notes" },
     { icon: "〰", label: "Trends" },
-    { icon: "▧", label: "Collection" },
+    { icon: "▧", label: "Collection Breakdown" },
     { icon: "✦", label: "Discover" },
     { icon: "◉", label: "Tested" },
     { icon: "☰", label: "My Collection" },
