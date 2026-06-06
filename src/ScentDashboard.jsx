@@ -18,6 +18,7 @@ import BubbleChart from "./components/BubbleChart.jsx";
 import TestedTab from "./components/TestedTab.jsx";
 import DiscoverTab from "./components/DiscoverTab.jsx";
 import PairingWheel from "./components/PairingWheel.jsx";
+import CollectionView from "./components/CollectionView.jsx";
 
 export default function ScentDashboard() {
   const [tab, setTab] = useState(0);
@@ -49,7 +50,7 @@ export default function ScentDashboard() {
   const [pairingNotes, setPairingNotes] = useState(() => loadStored("pairingNotes", {}));
   const [pairingRatings, setPairingRatings] = useState(() => loadStored("pairingRatings", {}));
   const [rejectedPairings, setRejectedPairings] = useState(() => loadStored("rejectedPairings", []));
-  const [visibleTabs, setVisibleTabs] = useState(() => loadStored("visibleTabs", { 0: true, 1: true, 2: true, 3: true, 4: true }));
+  const [visibleTabs, setVisibleTabs] = useState(() => loadStored("visibleTabs", { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true }));
   const [theme, setTheme] = useState(() => loadStored("theme", { preset: "apothecary" }));
 
   const isFirstVisit = (() => {
@@ -212,6 +213,7 @@ export default function ScentDashboard() {
     { icon: "▧", label: "Collection" },
     { icon: "✦", label: "Discover" },
     { icon: "◉", label: "Tested" },
+    { icon: "☰", label: "My Collection" },
   ];
 
   /* Filter tabs by visibility settings */
@@ -869,11 +871,16 @@ export default function ScentDashboard() {
               <TestedTab testedScents={testedScents} setTestedScents={setTestedScents} bottles={bottles} setBottles={setBottles} />
             </div>
           )}
+
+          {/* ═══ MY COLLECTION ═══════════════════════════ */}
+          {tab === 5 && (
+            <CollectionView bottles={bottles} setBottles={setBottles} bottleRatings={bottleRatings} setBottleRatings={setBottleRatings} noteOverrides={noteOverrides} />
+          )}
         </section>
       </div>
 
       {editing && (
-        <EditPanel bottles={bottles} setBottles={setBottles} onClose={() => setEditing(false)} onReset={resetAll} noteOverrides={noteOverrides} setNoteOverrides={setNoteOverrides} />
+        <EditPanel bottles={bottles} setBottles={setBottles} onClose={() => setEditing(false)} onReset={resetAll} noteOverrides={noteOverrides} setNoteOverrides={setNoteOverrides} testedScents={testedScents} setTestedScents={setTestedScents} />
       )}
       {showSettings && (
         <SettingsPanel

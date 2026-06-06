@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from "react";
 import { PAL, ff, STATUS_COLORS, STATUSES } from "../constants.js";
 import { FAMILY_ORDER, FAMILY_COLORS, FAMILY_LABELS, getNoteFamily } from "../noteCategories.js";
 
-const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNoteOverrides }) => {
+const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNoteOverrides, testedScents, setTestedScents }) => {
   const [newHouseInput, setNewHouseInput] = useState({});
   const inputCss = { background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "7px 10px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box" };
   const selectCss = { ...inputCss, appearance: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%238a7e6b' stroke-width='1.5'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", paddingRight: 28 };
@@ -125,7 +125,31 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                       )}
                     </div>
                     <div style={{ flex: "100% 1 100%", marginTop: 2 }}>
-                      <label style={lab}>Thoughts</label>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <label style={lab}>Thoughts</label>
+                        {b.status === "tester" && b.name.trim() && (
+                          <button onClick={() => {
+                            const alreadyTested = testedScents.some(t => t.name.toLowerCase() === b.name.toLowerCase());
+                            if (alreadyTested) return;
+                            setTestedScents(prev => [...prev, {
+                              name: b.name, house: b.house || "",
+                              date: new Date().toISOString().split("T")[0],
+                              notes: b.userNotes || "", thoughts: b.thoughts || "",
+                              ratings: {}, id: Date.now(),
+                            }]);
+                          }}
+                          style={{
+                            background: testedScents.some(t => t.name.toLowerCase() === b.name.toLowerCase()) ? `${PAL.sage}12` : `${PAL.plum}12`,
+                            border: `1px solid ${testedScents.some(t => t.name.toLowerCase() === b.name.toLowerCase()) ? PAL.sage + "40" : PAL.plum + "40"}`,
+                            borderRadius: 6, padding: "3px 10px",
+                            color: testedScents.some(t => t.name.toLowerCase() === b.name.toLowerCase()) ? PAL.sage : PAL.plum,
+                            fontFamily: ff.body, fontSize: 9, cursor: "pointer",
+                            letterSpacing: 1, textTransform: "uppercase",
+                          }}>
+                            {testedScents.some(t => t.name.toLowerCase() === b.name.toLowerCase()) ? "✓ In Tested" : "→ Add to Tested"}
+                          </button>
+                        )}
+                      </div>
                       <textarea style={{ ...inputCss, minHeight: 36, resize: "vertical", lineHeight: 1.5 }} value={b.thoughts || ""} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], thoughts: e.target.value }; setBottles(a); }} placeholder="Your impressions, when you wear it, memories…" />
                     </div>
                   </div>
