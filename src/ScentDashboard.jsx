@@ -46,6 +46,7 @@ export default function ScentDashboard() {
   const [noteOverrides, setNoteOverrides] = useState(() => loadStored("noteOverrides", {}));
   const [opposingPairs, setOpposingPairs] = useState(() => loadStored("opposingPairs", DEFAULT_OPPOSING));
   const [showSettings, setShowSettings] = useState(false);
+  const [pairingNotes, setPairingNotes] = useState(() => loadStored("pairingNotes", {}));
   const [visibleTabs, setVisibleTabs] = useState(() => loadStored("visibleTabs", { 0: true, 1: true, 2: true, 3: true, 4: true }));
   const [theme, setTheme] = useState(() => loadStored("theme", { preset: "apothecary" }));
 
@@ -105,6 +106,7 @@ export default function ScentDashboard() {
         if (data.testedScents) setTestedScents(data.testedScents);
         if (data.noteOverrides) setNoteOverrides(data.noteOverrides);
         if (data.opposingPairs) setOpposingPairs(data.opposingPairs);
+        if (data.pairingNotes) setPairingNotes(data.pairingNotes);
         try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
         setShowWelcome(false);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
@@ -125,11 +127,12 @@ export default function ScentDashboard() {
   useEffect(() => { try { localStorage.setItem("scent_opposingPairs", JSON.stringify(opposingPairs)); } catch {} }, [opposingPairs]);
   useEffect(() => { try { localStorage.setItem("scent_visibleTabs", JSON.stringify(visibleTabs)); } catch {} }, [visibleTabs]);
   useEffect(() => { try { localStorage.setItem("scent_theme", JSON.stringify(theme)); } catch {} }, [theme]);
+  useEffect(() => { try { localStorage.setItem("scent_pairingNotes", JSON.stringify(pairingNotes)); } catch {} }, [pairingNotes]);
 
   /* ─── Export / Import ─── */
 
   const exportData = () => {
-    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, opposingPairs, exportedAt: new Date().toISOString() };
+    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, opposingPairs, pairingNotes, exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -154,6 +157,7 @@ export default function ScentDashboard() {
         if (data.testedScents) setTestedScents(data.testedScents);
         if (data.noteOverrides) setNoteOverrides(data.noteOverrides);
         if (data.opposingPairs) setOpposingPairs(data.opposingPairs);
+        if (data.pairingNotes) setPairingNotes(data.pairingNotes);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
     };
     input.click();
@@ -838,7 +842,7 @@ export default function ScentDashboard() {
               )}
 
               {collectionView === "pairings" && (
-                <PairingWheel bottles={bottles} noteOverrides={noteOverrides} opposingPairs={opposingPairs} />
+                <PairingWheel bottles={bottles} noteOverrides={noteOverrides} opposingPairs={opposingPairs} pairingNotes={pairingNotes} setPairingNotes={setPairingNotes} />
               )}
             </div>
           )}
@@ -850,7 +854,12 @@ export default function ScentDashboard() {
 
           {/* ═══ TESTED ═════════════════════════════════ */}
           {tab === 4 && (
-            <TestedTab testedScents={testedScents} setTestedScents={setTestedScents} bottles={bottles} setBottles={setBottles} />
+            <div>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+                <button onClick={() => setEditing(true)} style={{ background: `${PAL.gold}12`, border: `1px solid ${PAL.gold}33`, borderRadius: 8, padding: "8px 16px", color: PAL.gold, fontFamily: ff.body, fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer" }}>✎ Edit Collection</button>
+              </div>
+              <TestedTab testedScents={testedScents} setTestedScents={setTestedScents} bottles={bottles} setBottles={setBottles} />
+            </div>
           )}
         </section>
       </div>

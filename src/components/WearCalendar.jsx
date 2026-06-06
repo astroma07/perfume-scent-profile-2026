@@ -10,8 +10,8 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerMouseDown = useRef(null);
 
-  /* Only show owned bottles in the picker */
-  const ownedBottles = useMemo(() => bottles.filter(b => b.status === "owned"), [bottles]);
+  /* Show owned and tester bottles in the picker */
+  const ownedBottles = useMemo(() => bottles.filter(b => b.status === "owned" || b.status === "tester"), [bottles]);
 
   /* Generate a stable color for any bottle name */
   const bottleColor = useCallback((name) => {
@@ -157,7 +157,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
             </div>
             {ownedBottles.length === 0 ? (
               <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, textAlign: "center", padding: "20px 0", lineHeight: 1.6 }}>
-                No owned fragrances yet. Add bottles to your collection and set their status to "owned" to start logging wears.
+                No owned or tester fragrances yet. Add bottles to your collection to start logging wears.
               </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>

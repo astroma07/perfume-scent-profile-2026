@@ -124,6 +124,10 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                         </div>
                       )}
                     </div>
+                    <div style={{ flex: "100% 1 100%", marginTop: 2 }}>
+                      <label style={lab}>Thoughts</label>
+                      <textarea style={{ ...inputCss, minHeight: 36, resize: "vertical", lineHeight: 1.5 }} value={b.thoughts || ""} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], thoughts: e.target.value }; setBottles(a); }} placeholder="Your impressions, when you wear it, memories…" />
+                    </div>
                   </div>
                 );
               })}
@@ -132,7 +136,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
           );
         })}
 
-        <button onClick={() => setBottles([...bottles, { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "to test", userNotes: "" }])} style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: 10, color: PAL.gold, cursor: "pointer", fontFamily: ff.body, fontSize: 12, width: "100%" }}>+ Add Fragrance</button>
+        <button onClick={() => setBottles([...bottles, { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "to test", userNotes: "", thoughts: "" }])} style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: 10, color: PAL.gold, cursor: "pointer", fontFamily: ff.body, fontSize: 12, width: "100%" }}>+ Add Fragrance</button>
 
         {/* Reset all data */}
         <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${PAL.border}` }}>

@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { PAL, ff } from "../constants.js";
 import { FAMILY_ORDER, FAMILY_COLORS, FAMILY_LABELS, getNoteFamily } from "../noteCategories.js";
 
-const PairingWheel = ({ bottles, noteOverrides, opposingPairs }) => {
+const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, setPairingNotes }) => {
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
   const [pairMode, setPairMode] = useState("all"); /* all | complementary | opposing */
@@ -304,26 +304,36 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs }) => {
               const isHov = hovered === p.idx;
               const typeColor = p.isOpposing && !p.isComplementary ? PAL.rose : p.isComplementary ? PAL.sage : PAL.gold;
               const typeLabel = p.isComplementary && p.isOpposing ? "Both" : p.isOpposing ? "Opposing" : "Complementary";
+              const pairKey = [owned[selected]?.name, p.bottle.name].sort().join("||");
               return (
                 <div key={i} onMouseEnter={() => setHovered(p.idx)} onMouseLeave={() => setHovered(null)}
-                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, cursor: "pointer",
+                  style={{ padding: "8px 10px", borderRadius: 8, cursor: "pointer",
                     background: isHov ? `${PAL.cream}06` : "transparent", border: `1px solid ${isHov ? PAL.border : "transparent"}`,
                     transition: "all .2s" }}>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: FAMILY_COLORS[p.family], flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontFamily: ff.display, fontSize: 13, fontStyle: "italic", color: PAL.cream }}>{p.bottle.name}</span>
-                    <span style={{ fontSize: 9, color: PAL.muted, marginLeft: 6 }}>{p.bottle.house}</span>
-                  </div>
-                  <span style={{ fontSize: 7, letterSpacing: 1, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3, color: typeColor, background: `${typeColor}12`, border: `1px solid ${typeColor}25` }}>{typeLabel}</span>
-                  {p.shared.length > 0 && (
-                    <div style={{ display: "flex", gap: 2 }}>
-                      {p.shared.slice(0, 3).map((n, j) => {
-                        const nc = FAMILY_COLORS[getNoteFamily(n, noteOverrides)];
-                        return <span key={j} style={{ fontSize: 6, letterSpacing: 1, textTransform: "uppercase", padding: "1px 5px", borderRadius: 2, color: nc, background: `${nc}10`, border: `1px solid ${nc}18` }}>{n}</span>;
-                      })}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: FAMILY_COLORS[p.family], flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontFamily: ff.display, fontSize: 13, fontStyle: "italic", color: PAL.cream }}>{p.bottle.name}</span>
+                      <span style={{ fontSize: 9, color: PAL.muted, marginLeft: 6 }}>{p.bottle.house}</span>
                     </div>
-                  )}
-                  <span style={{ fontFamily: ff.display, fontSize: 15, color: PAL.gold, minWidth: 20, textAlign: "right" }}>{p.strength || "↔"}</span>
+                    <span style={{ fontSize: 7, letterSpacing: 1, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3, color: typeColor, background: `${typeColor}12`, border: `1px solid ${typeColor}25` }}>{typeLabel}</span>
+                    {p.shared.length > 0 && (
+                      <div style={{ display: "flex", gap: 2 }}>
+                        {p.shared.slice(0, 3).map((n, j) => {
+                          const nc = FAMILY_COLORS[getNoteFamily(n, noteOverrides)];
+                          return <span key={j} style={{ fontSize: 6, letterSpacing: 1, textTransform: "uppercase", padding: "1px 5px", borderRadius: 2, color: nc, background: `${nc}10`, border: `1px solid ${nc}18` }}>{n}</span>;
+                        })}
+                      </div>
+                    )}
+                    <span style={{ fontFamily: ff.display, fontSize: 15, color: PAL.gold, minWidth: 20, textAlign: "right" }}>{p.strength || "↔"}</span>
+                  </div>
+                  <input
+                    value={(pairingNotes && pairingNotes[pairKey]) || ""}
+                    onChange={e => { e.stopPropagation(); setPairingNotes(prev => ({ ...prev, [pairKey]: e.target.value })); }}
+                    onClick={e => e.stopPropagation()}
+                    placeholder="Add pairing notes…"
+                    style={{ width: "100%", marginTop: 6, background: `${PAL.cream}04`, border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "6px 10px", color: PAL.cream, fontFamily: ff.body, fontSize: 10, outline: "none", boxSizing: "border-box" }}
+                  />
                 </div>
               );
             })}
