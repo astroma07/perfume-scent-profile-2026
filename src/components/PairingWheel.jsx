@@ -8,7 +8,7 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
   const [pairMode, setPairMode] = useState("all");
   const [showRejected, setShowRejected] = useState(false);
 
-  const owned = useMemo(() => bottles.filter(b => b.status === "owned" && (b.userNotes || "").trim()), [bottles]);
+  const owned = useMemo(() => bottles.filter(b => (b.status === "owned" || b.status === "tester") && (b.userNotes || "").trim()), [bottles]);
 
   const getBottleNotes = (b) => (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
   const getBottleFamily = (b) => {
@@ -84,11 +84,12 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
 
   /* ── Dimensions ── */
   const viewSize = 1200;
-  const pad = 140;
+  const pad = 180;
   const cx = viewSize / 2, cy = viewSize / 2;
   const catOuterR = 360, catInnerR = 150;
   const fragR = 430, fragDotR = 14;
-  const labelR = fragR + 28;
+  const testerR = 470, testerDotR = 9;
+  const labelR = testerR + 22;
 
   const arcPath = useCallback((r1, r2, a1, a2) => {
     const x1o = cx + Math.cos(a1) * r2, y1o = cy + Math.sin(a1) * r2;
@@ -102,13 +103,15 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
   const chordPath = useCallback((i1, i2) => {
     if (!layout.frags[i1] || !layout.frags[i2]) return "";
     const a1 = layout.frags[i1].angle, a2 = layout.frags[i2].angle;
-    const x1 = cx + Math.cos(a1) * fragR, y1 = cy + Math.sin(a1) * fragR;
-    const x2 = cx + Math.cos(a2) * fragR, y2 = cy + Math.sin(a2) * fragR;
+    const r1 = owned[i1]?.status === "tester" ? testerR : fragR;
+    const r2 = owned[i2]?.status === "tester" ? testerR : fragR;
+    const x1 = cx + Math.cos(a1) * r1, y1 = cy + Math.sin(a1) * r1;
+    const x2 = cx + Math.cos(a2) * r2, y2 = cy + Math.sin(a2) * r2;
     const pull = 0.06;
     const mx = cx + ((x1 - cx) + (x2 - cx)) * pull;
     const my = cy + ((y1 - cy) + (y2 - cy)) * pull;
     return `M${x1},${y1} Q${mx},${my} ${x2},${y2}`;
-  }, [layout, cx, cy, fragR]);
+  }, [layout, cx, cy, fragR, testerR, owned]);
 
   if (owned.length < 2) {
     return (
@@ -186,11 +189,15 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
           {owned.map((b, i) => {
             if (!layout.frags[i]) return null;
             const a = layout.frags[i].angle, fam = layout.frags[i].family;
+            const isTester = b.status === "tester";
+            const thisR = isTester ? testerR : fragR;
+            const thisDotR = isTester ? testerDotR : fragDotR;
             const x1 = cx + Math.cos(a) * catOuterR, y1 = cy + Math.sin(a) * catOuterR;
-            const x2 = cx + Math.cos(a) * (fragR - fragDotR - 4), y2 = cy + Math.sin(a) * (fragR - fragDotR - 4);
+            const x2 = cx + Math.cos(a) * (thisR - thisDotR - 4), y2 = cy + Math.sin(a) * (thisR - thisDotR - 4);
             const isAct = activeIdx === i || (showPairings && pairedIndices.has(i));
             return <line key={`sp-${i}`} x1={x1} y1={y1} x2={x2} y2={y2}
               stroke={FAMILY_COLORS[fam]} strokeWidth={isAct ? 1.5 : 0.5}
+              strokeDasharray={isTester ? "4,3" : "none"}
               opacity={activeIdx !== null ? (isAct ? 0.5 : 0.03) : 0.12}
               style={{ transition: "opacity .3s" }} />;
           })}
@@ -215,28 +222,32 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
           {owned.map((b, i) => {
             if (!layout.frags[i]) return null;
             const a = layout.frags[i].angle, fam = layout.frags[i].family;
-            const x = cx + Math.cos(a) * fragR, y = cy + Math.sin(a) * fragR;
+            const isTester = b.status === "tester";
+            const thisR = isTester ? testerR : fragR;
+            const thisDotR = isTester ? testerDotR : fragDotR;
+            const x = cx + Math.cos(a) * thisR, y = cy + Math.sin(a) * thisR;
             const color = FAMILY_COLORS[fam];
             const isSel = selected === i, isHov = hovered === i;
             const isPaired = showPairings && pairedIndices.has(i);
             const dimmed = activeIdx !== null && !isSel && !isPaired && !isHov;
             const pair = isPaired ? filteredPairings.find(pp => pp.idx === i) : null;
-            const lx = cx + Math.cos(a) * labelR, ly = cy + Math.sin(a) * labelR;
+            const lx = cx + Math.cos(a) * (labelR + (isTester ? 0 : 6)), ly = cy + Math.sin(a) * (labelR + (isTester ? 0 : 6));
             const deg = a * (180 / Math.PI), flip = deg > 90 || deg < -90;
             return (
               <g key={`f-${i}`} onClick={() => setSelected(selected === i ? null : i)}
                 onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}
                 style={{ cursor: "pointer" }}>
-                {isSel && <circle cx={x} cy={y} r={fragDotR + 8} fill="none" stroke={color} strokeWidth="1.5" opacity=".3">
-                  <animate attributeName="r" values={`${fragDotR+5};${fragDotR+11};${fragDotR+5}`} dur="2.5s" repeatCount="indefinite" />
+                {isSel && <circle cx={x} cy={y} r={thisDotR + 8} fill="none" stroke={color} strokeWidth="1.5" opacity=".3">
+                  <animate attributeName="r" values={`${thisDotR+5};${thisDotR+11};${thisDotR+5}`} dur="2.5s" repeatCount="indefinite" />
                 </circle>}
-                {(isHov || isSel) && <circle cx={x} cy={y} r={fragDotR + 5} fill={color} opacity=".12" />}
+                {(isHov || isSel) && <circle cx={x} cy={y} r={thisDotR + 5} fill={color} opacity=".12" />}
                 <circle cx={x} cy={y}
-                  r={isSel ? fragDotR + 3 : isHov ? fragDotR + 2 : fragDotR}
+                  r={isSel ? thisDotR + 3 : isHov ? thisDotR + 2 : thisDotR}
                   fill={dimmed ? "#1a1710" : color}
                   stroke={isSel ? PAL.cream : isHov ? color : PAL.bg}
-                  strokeWidth={isSel ? 2.5 : 2}
-                  opacity={dimmed ? 0.15 : 1}
+                  strokeWidth={isSel ? 2.5 : isTester ? 1 : 2}
+                  strokeDasharray={isTester && !isSel && !isHov ? "3,2" : "none"}
+                  opacity={dimmed ? 0.15 : isTester ? 0.7 : 1}
                   style={{ transition: "all .25s" }} />
                 {isPaired && pair && (
                   <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="middle"
@@ -246,7 +257,8 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
                   <>
                     <text x={lx} y={ly - 2} textAnchor={flip ? "end" : "start"} dominantBaseline="middle"
                       transform={`rotate(${flip ? deg + 180 : deg}, ${lx}, ${ly})`}
-                      fill={PAL.cream} fontSize="18" fontFamily={ff.display} fontStyle="italic">{b.name}</text>
+                      fill={PAL.cream} fontSize={isTester ? "15" : "18"} fontFamily={ff.display} fontStyle="italic">
+                      {b.name}{isTester ? "  ᵗ" : ""}</text>
                     <text x={lx} y={ly + 16} textAnchor={flip ? "end" : "start"} dominantBaseline="middle"
                       transform={`rotate(${flip ? deg + 180 : deg}, ${lx}, ${ly})`}
                       fill={PAL.muted} fontSize="13" fontFamily={ff.body}>{b.house}</text>
@@ -289,6 +301,15 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
             <span style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: FAMILY_COLORS[f] }}>{FAMILY_LABELS[f]}</span>
           </div>
         ))}
+        <span style={{ width: 1, height: 14, background: PAL.border, margin: "0 4px" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ width: 12, height: 12, borderRadius: "50%", background: PAL.muted }} />
+          <span style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: PAL.muted }}>Owned</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", border: `1.5px dashed ${PAL.muted}`, background: "transparent" }} />
+          <span style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: PAL.muted }}>Tester</span>
+        </div>
         {showPairings && <>
           <span style={{ width: 1, height: 14, background: PAL.border, margin: "0 4px" }} />
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
