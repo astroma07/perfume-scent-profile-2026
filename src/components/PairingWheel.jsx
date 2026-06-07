@@ -236,12 +236,16 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
             const maxW = Math.max(...filteredPairings.map(pp => pp.strength), 1);
             const width = p.isOpposing && !p.isComplementary ? 2.5 : 2 + (p.strength / maxW) * 5;
             const color = p.isOpposing && !p.isComplementary ? PAL.rose : p.isComplementary ? PAL.sage : PAL.gold;
+            const selIsTester = allActive[selected]?._type === "tester";
+            const pairIsTester = p._type === "tester";
+            const hasTester = selIsTester || pairIsTester;
+            const dash = p.isOpposing && !p.isComplementary ? "8,5" : hasTester ? "5,4" : "none";
             return (
               <path key={`ch-${i}`} d={chordPath(selected, p.idx)} fill="none"
                 stroke={isHovPair ? PAL.cream : color}
-                strokeWidth={isHovPair ? width + 2 : width}
-                strokeDasharray={p.isOpposing && !p.isComplementary ? "8,5" : "none"}
-                opacity={hovered !== null ? (isHovPair ? 0.9 : 0.06) : 0.5}
+                strokeWidth={isHovPair ? width + 2 : hasTester ? width * 0.7 : width}
+                strokeDasharray={isHovPair ? "none" : dash}
+                opacity={hovered !== null ? (isHovPair ? 0.9 : 0.06) : hasTester ? 0.35 : 0.5}
                 strokeLinecap="round" style={{ transition: "opacity .3s" }} />
             );
           })}
