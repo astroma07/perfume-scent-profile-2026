@@ -84,12 +84,12 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
 
   /* ── Dimensions ── */
   const viewSize = 1200;
-  const pad = 180;
+  const pad = 150;
   const cx = viewSize / 2, cy = viewSize / 2;
   const catOuterR = 360, catInnerR = 150;
-  const fragR = 420, fragDotR = 15;
-  const testerR = 490, testerDotR = 8;
-  const labelR = testerR + 22;
+  const fragR = 430, fragDotR = 15;
+  const testerR = 455, testerDotR = 8;
+  const labelR = testerR + 20;
 
   const arcPath = useCallback((r1, r2, a1, a2) => {
     const x1o = cx + Math.cos(a1) * r2, y1o = cy + Math.sin(a1) * r2;
@@ -185,9 +185,8 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
             );
           })}
 
-          {/* Ring guides */}
-          <circle cx={cx} cy={cy} r={fragR} fill="none" stroke={PAL.border} strokeWidth="0.5" opacity=".2" strokeDasharray="2,6" />
-          <circle cx={cx} cy={cy} r={testerR} fill="none" stroke={PAL.border} strokeWidth="0.5" opacity=".12" strokeDasharray="1,4" />
+          {/* Ring guide */}
+          <circle cx={cx} cy={cy} r={fragR} fill="none" stroke={PAL.border} strokeWidth="0.5" opacity=".15" />
 
           {/* Spokes */}
           {owned.map((b, i) => {
@@ -222,8 +221,9 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
             );
           })}
 
-          {/* Fragrance dots */}
-          {owned.map((b, i) => {
+          {/* Fragrance dots — testers first (behind), then owned (in front) */}
+          {[...owned].sort((a, b) => (a.status === "tester" ? -1 : 1) - (b.status === "tester" ? -1 : 1)).map((b) => {
+            const i = owned.indexOf(b);
             if (!layout.frags[i]) return null;
             const a = layout.frags[i].angle, fam = layout.frags[i].family;
             const isTester = b.status === "tester";
