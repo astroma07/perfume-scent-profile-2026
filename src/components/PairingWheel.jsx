@@ -127,21 +127,23 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
     const b1 = allActive[i1], b2 = allActive[i2];
     if (!b1 || !b2) return "";
     const isT1 = b1._type === "tester", isT2 = b2._type === "tester";
-    const pos1 = isT1 ? layout.testerPos[testerBottles.indexOf(b1)] : layout.ownedPos[ownedBottles.indexOf(b1)];
-    const pos2 = isT2 ? layout.testerPos[testerBottles.indexOf(b2)] : layout.ownedPos[ownedBottles.indexOf(b2)];
+    const posIdx1 = isT1 ? i1 - ownedBottles.length : i1;
+    const posIdx2 = isT2 ? i2 - ownedBottles.length : i2;
+    const pos1 = isT1 ? layout.testerPos[posIdx1] : layout.ownedPos[posIdx1];
+    const pos2 = isT2 ? layout.testerPos[posIdx2] : layout.ownedPos[posIdx2];
     if (!pos1 || !pos2) return "";
     const r1 = isT1 ? testerR : ownedR, r2 = isT2 ? testerR : ownedR;
     const x1 = cx + Math.cos(pos1.angle) * r1, y1 = cy + Math.sin(pos1.angle) * r1;
     const x2 = cx + Math.cos(pos2.angle) * r2, y2 = cy + Math.sin(pos2.angle) * r2;
     const pull = 0.06;
     return `M${x1},${y1} Q${cx + ((x1-cx)+(x2-cx))*pull},${cy + ((y1-cy)+(y2-cy))*pull} ${x2},${y2}`;
-  }, [layout, allActive, cx, cy, ownedR, testerR, ownedBottles, testerBottles]);
+  }, [layout, allActive, cx, cy, ownedR, testerR, ownedBottles.length]);
 
   const getPos = (idx) => {
     const b = allActive[idx];
     if (!b) return null;
-    if (b._type === "tester") return layout.testerPos[testerBottles.indexOf(b)];
-    return layout.ownedPos[ownedBottles.indexOf(b)];
+    if (b._type === "tester") return layout.testerPos[idx - ownedBottles.length];
+    return layout.ownedPos[idx];
   };
 
   if (ownedBottles.length + testerBottles.length < 2) {
@@ -220,7 +222,7 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
             const pos = layout.ownedPos[i]; if (!pos) return null;
             const x1 = cx + Math.cos(pos.angle) * catOuterR, y1 = cy + Math.sin(pos.angle) * catOuterR;
             const x2 = cx + Math.cos(pos.angle) * (ownedR - ownedDotR - 3), y2 = cy + Math.sin(pos.angle) * (ownedR - ownedDotR - 3);
-            const allIdx = allActive.indexOf(allActive.find(a => a._type === "owned" && ownedBottles.indexOf(a) === i));
+            const allIdx = i;
             const isAct = activeIdx === allIdx || (showPairings && pairedIndices.has(allIdx));
             return <line key={`sp-${i}`} x1={x1} y1={y1} x2={x2} y2={y2}
               stroke={FAMILY_COLORS[pos.family]} strokeWidth={isAct ? 1.5 : 0.4}
