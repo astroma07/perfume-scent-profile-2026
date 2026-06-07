@@ -87,8 +87,8 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
   const pad = 180;
   const cx = viewSize / 2, cy = viewSize / 2;
   const catOuterR = 360, catInnerR = 150;
-  const fragR = 430, fragDotR = 14;
-  const testerR = 470, testerDotR = 9;
+  const fragR = 420, fragDotR = 15;
+  const testerR = 490, testerDotR = 8;
   const labelR = testerR + 22;
 
   const arcPath = useCallback((r1, r2, a1, a2) => {
@@ -184,6 +184,10 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
               </g>
             );
           })}
+
+          {/* Ring guides */}
+          <circle cx={cx} cy={cy} r={fragR} fill="none" stroke={PAL.border} strokeWidth="0.5" opacity=".2" strokeDasharray="2,6" />
+          <circle cx={cx} cy={cy} r={testerR} fill="none" stroke={PAL.border} strokeWidth="0.5" opacity=".12" strokeDasharray="1,4" />
 
           {/* Spokes */}
           {owned.map((b, i) => {
