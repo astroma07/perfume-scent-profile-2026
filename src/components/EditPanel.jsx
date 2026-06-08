@@ -39,7 +39,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
       onMouseDown={e => { mouseDownTarget.current = e.target; }}
       onClick={e => { if (e.target === e.currentTarget && mouseDownTarget.current === e.currentTarget) onClose(); }}
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: PAL.bg, border: `1px solid ${PAL.border}`, borderRadius: 16, padding: 28, width: "94%", maxWidth: 780, maxHeight: "85vh", overflowY: "auto" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: PAL.bg, border: `1px solid ${PAL.border}`, borderRadius: 16, padding: 28, width: "96%", maxWidth: 1000, maxHeight: "85vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
           <h3 style={{ fontFamily: ff.display, fontSize: 20, color: PAL.cream, margin: 0 }}>Edit Collection</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", color: PAL.muted, fontSize: 22, cursor: "pointer" }}>✕</button>
