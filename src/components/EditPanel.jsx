@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from "react";
 import { PAL, ff, STATUS_COLORS, STATUSES } from "../constants.js";
 import { FAMILY_ORDER, FAMILY_COLORS, FAMILY_LABELS, getNoteFamily } from "../noteCategories.js";
+import { FragranceTags } from "./ui.jsx";
 
 const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNoteOverrides, testedScents, setTestedScents }) => {
   const [newHouseInput, setNewHouseInput] = useState({});
@@ -152,6 +153,9 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                       </div>
                       <textarea style={{ ...inputCss, minHeight: 36, resize: "vertical", lineHeight: 1.5 }} value={b.thoughts || ""} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], thoughts: e.target.value }; setBottles(a); }} placeholder="Your impressions, when you wear it, memories…" />
                     </div>
+                    <div style={{ flex: "100% 1 100%", marginTop: 4 }}>
+                      <FragranceTags compact tags={b.tags || {}} onChange={t => { const a = [...bottles]; a[i] = { ...a[i], tags: t }; setBottles(a); }} />
+                    </div>
                   </div>
                 );
               })}
@@ -160,7 +164,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
           );
         })}
 
-        <button onClick={() => setBottles([...bottles, { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "to test", userNotes: "", thoughts: "" }])} style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: 10, color: PAL.gold, cursor: "pointer", fontFamily: ff.body, fontSize: 12, width: "100%" }}>+ Add Fragrance</button>
+        <button onClick={() => setBottles([...bottles, { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "to test", userNotes: "", thoughts: "", tags: {} }])} style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: 10, color: PAL.gold, cursor: "pointer", fontFamily: ff.body, fontSize: 12, width: "100%" }}>+ Add Fragrance</button>
 
         {/* Reset all data */}
         <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${PAL.border}` }}>

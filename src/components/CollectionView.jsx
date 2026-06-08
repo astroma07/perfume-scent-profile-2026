@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { PAL, ff, STATUS_COLORS, STATUSES } from "../constants.js";
 import { FAMILY_COLORS, getNoteFamily } from "../noteCategories.js";
-import { RATING_CATEGORIES, RatingSlider, RatingBadge, SectionTitle } from "./ui.jsx";
+import { RATING_CATEGORIES, RatingSlider, RatingBadge, SectionTitle, FragranceTags, TagIcons } from "./ui.jsx";
 
 const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, noteOverrides }) => {
   const [sortBy, setSortBy] = useState("status");
@@ -129,6 +129,15 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
                 </div>
               )}
 
+              {/* Tags preview (collapsed) */}
+              {!isExpanded && b.tags && (
+                <div style={{ display: "flex", gap: 4, marginTop: 8, flexWrap: "wrap" }}>
+                  {Object.entries(b.tags || {}).flatMap(([cat, keys]) =>
+                    keys.map(k => <span key={`${cat}-${k}`} style={{ display: "inline-flex", width: 18, height: 18, opacity: .6 }}>{TagIcons[k] && TagIcons[k](true)}</span>)
+                  )}
+                </div>
+              )}
+
               {/* Thoughts preview (collapsed) */}
               {!isExpanded && b.thoughts && (
                 <p style={{ fontFamily: ff.body, fontSize: 12, color: `${PAL.cream}66`, marginTop: 8, lineHeight: 1.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -183,6 +192,12 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
                           }))} />
                       ))}
                     </div>
+                  </div>
+
+                  {/* Tags */}
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 8 }}>When to Wear</label>
+                    <FragranceTags tags={b.tags || {}} onChange={t => updateBottle(b._idx, { tags: t })} />
                   </div>
 
                   {/* Details row */}

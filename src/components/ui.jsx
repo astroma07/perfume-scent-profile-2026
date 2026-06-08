@@ -71,3 +71,141 @@ export const RatingBadge = ({ ratings, size }) => {
     }}>{avg.toFixed(1)}</div>
   );
 };
+
+/* ═══ Fragrance Tag Icons ═══ */
+
+const iconStyle = (active, color) => ({
+  width: 28, height: 28, cursor: "pointer", opacity: active ? 1 : 0.25,
+  transition: "all .2s",
+});
+
+export const TagIcons = {
+  /* Time of Day */
+  day: (active) => (
+    <svg viewBox="0 0 24 24" style={iconStyle(active)} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="5" fill={active ? "#d4944a" : "#666"} />
+      {[0,45,90,135,180,225,270,315].map(a => {
+        const r = (a * Math.PI) / 180;
+        return <line key={a} x1={12 + Math.cos(r)*7.5} y1={12 + Math.sin(r)*7.5} x2={12 + Math.cos(r)*10} y2={12 + Math.sin(r)*10} stroke={active ? "#d4944a" : "#666"} strokeWidth="1.5" strokeLinecap="round" />;
+      })}
+    </svg>
+  ),
+  night: (active) => (
+    <svg viewBox="0 0 24 24" style={iconStyle(active)} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill={active ? "#8a8acd" : "#666"} />
+    </svg>
+  ),
+  /* Seasons */
+  spring: (active) => (
+    <svg viewBox="0 0 24 24" style={iconStyle(active)} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 22V12M12 12C9 9 5 10 5 6c3.5 0 6 1.5 7 6zM12 12c3-3 7-2 7-6-3.5 0-6 1.5-7 6z" stroke={active ? "#d4849a" : "#666"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="5" r="2.5" fill={active ? "#d4849a" : "#666"} opacity=".6" />
+    </svg>
+  ),
+  summer: (active) => (
+    <svg viewBox="0 0 24 24" style={iconStyle(active)} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="5.5" fill={active ? "#c5a46d" : "#666"} />
+      {[0,60,120,180,240,300].map(a => {
+        const r = (a * Math.PI) / 180;
+        return <line key={a} x1={12 + Math.cos(r)*8} y1={12 + Math.sin(r)*8} x2={12 + Math.cos(r)*11} y2={12 + Math.sin(r)*11} stroke={active ? "#c5a46d" : "#666"} strokeWidth="2" strokeLinecap="round" />;
+      })}
+    </svg>
+  ),
+  fall: (active) => (
+    <svg viewBox="0 0 24 24" style={iconStyle(active)} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17 3c0 6-3.5 9-7 12M10 15c-3-1-5.5-1-7 1 2 1 5 .5 7-1zM10 15c-1-3-1-6 2-8" stroke={active ? "#d4944a" : "#666"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M11 8c2 1 5 2 8 0-1 3-4 5-7 4" stroke={active ? "#c47a6b" : "#666"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 22v-7" stroke={active ? "#8a6a4a" : "#666"} strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  winter: (active) => (
+    <svg viewBox="0 0 24 24" style={iconStyle(active)} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="12" y1="2" x2="12" y2="22" stroke={active ? "#7bafc4" : "#666"} strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="2" y1="12" x2="22" y2="12" stroke={active ? "#7bafc4" : "#666"} strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="5" y1="5" x2="19" y2="19" stroke={active ? "#7bafc4" : "#666"} strokeWidth="1" strokeLinecap="round" />
+      <line x1="19" y1="5" x2="5" y2="19" stroke={active ? "#7bafc4" : "#666"} strokeWidth="1" strokeLinecap="round" />
+      <circle cx="12" cy="5" r="1.5" fill={active ? "#7bafc4" : "#666"} opacity=".5" />
+      <circle cx="12" cy="19" r="1.5" fill={active ? "#7bafc4" : "#666"} opacity=".5" />
+      <circle cx="5" cy="12" r="1.5" fill={active ? "#7bafc4" : "#666"} opacity=".5" />
+      <circle cx="19" cy="12" r="1.5" fill={active ? "#7bafc4" : "#666"} opacity=".5" />
+    </svg>
+  ),
+  /* Occasions */
+  casual: (active) => (
+    <svg viewBox="0 0 24 24" style={iconStyle(active)} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 4h12l-1 6H7L6 4z" fill={active ? "#6b9e6b" : "#666"} opacity=".4" />
+      <path d="M6 4h12M7 10h10M8 10v10M16 10v10M5 20h14" stroke={active ? "#6b9e6b" : "#666"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  date: (active) => (
+    <svg viewBox="0 0 24 24" style={iconStyle(active)} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill={active ? "#b5546a" : "#666"} />
+    </svg>
+  ),
+  work: (active) => (
+    <svg viewBox="0 0 24 24" style={iconStyle(active)} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="8" width="18" height="12" rx="2" stroke={active ? "#8a9e7a" : "#666"} strokeWidth="1.5" />
+      <path d="M8 8V6a2 2 0 012-2h4a2 2 0 012 2v2" stroke={active ? "#8a9e7a" : "#666"} strokeWidth="1.5" />
+      <line x1="3" y1="14" x2="21" y2="14" stroke={active ? "#8a9e7a" : "#666"} strokeWidth="1" opacity=".4" />
+    </svg>
+  ),
+  evening: (active) => (
+    <svg viewBox="0 0 24 24" style={iconStyle(active)} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 22l4-11 4 11H8z" stroke={active ? "#c5a46d" : "#666"} strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M12 11V7" stroke={active ? "#c5a46d" : "#666"} strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="12" cy="5" r="2" fill={active ? "#c5a46d" : "#666"} opacity=".5" />
+      <path d="M6 22h12" stroke={active ? "#c5a46d" : "#666"} strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  special: (active) => (
+    <svg viewBox="0 0 24 24" style={iconStyle(active)} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="12,2 14.5,9 22,9 16,13.5 18,21 12,17 6,21 8,13.5 2,9 9.5,9" fill={active ? "#c49bd4" : "#666"} />
+    </svg>
+  ),
+};
+
+export const TAG_DEFS = {
+  timeOfDay: { label: "Time of Day", options: [
+    { key: "day", label: "Day" }, { key: "night", label: "Night" },
+  ]},
+  seasons: { label: "Seasons", options: [
+    { key: "spring", label: "Spring" }, { key: "summer", label: "Summer" },
+    { key: "fall", label: "Fall" }, { key: "winter", label: "Winter" },
+  ]},
+  occasions: { label: "Occasion", options: [
+    { key: "casual", label: "Casual" }, { key: "date", label: "Date" },
+    { key: "work", label: "Work" }, { key: "evening", label: "Evening" },
+    { key: "special", label: "Special" },
+  ]},
+};
+
+export const FragranceTags = ({ tags, onChange, compact }) => {
+  const toggle = (category, key) => {
+    const current = tags?.[category] || [];
+    const next = current.includes(key) ? current.filter(k => k !== key) : [...current, key];
+    onChange({ ...tags, [category]: next });
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: compact ? 6 : 10 }}>
+      {Object.entries(TAG_DEFS).map(([cat, def]) => (
+        <div key={cat}>
+          <span style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: "#8a7e6b", marginBottom: 4, display: "block" }}>{def.label}</span>
+          <div style={{ display: "flex", gap: compact ? 4 : 8, alignItems: "center", flexWrap: "wrap" }}>
+            {def.options.map(opt => {
+              const active = (tags?.[cat] || []).includes(opt.key);
+              return (
+                <div key={opt.key} onClick={() => toggle(cat, opt.key)}
+                  title={opt.label}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                  {TagIcons[opt.key](active)}
+                  <span style={{ fontSize: 7, color: active ? "#e8dfd0" : "#555", letterSpacing: 1, textTransform: "uppercase" }}>{opt.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
