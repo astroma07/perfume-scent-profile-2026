@@ -9,6 +9,9 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
   const selectCss = { ...inputCss, appearance: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%238a7e6b' stroke-width='1.5'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", paddingRight: 28 };
   const lab = { fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, marginBottom: 3, display: "block" };
 
+  const [collapsedSections, setCollapsedSections] = useState({});
+  const toggleSection = (s) => setCollapsedSections(prev => ({ ...prev, [s]: !prev[s] }));
+
   const allHouses = useMemo(() => [...new Set(bottles.map(b => b.house).filter(Boolean))].sort(), [bottles]);
 
   const handleHouseChange = (i, val) => {
@@ -43,8 +46,16 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
           const items = bottles.map((b, i) => ({ ...b, _i: i })).filter(b => b.status === status);
           return (
             <div key={status} style={{ marginBottom: 18 }}>
-              <h4 style={{ fontFamily: ff.body, fontSize: 11, letterSpacing: 3, textTransform: "uppercase", color: STATUS_COLORS[status], margin: "0 0 8px", borderBottom: `1px solid ${STATUS_COLORS[status]}22`, paddingBottom: 6 }}>{status} ({items.length})</h4>
-              {items.map(b => {
+              <h4 onClick={() => toggleSection(status)} style={{
+                fontFamily: ff.body, fontSize: 11, letterSpacing: 3, textTransform: "uppercase",
+                color: STATUS_COLORS[status], margin: "0 0 8px",
+                borderBottom: `1px solid ${STATUS_COLORS[status]}22`, paddingBottom: 6,
+                cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none",
+              }}>
+                <span style={{ fontSize: 8, transition: "transform .2s", transform: collapsedSections[status] ? "rotate(-90deg)" : "rotate(0deg)" }}>▼</span>
+                {status} ({items.length})
+              </h4>
+              {!collapsedSections[status] && items.map(b => {
                 const i = b._i;
                 const isNewHouse = newHouseInput.hasOwnProperty(i);
                 const isTested = testedScents.some(t => t.name.toLowerCase() === b.name.toLowerCase());
@@ -137,7 +148,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                   </div>
                 );
               })}
-              {items.length === 0 && <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, padding: "4px 0" }}>No fragrances in this category</p>}
+              {items.length === 0 && !collapsedSections[status] && <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, padding: "4px 0" }}>No fragrances in this category</p>}
             </div>
           );
         })}
