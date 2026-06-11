@@ -19,6 +19,7 @@ import TestedTab from "./components/TestedTab.jsx";
 import DiscoverTab from "./components/DiscoverTab.jsx";
 import PairingWheel from "./components/PairingWheel.jsx";
 import CollectionView from "./components/CollectionView.jsx";
+import PurchaseList from "./components/PurchaseList.jsx";
 
 export default function ScentDashboard() {
   const [tab, setTab] = useState(0);
@@ -50,6 +51,8 @@ export default function ScentDashboard() {
   const [pairingNotes, setPairingNotes] = useState(() => loadStored("pairingNotes", {}));
   const [pairingRatings, setPairingRatings] = useState(() => loadStored("pairingRatings", {}));
   const [rejectedPairings, setRejectedPairings] = useState(() => loadStored("rejectedPairings", []));
+  const [purchaseData, setPurchaseData] = useState(() => loadStored("purchaseData", {}));
+  const [collectionSubTab, setCollectionSubTab] = useState("collection");
   const [visibleTabs, setVisibleTabs] = useState(() => loadStored("visibleTabs", { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true }));
   const [theme, setTheme] = useState(() => loadStored("theme", { preset: "apothecary" }));
 
@@ -121,6 +124,7 @@ export default function ScentDashboard() {
         if (data.pairingNotes) setPairingNotes(data.pairingNotes);
         if (data.pairingRatings) setPairingRatings(data.pairingRatings);
         if (data.rejectedPairings) setRejectedPairings(data.rejectedPairings);
+        if (data.purchaseData) setPurchaseData(data.purchaseData);
         try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
         setShowWelcome(false);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
@@ -144,11 +148,12 @@ export default function ScentDashboard() {
   useEffect(() => { try { localStorage.setItem("scent_pairingNotes", JSON.stringify(pairingNotes)); } catch {} }, [pairingNotes]);
   useEffect(() => { try { localStorage.setItem("scent_pairingRatings", JSON.stringify(pairingRatings)); } catch {} }, [pairingRatings]);
   useEffect(() => { try { localStorage.setItem("scent_rejectedPairings", JSON.stringify(rejectedPairings)); } catch {} }, [rejectedPairings]);
+  useEffect(() => { try { localStorage.setItem("scent_purchaseData", JSON.stringify(purchaseData)); } catch {} }, [purchaseData]);
 
   /* ─── Export / Import ─── */
 
   const exportData = () => {
-    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, opposingPairs, pairingNotes, pairingRatings, rejectedPairings, exportedAt: new Date().toISOString() };
+    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, opposingPairs, pairingNotes, pairingRatings, rejectedPairings, purchaseData, exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -176,6 +181,7 @@ export default function ScentDashboard() {
         if (data.pairingNotes) setPairingNotes(data.pairingNotes);
         if (data.pairingRatings) setPairingRatings(data.pairingRatings);
         if (data.rejectedPairings) setRejectedPairings(data.rejectedPairings);
+        if (data.purchaseData) setPurchaseData(data.purchaseData);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
     };
     input.click();
@@ -883,7 +889,25 @@ export default function ScentDashboard() {
 
           {/* ═══ MY COLLECTION ═══════════════════════════ */}
           {tab === 5 && (
-            <CollectionView bottles={bottles} setBottles={setBottles} bottleRatings={bottleRatings} setBottleRatings={setBottleRatings} noteOverrides={noteOverrides} />
+            <div>
+              <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
+                {[{k:"collection",l:"My Collection"},{k:"purchases",l:"Purchases"}].map(v => (
+                  <button key={v.k} onClick={() => setCollectionSubTab(v.k)} style={{
+                    background: collectionSubTab === v.k ? `${PAL.gold}14` : "transparent",
+                    border: `1px solid ${collectionSubTab === v.k ? PAL.gold + "44" : PAL.border}`,
+                    borderRadius: 20, padding: "6px 18px",
+                    fontFamily: ff.body, fontSize: 11, color: collectionSubTab === v.k ? PAL.gold : PAL.muted,
+                    cursor: "pointer",
+                  }}>{v.l}</button>
+                ))}
+              </div>
+              {collectionSubTab === "collection" && (
+                <CollectionView bottles={bottles} setBottles={setBottles} bottleRatings={bottleRatings} setBottleRatings={setBottleRatings} noteOverrides={noteOverrides} />
+              )}
+              {collectionSubTab === "purchases" && (
+                <PurchaseList bottles={bottles} noteOverrides={noteOverrides} purchaseData={purchaseData} setPurchaseData={setPurchaseData} />
+              )}
+            </div>
           )}
         </section>
       </div>
