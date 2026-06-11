@@ -29,6 +29,9 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
     setNewHouseInput(prev => { const n = { ...prev }; delete n[i]; return n; });
   };
 
+  const [resetStep, setResetStep] = useState(0);
+  const [resetInput, setResetInput] = useState("");
+
   const mouseDownTarget = useRef(null);
 
   return (
@@ -156,7 +159,31 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
         <button onClick={() => setBottles([...bottles, { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "to test", userNotes: "", thoughts: "", tags: {} }])} style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: 10, color: PAL.gold, cursor: "pointer", fontFamily: ff.body, fontSize: 12, width: "100%" }}>+ Add Fragrance</button>
 
         <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${PAL.border}` }}>
-          <button onClick={() => { if (confirm("Reset all data to defaults? This cannot be undone.")) onReset(); }} style={{ background: `${PAL.rose}08`, border: `1px solid ${PAL.rose}25`, borderRadius: 8, padding: "8px 16px", color: PAL.rose, fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>Reset All Data</button>
+          {resetStep === 0 && (
+            <button onClick={() => setResetStep(1)} style={{ background: `${PAL.rose}08`, border: `1px solid ${PAL.rose}25`, borderRadius: 8, padding: "8px 16px", color: PAL.rose, fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>Reset All Data</button>
+          )}
+          {resetStep === 1 && (
+            <div style={{ background: `${PAL.rose}06`, border: `1px solid ${PAL.rose}20`, borderRadius: 10, padding: "14px 18px" }}>
+              <p style={{ fontFamily: ff.body, fontSize: 13, color: PAL.cream, margin: "0 0 10px" }}>Are you sure you want to reset all data? This will delete your entire collection, wear history, ratings, pairings, and all settings.</p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => setResetStep(2)} style={{ background: `${PAL.rose}18`, border: `1px solid ${PAL.rose}40`, borderRadius: 8, padding: "8px 18px", color: PAL.rose, fontFamily: ff.body, fontSize: 11, cursor: "pointer", fontWeight: 600 }}>Yes, I'm sure</button>
+                <button onClick={() => setResetStep(0)} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "8px 18px", color: PAL.muted, fontFamily: ff.body, fontSize: 11, cursor: "pointer" }}>Cancel</button>
+              </div>
+            </div>
+          )}
+          {resetStep === 2 && (
+            <div style={{ background: `${PAL.rose}08`, border: `1px solid ${PAL.rose}30`, borderRadius: 10, padding: "14px 18px" }}>
+              <p style={{ fontFamily: ff.body, fontSize: 13, color: PAL.cream, margin: "0 0 4px" }}>Type <strong style={{ color: PAL.rose }}>reset</strong> to confirm permanent deletion:</p>
+              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <input value={resetInput} onChange={e => setResetInput(e.target.value)} placeholder="Type reset…"
+                  style={{ background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.rose}40`, borderRadius: 6, padding: "8px 12px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", flex: 1 }} autoFocus />
+                <button onClick={() => { if (resetInput.toLowerCase().trim() === "reset") { onReset(); setResetStep(0); setResetInput(""); } }}
+                  disabled={resetInput.toLowerCase().trim() !== "reset"}
+                  style={{ background: resetInput.toLowerCase().trim() === "reset" ? `${PAL.rose}30` : `${PAL.rose}08`, border: `1px solid ${resetInput.toLowerCase().trim() === "reset" ? PAL.rose : PAL.rose + "25"}`, borderRadius: 8, padding: "8px 18px", color: resetInput.toLowerCase().trim() === "reset" ? PAL.cream : PAL.muted, fontFamily: ff.body, fontSize: 11, cursor: resetInput.toLowerCase().trim() === "reset" ? "pointer" : "not-allowed", fontWeight: 600, transition: "all .2s" }}>Delete Everything</button>
+                <button onClick={() => { setResetStep(0); setResetInput(""); }} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "8px 14px", color: PAL.muted, fontFamily: ff.body, fontSize: 11, cursor: "pointer" }}>Cancel</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
