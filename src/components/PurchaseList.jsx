@@ -7,6 +7,8 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
   const [sortBy, setSortBy] = useState("priority");
   const [editingId, setEditingId] = useState(null);
   const [showPurchased, setShowPurchased] = useState(false);
+  const [dragIdx, setDragIdx] = useState(null);
+  const [dragOverIdx, setDragOverIdx] = useState(null);
 
   const inputCss = { background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "8px 10px", color: PAL.cream, fontFamily: ff.body, fontSize: 12, outline: "none", width: "100%", boxSizing: "border-box" };
 
@@ -41,6 +43,21 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
     newData[list[idx].name] = { ...(newData[list[idx].name] || {}), priority: list[swapIdx].priority };
     newData[list[swapIdx].name] = { ...(newData[list[swapIdx].name] || {}), priority: list[idx].priority };
     setPurchaseData(newData);
+  };
+
+  const handleDrop = (dropIdx) => {
+    if (dragIdx === null || dragIdx === dropIdx) { setDragIdx(null); setDragOverIdx(null); return; }
+    const list = [...sorted.active];
+    const newData = { ...(purchaseData || {}) };
+    /* Reassign priorities based on new visual order */
+    const moved = list.splice(dragIdx, 1)[0];
+    list.splice(dropIdx, 0, moved);
+    list.forEach((item, i) => {
+      newData[item.name] = { ...(newData[item.name] || {}), priority: i + 1 };
+    });
+    setPurchaseData(newData);
+    setDragIdx(null);
+    setDragOverIdx(null);
   };
 
   if (items.length === 0) return (
@@ -83,7 +100,19 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
         {sorted.active.map((item, visualIdx) => {
           const isEditing = editingId === item.id;
           return (
-            <div key={item.id} style={{ background: `${PAL.cream}03`, border: `1px solid ${isEditing ? PAL.gold + "33" : PAL.border}`, borderRadius: 14, padding: "14px 16px", transition: "border-color .2s" }}>
+            <div key={item.id}
+              draggable
+              onDragStart={() => setDragIdx(visualIdx)}
+              onDragOver={e => { e.preventDefault(); setDragOverIdx(visualIdx); }}
+              onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
+              onDrop={() => handleDrop(visualIdx)}
+              style={{
+                background: `${PAL.cream}03`,
+                border: `1px solid ${dragOverIdx === visualIdx && dragIdx !== visualIdx ? PAL.gold + "66" : isEditing ? PAL.gold + "33" : PAL.border}`,
+                borderRadius: 14, padding: "14px 16px", transition: "border-color .2s",
+                opacity: dragIdx === visualIdx ? 0.4 : 1,
+                cursor: "grab",
+              }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center", minWidth: 28 }}>
                   <button onClick={() => movePriority(item.name, -1)} style={{ background: "none", border: "none", color: PAL.muted, fontSize: 10, cursor: "pointer", padding: 0 }}>▲</button>

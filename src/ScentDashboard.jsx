@@ -431,19 +431,19 @@ export default function ScentDashboard() {
         </header>
 
         {/* Tabs */}
-        <nav style={{ display: "flex", gap: 8, paddingTop: 28, flexWrap: "wrap", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .2s" }}>
+        <nav style={{ display: "flex", gap: 5, paddingTop: 28, flexWrap: "nowrap", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .2s" }}>
           {filteredTabs.map((t) => (
             <button key={t.origIdx} onClick={() => setTab(t.origIdx)} style={{
               background: tab === t.origIdx ? `${PAL.gold}14` : "transparent",
               border: `1px solid ${tab === t.origIdx ? PAL.gold + "44" : PAL.border}`,
-              borderRadius: 28, padding: "9px 20px",
-              fontFamily: ff.body, fontSize: 11, fontWeight: tab === t.origIdx ? 500 : 400,
-              letterSpacing: 1.8, textTransform: "uppercase",
+              borderRadius: 20, padding: "7px 12px",
+              fontFamily: ff.body, fontSize: 9, fontWeight: tab === t.origIdx ? 500 : 400,
+              letterSpacing: 1.2, textTransform: "uppercase",
               color: tab === t.origIdx ? PAL.gold : PAL.muted,
               cursor: "pointer", transition: "all .3s",
-              display: "flex", alignItems: "center", gap: 7,
+              display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
             }}>
-              <span style={{ fontSize: 14 }}>{t.icon}</span>{t.label}
+              <span style={{ fontSize: 11 }}>{t.icon}</span>{t.label}
             </button>
           ))}
         </nav>
