@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { PAL, ff, STATUS_COLORS, STATUSES } from "../constants.js";
+import { PAL, ff, STATUS_COLORS, STATUSES, TESTER_COLOR } from "../constants.js";
 import { FAMILY_COLORS, getNoteFamily } from "../noteCategories.js";
 import { RATING_CATEGORIES, RatingSlider, RatingBadge, SectionTitle, FragranceTags, TagIcons } from "./ui.jsx";
 
@@ -104,6 +104,13 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
                   borderRadius: 12, color: statusColor, background: `${statusColor}14`,
                   border: `1px solid ${statusColor}30`, fontFamily: ff.body, flexShrink: 0,
                 }}>{b.status}</span>
+                {b.hasTester && (
+                  <span style={{
+                    fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", padding: "3px 10px",
+                    borderRadius: 12, color: TESTER_COLOR, background: `${TESTER_COLOR}14`,
+                    border: `1px solid ${TESTER_COLOR}30`, fontFamily: ff.body, flexShrink: 0,
+                  }}>sample</span>
+                )}
                 {/* Cost */}
                 {b.cost > 0 && (
                   <span style={{ fontFamily: ff.display, fontSize: 16, color: PAL.cream }}>

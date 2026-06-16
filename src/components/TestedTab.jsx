@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { PAL, ff, STATUS_COLORS } from "../constants.js";
+import { PAL, ff, STATUS_COLORS, TESTER_COLOR } from "../constants.js";
 import { RATING_CATEGORIES, RatingSlider, RatingBadge, SectionTitle } from "./ui.jsx";
 
 const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles }) => {
@@ -47,7 +47,7 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles }) => {
     setShowForm(true);
   };
 
-  const addToCollection = (entry, status) => {
+  const addToCollection = (entry, status, hasTester = false) => {
     const newBottle = {
       name: entry.name,
       fullName: entry.house ? `${entry.name} — ${entry.house}` : entry.name,
@@ -55,6 +55,7 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles }) => {
       cost: 0, ml: 0, freq: 0, status,
       userNotes: entry.notes || "",
       thoughts: entry.thoughts || "",
+      hasTester,
     };
     setBottles(prev => [...prev, newBottle]);
   };
@@ -231,7 +232,7 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles }) => {
                   <button onClick={() => editEntry(i)} style={{ padding: "6px 12px", borderRadius: 6, background: "transparent", border: `1px solid ${PAL.border}`, color: PAL.muted, fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1 }}>Edit</button>
                   {!exists ? (
                     <>
-                      <button onClick={() => addToCollection(entry, "tester")} style={{ padding: "6px 12px", borderRadius: 6, background: `${STATUS_COLORS["tester"]}10`, border: `1px solid ${STATUS_COLORS["tester"]}35`, color: STATUS_COLORS["tester"], fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1 }}>+ Tester</button>
+                      <button onClick={() => addToCollection(entry, "wishlist", true)} style={{ padding: "6px 12px", borderRadius: 6, background: `${TESTER_COLOR}10`, border: `1px solid ${TESTER_COLOR}35`, color: TESTER_COLOR, fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1 }}>+ Sample</button>
                       <button onClick={() => addToCollection(entry, "wishlist")} style={{ padding: "6px 12px", borderRadius: 6, background: `${PAL.gold}10`, border: `1px solid ${PAL.gold}35`, color: PAL.gold, fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1 }}>+ Wishlist</button>
                     </>
                   ) : (

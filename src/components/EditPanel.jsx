@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { PAL, ff, STATUS_COLORS, STATUSES } from "../constants.js";
+import { PAL, ff, STATUS_COLORS, STATUSES, TESTER_COLOR } from "../constants.js";
 import { FAMILY_ORDER, FAMILY_COLORS, FAMILY_LABELS, getNoteFamily } from "../noteCategories.js";
 import { FragranceTags } from "./ui.jsx";
 
@@ -64,8 +64,8 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                 const isTested = testedScents.some(t => t.name.toLowerCase() === b.name.toLowerCase());
                 return (
                   <div key={i} style={{ marginBottom: 10, padding: "10px 12px", background: `${PAL.cream}02`, border: `1px solid ${PAL.border}`, borderRadius: 10 }}>
-                    {/* LINE 1: Name, House, Status, Cost, mL, Freq, Delete */}
-                    <div style={{ display: "grid", gap: 6, alignItems: "end", gridTemplateColumns: "2fr 1.5fr 1fr 70px 55px 55px 28px" }}>
+                    {/* LINE 1: Name, House, Status, Sample toggle, Cost, mL, Freq, Delete */}
+                    <div style={{ display: "grid", gap: 6, alignItems: "end", gridTemplateColumns: "2fr 1.5fr 1fr auto 70px 55px 55px 28px" }}>
                       <div><label style={lab}>Name *</label><input style={{ ...inputCss, borderColor: !b.name.trim() ? `${PAL.rose}44` : undefined }} placeholder="Fragrance name…" value={b.name} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], name: e.target.value, fullName: e.target.value + (b.house ? ` — ${b.house}` : "") }; setBottles(a); }} /></div>
                       <div>
                         <label style={lab}>House</label>
@@ -88,6 +88,18 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                         <select style={selectCss} value={b.status} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], status: e.target.value }; setBottles(a); }}>
                           {STATUSES.map(s => <option key={s} value={s} style={{ background: PAL.bg, color: PAL.cream }}>{s}</option>)}
                         </select>
+                      </div>
+                      <div style={{ textAlign: "center" }}>
+                        <label style={lab}>Sample</label>
+                        <button onClick={() => { const a = [...bottles]; a[i] = { ...a[i], hasTester: !b.hasTester }; setBottles(a); }}
+                          style={{
+                            width: 34, height: 34, borderRadius: 8, cursor: "pointer",
+                            background: b.hasTester ? `${TESTER_COLOR}20` : "transparent",
+                            border: `1.5px solid ${b.hasTester ? TESTER_COLOR : PAL.border}`,
+                            color: b.hasTester ? TESTER_COLOR : PAL.muted,
+                            fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
+                            transition: "all .2s",
+                          }}>{b.hasTester ? "◉" : "○"}</button>
                       </div>
                       <div><label style={lab}>Cost $</label><input style={inputCss} type="number" value={b.cost} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], cost: +e.target.value }; setBottles(a); }} /></div>
                       <div><label style={lab}>mL</label><input style={inputCss} type="number" value={b.ml} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], ml: +e.target.value }; setBottles(a); }} /></div>
@@ -132,7 +144,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                     {/* LINE 3: Thoughts (full width) + Add to Tested */}
                     <div style={{ marginTop: 6, display: "flex", gap: 8, alignItems: "flex-start" }}>
                       <textarea style={{ ...inputCss, flex: 1, minHeight: 32, resize: "vertical", lineHeight: 1.4, fontSize: 12 }} value={b.thoughts || ""} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], thoughts: e.target.value }; setBottles(a); }} placeholder="Thoughts, impressions, memories…" />
-                      {b.status === "tester" && b.name.trim() && (
+                      {b.hasTester && b.name.trim() && (
                         <button onClick={() => {
                           if (isTested) return;
                           setTestedScents(prev => [...prev, { name: b.name, house: b.house || "", date: new Date().toISOString().split("T")[0], notes: b.userNotes || "", thoughts: b.thoughts || "", ratings: {}, id: Date.now() }]);
@@ -156,7 +168,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
           );
         })}
 
-        <button onClick={() => setBottles([...bottles, { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "to test", userNotes: "", thoughts: "", tags: {} }])} style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: 10, color: PAL.gold, cursor: "pointer", fontFamily: ff.body, fontSize: 12, width: "100%" }}>+ Add Fragrance</button>
+        <button onClick={() => setBottles([...bottles, { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "to test", userNotes: "", thoughts: "", tags: {}, hasTester: false }])} style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: 10, color: PAL.gold, cursor: "pointer", fontFamily: ff.body, fontSize: 12, width: "100%" }}>+ Add Fragrance</button>
 
         <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${PAL.border}` }}>
           {resetStep === 0 && (

@@ -10,8 +10,8 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerMouseDown = useRef(null);
 
-  /* Show owned and tester bottles in the picker */
-  const ownedBottles = useMemo(() => bottles.filter(b => b.status === "owned" || b.status === "tester"), [bottles]);
+  /* Show owned and tester/sample bottles in the picker */
+  const ownedBottles = useMemo(() => bottles.filter(b => b.status === "owned" || b.hasTester), [bottles]);
 
   /* Generate a stable color for any bottle name */
   const bottleColor = useCallback((name) => {

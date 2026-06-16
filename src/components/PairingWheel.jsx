@@ -9,9 +9,9 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
   const [pairMode, setPairMode] = useState("all");
   const [showRejected, setShowRejected] = useState(false);
 
-  /* Split bottles into owned and testers */
+  /* Split: owned bottles on inner ring, hasTester bottles on outer ring */
   const ownedBottles = useMemo(() => bottles.filter(b => b.status === "owned" && (b.userNotes || "").trim()), [bottles]);
-  const testerBottles = useMemo(() => bottles.filter(b => b.status === "tester" && (b.userNotes || "").trim()), [bottles]);
+  const testerBottles = useMemo(() => bottles.filter(b => b.hasTester && b.status !== "owned" && (b.userNotes || "").trim()), [bottles]);
   const allActive = useMemo(() => [...ownedBottles.map(b => ({ ...b, _type: "owned" })), ...testerBottles.map(b => ({ ...b, _type: "tester" }))], [ownedBottles, testerBottles]);
 
   const getBottleNotes = (b) => (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
