@@ -71,13 +71,12 @@ export default function ScentDashboard() {
   const [showWelcome, setShowWelcome] = useState(isFirstVisit);
 
   const [notes, setNotes] = useState(() => isFirstVisit ? [] : loadStored("notes", []));
-  /* Migrate old status names + convert tester status to flag */
-  const migrateStatuses = (list) => list.map(b => {
-    let status = b.status === "want to try" ? "to test" : b.status === "want" ? "wishlist" : b.status;
-    let hasTester = b.hasTester || false;
-    if (status === "tester") { status = "wishlist"; hasTester = true; }
-    return { ...b, status, hasTester };
-  });
+  /* Migrate old status names + ensure hasTester field */
+  const migrateStatuses = (list) => list.map(b => ({
+    ...b,
+    status: b.status === "want to try" ? "to test" : b.status === "want" ? "wishlist" : b.status,
+    hasTester: b.hasTester || false,
+  }));
 
   const [bottles, setBottles] = useState(() => {
     const raw = isFirstVisit ? [] : loadStored("bottles", INITIAL_BOTTLES);
