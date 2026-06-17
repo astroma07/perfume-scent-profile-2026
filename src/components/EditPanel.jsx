@@ -46,7 +46,10 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
         </div>
 
         {STATUSES.map(status => {
-          const items = bottles.map((b, i) => ({ ...b, _i: i })).filter(b => b.status === status);
+          const items = bottles.map((b, i) => ({ ...b, _i: i })).filter(b => {
+            if (status === "tester") return b.status === "tester" || b.hasTester;
+            return b.status === status;
+          });
           return (
             <div key={status} style={{ marginBottom: 18 }}>
               <h4 onClick={() => toggleSection(status)} style={{
@@ -63,7 +66,12 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                 const isNewHouse = newHouseInput.hasOwnProperty(i);
                 const isTested = testedScents.some(t => t.name.toLowerCase() === b.name.toLowerCase());
                 return (
-                  <div key={i} style={{ marginBottom: 10, padding: "10px 12px", background: `${PAL.cream}02`, border: `1px solid ${PAL.border}`, borderRadius: 10 }}>
+                  <div key={`${status}-${i}`} style={{ marginBottom: 10, padding: "10px 12px", background: `${PAL.cream}02`, border: `1px solid ${b.hasTester && b.status !== status ? TESTER_COLOR + "33" : PAL.border}`, borderRadius: 10, position: "relative" }}>
+                    {b.hasTester && b.status !== "tester" && status === "tester" && (
+                      <div style={{ position: "absolute", top: 6, right: 10, fontSize: 8, letterSpacing: 1.5, textTransform: "uppercase", color: STATUS_COLORS[b.status], background: `${STATUS_COLORS[b.status]}14`, border: `1px solid ${STATUS_COLORS[b.status]}30`, borderRadius: 10, padding: "2px 8px", fontFamily: ff.body }}>
+                        also {b.status}
+                      </div>
+                    )}
                     {/* LINE 1: Name, House, Status, Sample toggle, Cost, mL, Freq, Delete */}
                     <div style={{ display: "grid", gap: 6, alignItems: "end", gridTemplateColumns: "2fr 1.5fr 1fr auto 70px 55px 55px 28px" }}>
                       <div><label style={lab}>Name *</label><input style={{ ...inputCss, borderColor: !b.name.trim() ? `${PAL.rose}44` : undefined }} placeholder="Fragrance name…" value={b.name} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], name: e.target.value, fullName: e.target.value + (b.house ? ` — ${b.house}` : "") }; setBottles(a); }} /></div>
@@ -90,7 +98,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                         </select>
                       </div>
                       <div style={{ textAlign: "center" }}>
-                        <label style={lab}>Sample</label>
+                        <label style={lab}>Tester</label>
                         <button onClick={() => { const a = [...bottles]; a[i] = { ...a[i], hasTester: !b.hasTester }; setBottles(a); }}
                           style={{
                             width: 34, height: 34, borderRadius: 8, cursor: "pointer",

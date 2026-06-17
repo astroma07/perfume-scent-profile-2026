@@ -109,7 +109,7 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
                     fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", padding: "3px 10px",
                     borderRadius: 12, color: TESTER_COLOR, background: `${TESTER_COLOR}14`,
                     border: `1px solid ${TESTER_COLOR}30`, fontFamily: ff.body, flexShrink: 0,
-                  }}>sample</span>
+                  }}>tester</span>
                 )}
                 {/* Cost */}
                 {b.cost > 0 && (
