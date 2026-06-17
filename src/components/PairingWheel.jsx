@@ -9,10 +9,19 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
   const [pairMode, setPairMode] = useState("all");
   const [showRejected, setShowRejected] = useState(false);
 
-  /* Split: owned bottles on inner ring, tester/sample bottles on outer ring */
+  /* Split: owned on inner ring, testers on outer ring. Owned+hasTester appear on BOTH rings visually */
   const ownedBottles = useMemo(() => bottles.filter(b => b.status === "owned" && (b.userNotes || "").trim()), [bottles]);
-  const testerBottles = useMemo(() => bottles.filter(b => b.status !== "owned" && (b.status === "tester" || b.hasTester) && (b.userNotes || "").trim()), [bottles]);
-  const allActive = useMemo(() => [...ownedBottles.map(b => ({ ...b, _type: "owned" })), ...testerBottles.map(b => ({ ...b, _type: "tester" }))], [ownedBottles, testerBottles]);
+  const testerBottles = useMemo(() => bottles.filter(b => (b.status === "tester" || b.hasTester) && b.status !== "owned" && (b.userNotes || "").trim()), [bottles]);
+  /* Owned bottles that ALSO have samples — shown on outer ring too */
+  const ownedWithSample = useMemo(() => ownedBottles.filter(b => b.hasTester), [ownedBottles]);
+  /* allActive: unique list for pairing calculations */
+  const allActive = useMemo(() => [
+    ...ownedBottles.map(b => ({ ...b, _type: "owned" })),
+    ...testerBottles.map(b => ({ ...b, _type: "tester" })),
+  ], [ownedBottles, testerBottles]);
+
+  /* Visual tester ring: standalone testers + owned bottles that also have samples */
+  const testerVisual = useMemo(() => [...testerBottles, ...ownedWithSample], [testerBottles, ownedWithSample]);
 
   const getBottleNotes = (b) => (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
   const getBottleFamily = (b) => {
@@ -29,9 +38,9 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
     const ownedByFam = {}, testerByFam = {};
     FAMILY_ORDER.forEach(f => { ownedByFam[f] = []; testerByFam[f] = []; });
     ownedBottles.forEach((b, i) => { ownedByFam[getBottleFamily(b)].push({ bottle: b, idx: i }); });
-    testerBottles.forEach((b, i) => { testerByFam[getBottleFamily(b)].push({ bottle: b, idx: i }); });
+    testerVisual.forEach((b, i) => { testerByFam[getBottleFamily(b)].push({ bottle: b, idx: i }); });
     return { ownedByFam, testerByFam };
-  }, [ownedBottles, testerBottles, noteOverrides]);
+  }, [ownedBottles, testerVisual, noteOverrides]);
 
   /* Layout: arc sizes driven by owned count, testers fit within */
   const layout = useMemo(() => {
@@ -250,10 +259,13 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
             );
           })}
 
-          {/* TESTER DOTS (behind) */}
-          {testerBottles.map((b, i) => {
+          {/* TESTER DOTS (behind) — includes owned+sample duplicates */}
+          {testerVisual.map((b, i) => {
             const pos = layout.testerPos[i]; if (!pos) return null;
-            const allIdx = ownedBottles.length + i;
+            /* If this is an owned bottle shown as sample, point to its owned index */
+            const isOwnedDupe = b.status === "owned";
+            const allIdx = isOwnedDupe ? ownedBottles.indexOf(b) : ownedBottles.length + testerBottles.indexOf(b);
+            if (allIdx < 0) return null;
             const color = FAMILY_COLORS[pos.family];
             const x = cx + Math.cos(pos.angle) * testerR, y = cy + Math.sin(pos.angle) * testerR;
             const isSel = selected === allIdx, isHov = hovered === allIdx && hovType === "tester";
@@ -348,7 +360,7 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
           </>) : (<>
             <text x={cx} y={cy - 16} textAnchor="middle" fill={PAL.muted} fontSize="12" letterSpacing="6" style={{ textTransform: "uppercase" }}>Your</text>
             <text x={cx} y={cy + 16} textAnchor="middle" fill={PAL.cream} fontSize="32" fontFamily={ff.display} fontStyle="italic">Collection</text>
-            <text x={cx} y={cy + 42} textAnchor="middle" fill={PAL.muted} fontSize="14">{ownedBottles.length} owned · {testerBottles.length} testers</text>
+            <text x={cx} y={cy + 42} textAnchor="middle" fill={PAL.muted} fontSize="14">{ownedBottles.length} owned · {testerVisual.length} samples</text>
           </>)}
         </svg>
       </div>
