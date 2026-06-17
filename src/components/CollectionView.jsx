@@ -10,7 +10,7 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
 
   const sorted = useMemo(() => {
     let list = bottles.map((b, i) => ({ ...b, _idx: i })).filter(b => b.name.trim());
-    if (filterStatus) list = list.filter(b => b.status === filterStatus);
+    if (filterStatus) list = list.filter(b => filterStatus === "tester" ? (b.status === "tester" || b.hasTester) : b.status === filterStatus);
     if (sortBy === "name") list.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === "house") list.sort((a, b) => (a.house || "").localeCompare(b.house || ""));
     else if (sortBy === "cost") list.sort((a, b) => (b.cost || 0) - (a.cost || 0));
