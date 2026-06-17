@@ -91,7 +91,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                       </div>
                       <div style={{ textAlign: "center" }}>
                         <label style={lab}>Sample</label>
-                        <button onClick={() => { const a = [...bottles]; a[i] = { ...a[i], hasTester: !b.hasTester, status: !b.hasTester ? "tester" : b.status }; setBottles(a); }}
+                        <button onClick={() => { const a = [...bottles]; a[i] = { ...a[i], hasTester: !b.hasTester }; setBottles(a); }}
                           style={{
                             width: 34, height: 34, borderRadius: 8, cursor: "pointer",
                             background: b.hasTester ? `${TESTER_COLOR}20` : "transparent",
