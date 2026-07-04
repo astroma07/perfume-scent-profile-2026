@@ -47,39 +47,61 @@ export const isValidBottle = (b) => b.name && b.name.trim() && b.name.trim().toL
 
 export function computeNotesProfile(bottles, testedScents) {
   const counts = {};
-  bottles.filter(b => (b.status === "owned" || b.status === "had") && isValidBottle(b)).forEach(b => {
-    (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean).forEach(n => {
-      counts[n] = (counts[n] || 0) + 3;
+
+  /* Status weights: what you own/wear matters most */
+  const statusWeight = (b) => {
+    if (b.status === "owned") return 4;
+    if (b.status === "had") return 2.5;
+    if (b.status === "tester") return 3;
+    if (b.hasTester) return 2;
+    if (b.status === "wishlist") return 1;
+    return 0.5;
+  };
+
+  /* Frequency bonus: bottles worn more often define your profile more */
+  const freqBonus = (b) => 1 + Math.min((b.freq || 0) * 0.15, 2);
+
+  /* Position weighting: first-listed notes are typically most prominent */
+  const positionWeight = (idx, total) => total <= 1 ? 1 : 1 - (idx / total) * 0.5;
+
+  /* Process collection bottles */
+  bottles.filter(b => isValidBottle(b)).forEach(b => {
+    const notes = (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+    if (notes.length === 0) return;
+    const base = statusWeight(b) * freqBonus(b);
+    notes.forEach((n, idx) => {
+      counts[n] = (counts[n] || 0) + base * positionWeight(idx, notes.length);
     });
   });
-  bottles.filter(b => (b.status === "wishlist" || b.status === "to test") && isValidBottle(b)).forEach(b => {
-    (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean).forEach(n => {
-      counts[n] = (counts[n] || 0) + 1;
-    });
-  });
+
+  /* Tested scents */
   (testedScents || []).forEach(t => {
-    (t.notes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean).forEach(n => {
-      counts[n] = (counts[n] || 0) + 2;
+    const notes = (t.notes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+    notes.forEach((n, idx) => {
+      counts[n] = (counts[n] || 0) + 2 * positionWeight(idx, notes.length);
     });
   });
+
+  /* Fallback: match bottles without notes against NOTE_TO_FRAGRANCES */
   bottles.filter(b => isValidBottle(b) && (!b.userNotes || b.userNotes.trim() === "")).forEach(b => {
     const bName = (b.fullName || b.name).toLowerCase();
     Object.entries(NOTE_TO_FRAGRANCES).forEach(([note, frags]) => {
       frags.forEach(f => {
         if (bName.includes(f.split(" — ")[0].toLowerCase()) || f.toLowerCase().includes(bName.split(" — ")[0].toLowerCase())) {
-          const weight = (b.status === "owned" || b.status === "had") ? 2 : 1;
-          counts[note] = (counts[note] || 0) + weight;
+          counts[note] = (counts[note] || 0) + statusWeight(b) * 0.5;
         }
       });
     });
   });
+
+  /* Normalize: percentages relative to TOTAL, not just top N */
   const total = Object.values(counts).reduce((s, v) => s + v, 0);
   if (total === 0) return [];
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-  const topTotal = sorted.reduce((s, [, v]) => s + v, 0);
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 12);
   return sorted.map(([name, count]) => ({
     name: name.charAt(0).toUpperCase() + name.slice(1),
-    pct: Math.round((count / topTotal) * 100),
+    pct: Math.round((count / total) * 100),
+    raw: Math.round(count * 10) / 10,
   }));
 }
 
