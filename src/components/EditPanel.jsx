@@ -72,8 +72,8 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                         also {b.status}
                       </div>
                     )}
-                    {/* LINE 1: Name, House, Status, Sample toggle, Cost, mL, Freq, Delete */}
-                    <div style={{ display: "grid", gap: 6, alignItems: "end", gridTemplateColumns: "2fr 1.5fr 1fr auto 70px 55px 55px 28px" }}>
+                    {/* LINE 1: Name, House, Status, Tester, Type, Cost, mL, Freq, Delete */}
+                    <div style={{ display: "grid", gap: 6, alignItems: "end", gridTemplateColumns: "2fr 1.5fr 1fr auto 75px 70px 55px 55px 28px" }}>
                       <div><label style={lab}>Name *</label><input style={{ ...inputCss, borderColor: !b.name.trim() ? `${PAL.rose}44` : undefined }} placeholder="Fragrance name…" value={b.name} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], name: e.target.value, fullName: e.target.value + (b.house ? ` — ${b.house}` : "") }; setBottles(a); }} /></div>
                       <div>
                         <label style={lab}>House</label>
@@ -108,6 +108,18 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                             fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
                             transition: "all .2s",
                           }}>{b.hasTester ? "◉" : "○"}</button>
+                      </div>
+                      <div>
+                        <label style={lab}>Type</label>
+                        <select style={{ ...selectCss, fontSize: 10, padding: "7px 22px 7px 6px" }} value={b.concentration || ""} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], concentration: e.target.value }; setBottles(a); }}>
+                          <option value="" style={{ background: PAL.bg, color: PAL.muted }}>—</option>
+                          <option value="parfum" style={{ background: PAL.bg }}>Parfum</option>
+                          <option value="edp" style={{ background: PAL.bg }}>EDP</option>
+                          <option value="edt" style={{ background: PAL.bg }}>EDT</option>
+                          <option value="edc" style={{ background: PAL.bg }}>EDC</option>
+                          <option value="body" style={{ background: PAL.bg }}>Body</option>
+                          <option value="oil" style={{ background: PAL.bg }}>Oil</option>
+                        </select>
                       </div>
                       <div><label style={lab}>Cost $</label><input style={inputCss} type="number" value={b.cost} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], cost: +e.target.value }; setBottles(a); }} /></div>
                       <div><label style={lab}>mL</label><input style={inputCss} type="number" value={b.ml} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], ml: +e.target.value }; setBottles(a); }} /></div>
