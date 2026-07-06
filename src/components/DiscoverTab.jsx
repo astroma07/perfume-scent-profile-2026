@@ -77,6 +77,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
     /* Fragella can return: flat array, { data: [...] }, or single object */
     let list = [];
     if (Array.isArray(data)) list = data;
+    else if (data?.similar_fragrances && Array.isArray(data.similar_fragrances)) list = data.similar_fragrances;
     else if (data?.data && Array.isArray(data.data)) list = data.data;
     else if (data?.results && Array.isArray(data.results)) list = data.results;
     else if (data?.Name || data?.name) list = [data];
