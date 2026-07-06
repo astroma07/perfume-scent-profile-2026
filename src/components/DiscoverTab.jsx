@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { PAL, ff, STATUS_COLORS } from "../constants.js";
+import { PAL, ff, STATUS_COLORS, TESTER_COLOR } from "../constants.js";
 import { NOTE_TO_FRAGRANCES } from "../noteMap.js";
 import { FRAGRANCE_DB } from "../fragranceDB.js";
 import { getNoteFamily, FAMILY_COLORS } from "../noteCategories.js";
@@ -12,20 +12,23 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
   const [addedNames, setAddedNames] = useState(new Set());
   const [showAllRecs, setShowAllRecs] = useState(false);
   const [searchMode, setSearchMode] = useState("local");
+  const [apiSearchType, setApiSearchType] = useState("name");
   const [apiResults, setApiResults] = useState([]);
   const [apiLoading, setApiLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   const [activeSection, setActiveSection] = useState("recs");
+  const [similarSource, setSimilarSource] = useState(null);
+  const [noteInputs, setNoteInputs] = useState("");
 
-  /* Build note profile from owned collection for smart recommendations */
   const userNoteProfile = useMemo(() => {
     const counts = {};
-    bottles.filter(b => b.status === "owned" || b.status === "had").forEach(b => {
+    bottles.filter(b => b.status === "owned" || b.status === "had" || b.status === "tester" || b.hasTester).forEach(b => {
       (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean).forEach(n => {
-        counts[n] = (counts[n] || 0) + 3;
+        const w = b.status === "owned" ? 4 : b.status === "tester" || b.hasTester ? 3 : 2;
+        counts[n] = (counts[n] || 0) + w;
       });
     });
-    bottles.filter(b => (b.status === "owned") && (!b.userNotes || !b.userNotes.trim())).forEach(b => {
+    bottles.filter(b => b.status === "owned" && (!b.userNotes || !b.userNotes.trim())).forEach(b => {
       const bName = (b.fullName || b.name).toLowerCase();
       Object.entries(NOTE_TO_FRAGRANCES).forEach(([note, frags]) => {
         frags.forEach(f => {
@@ -38,7 +41,6 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
     return counts;
   }, [bottles]);
 
-  /* Score DB fragrances by note overlap with user's profile */
   const smartRecs = useMemo(() => {
     const ownedNames = new Set(bottles.map(b => b.name.toLowerCase()));
     const totalWeight = Object.values(userNoteProfile).reduce((s, v) => s + v, 0);
@@ -70,71 +72,88 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
 
   const results = searchMode === "api" && apiResults.length > 0 ? apiResults : localResults;
 
-  const searchApi = async (q) => {
-    if (!q || q.length < 3) return;
+  /* ─── API search functions ─── */
+  const parseApiResults = (data) => (Array.isArray(data) ? data : data?.results || data?.data || []).map(f => ({
+    name: f.Name || f.name || "", house: f.Brand || f.brand || "", cost: parseFloat(f.Price || f.price) || 0, ml: 0,
+    notes: (f["General Notes"] || f.notes || []).map(n => typeof n === "string" ? n.toLowerCase() : n),
+    description: [f.Longevity ? `${f.Longevity} longevity` : "", f.Sillage ? `${f.Sillage} sillage` : "", f.Description || ""].filter(Boolean).join(" · "),
+    _api: true,
+  }));
+
+  const apiCall = async (endpoint, params) => {
     setApiLoading(true); setApiError(null);
     try {
-      const res = await fetch(`/api/fragella?endpoint=search&search=${encodeURIComponent(q)}&limit=12`);
+      const qp = new URLSearchParams({ endpoint, ...params });
+      const res = await fetch(`/api/fragella?${qp}`);
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
-      setApiResults((Array.isArray(data) ? data : []).map(f => ({
-        name: f.Name || "", house: f.Brand || "", cost: parseFloat(f.Price) || 0, ml: 0,
-        notes: (f["General Notes"] || []).map(n => n.toLowerCase()),
-        description: [f.Longevity ? `${f.Longevity} longevity` : "", f.Sillage ? `${f.Sillage} sillage` : ""].filter(Boolean).join(" · "),
-        _api: true,
-      })));
+      setApiResults(parseApiResults(data));
     } catch {
-      setApiError("Fragella API not configured. Add FRAGELLA_API_KEY in Vercel → Settings → Environment Variables to unlock live search across 74,000+ fragrances.");
+      setApiError("Fragella API not configured. Add FRAGELLA_API_KEY in Vercel → Settings → Environment Variables.");
       setApiResults([]);
     }
     setApiLoading(false);
   };
 
-  const alreadyInCollection = (name, house) => bottles.some(b => b.name.toLowerCase() === name.toLowerCase() || (b.house && house && b.house.toLowerCase() === house.toLowerCase() && b.name.toLowerCase().includes(name.split(" ")[0].toLowerCase())));
+  const searchByName = (q) => { if (q.length >= 2) apiCall("search", { search: q, limit: "20" }); };
+  const searchByNotes = (notes) => { if (notes.trim()) apiCall("notes", { notes: notes.trim(), limit: "20" }); };
+  const searchByHouse = (house) => { if (house.trim()) apiCall("brand", { brandName: house.trim(), limit: "20" }); };
+  const searchSimilar = (name) => { if (name.trim()) apiCall("similar", { name: name.trim(), limit: "15" }); };
+
+  const alreadyInCollection = (name) => bottles.some(b => b.name.toLowerCase() === name.toLowerCase());
 
   const addToCollection = (frag, status) => {
-    setBottles(prev => [...prev, { name: frag.name, fullName: `${frag.name} — ${frag.house}`, house: frag.house, cost: frag.cost || 0, ml: frag.ml || 0, freq: 0, status, userNotes: (frag.notes || []).join(", ") }]);
+    setBottles(prev => [...prev, {
+      name: frag.name, fullName: `${frag.name} — ${frag.house}`, house: frag.house,
+      cost: frag.cost || 0, ml: frag.ml || 0, freq: 0, status,
+      userNotes: (frag.notes || []).join(", "),
+      hasTester: status === "tester",
+    }]);
     setAddedNames(prev => new Set([...prev, frag.name]));
   };
 
+  const getNoteColor = (n) => FAMILY_COLORS[getNoteFamily(n)] || PAL.gold;
+
   const renderFragCard = (frag, i, showScore) => {
-    const exists = alreadyInCollection(frag.name, frag.house);
+    const exists = alreadyInCollection(frag.name);
     const justAdded = addedNames.has(frag.name);
     return (
-      <div key={`${frag.house}-${frag.name}-${i}`} style={{ background: `${PAL.cream}04`, border: `1px solid ${PAL.border}`, borderRadius: 14, padding: "16px 18px", animation: `cardIn .35s ease ${Math.min(i, 8) * .04}s both` }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              {showScore && frag.pct > 0 && (
-                <div style={{ width: 30, height: 30, borderRadius: 15, background: `${frag.pct >= 60 ? PAL.sage : frag.pct >= 30 ? PAL.gold : PAL.plum}18`, border: `1px solid ${frag.pct >= 60 ? PAL.sage : frag.pct >= 30 ? PAL.gold : PAL.plum}44`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ff.display, fontSize: 12, color: frag.pct >= 60 ? PAL.sage : frag.pct >= 30 ? PAL.gold : PAL.plum, flexShrink: 0 }}>{frag.pct}%</div>
-              )}
-              <div>
-                <span style={{ fontFamily: ff.display, fontSize: 17, color: PAL.cream }}>{frag.name}</span>
-                {frag.house && <span style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, marginLeft: 6 }}>{frag.house}</span>}
-              </div>
-            </div>
-            {frag.description && <p style={{ fontFamily: ff.body, fontSize: 12, color: `${PAL.cream}77`, marginTop: 6, lineHeight: 1.5 }}>{frag.description}</p>}
-            <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 8 }}>
-              {(frag.notes || []).slice(0, 5).map((n, j) => (
-                <span key={j} onClick={() => { setFilterNote(n); setActiveSection("browse"); }} style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: (showScore && frag.matched?.includes(n)) ? PAL.sage : PAL.gold, background: (showScore && frag.matched?.includes(n)) ? `${PAL.sage}12` : `${PAL.gold}12`, border: `1px solid ${(showScore && frag.matched?.includes(n)) ? PAL.sage : PAL.gold}25`, borderRadius: 4, padding: "2px 8px", cursor: "pointer" }}>{n}</span>
-              ))}
-            </div>
-            {frag.cost > 0 && (
-              <div style={{ display: "flex", gap: 14, marginTop: 8 }}>
-                <span style={{ fontFamily: ff.display, fontSize: 18, color: PAL.cream }}>${frag.cost}</span>
-                {frag.ml > 0 && <span style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, alignSelf: "center" }}>{frag.ml}mL · ${(frag.cost / frag.ml).toFixed(2)}/mL</span>}
-              </div>
+      <div key={`${frag.name}-${i}`} style={{ display: "flex", gap: 14, background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 14, padding: "14px 16px", animation: "cardIn .3s both", animationDelay: `${i * .04}s` }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontFamily: ff.display, fontSize: 18, fontStyle: "italic", color: PAL.cream }}>{frag.name}</span>
+            <span style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted }}>— {frag.house}</span>
+            {showScore && frag.pct > 0 && <span style={{ fontFamily: ff.display, fontSize: 14, color: PAL.gold, background: `${PAL.gold}12`, borderRadius: 10, padding: "2px 10px" }}>{frag.pct}%</span>}
+            {frag._api && <span style={{ fontSize: 8, color: PAL.muted, border: `1px solid ${PAL.border}`, borderRadius: 3, padding: "1px 5px" }}>API</span>}
+          </div>
+          {frag.description && <p style={{ fontFamily: ff.body, fontSize: 12, color: `${PAL.cream}77`, marginTop: 6, lineHeight: 1.5 }}>{frag.description}</p>}
+          <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 8 }}>
+            {(frag.notes || []).slice(0, 6).map((n, j) => (
+              <span key={j} onClick={() => { setFilterNote(n); setActiveSection("browse"); setSearchMode("local"); }}
+                style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: (showScore && frag.matched?.includes(n)) ? PAL.sage : getNoteColor(n), background: `${(showScore && frag.matched?.includes(n)) ? PAL.sage : getNoteColor(n)}12`, border: `1px solid ${(showScore && frag.matched?.includes(n)) ? PAL.sage : getNoteColor(n)}25`, borderRadius: 4, padding: "2px 8px", cursor: "pointer" }}>{n}</span>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 8 }}>
+            {frag.cost > 0 && <span style={{ fontFamily: ff.display, fontSize: 18, color: PAL.cream }}>${frag.cost}</span>}
+            {frag.ml > 0 && frag.cost > 0 && <span style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted }}>{frag.ml}mL</span>}
+            {/* Find Similar button */}
+            <button onClick={() => { setSimilarSource(frag); setActiveSection("similar"); if (searchMode === "api") searchSimilar(frag.name); }}
+              style={{ marginLeft: "auto", background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "3px 10px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, cursor: "pointer", letterSpacing: 1 }}>Find Similar</button>
+            {/* Browse House button */}
+            {frag.house && (
+              <button onClick={() => { setQuery(""); setActiveSection("browse"); if (searchMode === "api") { setApiSearchType("house"); searchByHouse(frag.house); } else { setFilterHouse(frag.house); setFilterNote(null); } }}
+                style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "3px 10px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, cursor: "pointer", letterSpacing: 1 }}>More by {frag.house}</button>
             )}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 120 }}>
-            {exists || justAdded ? (
-              <div style={{ padding: "10px 16px", borderRadius: 8, textAlign: "center", background: `${PAL.sage}15`, border: `1px solid ${PAL.sage}40`, fontFamily: ff.body, fontSize: 11, color: PAL.sage }}>✓ {justAdded ? "Added" : "In collection"}</div>
-            ) : (
-              [{s:"owned",l:"Add as Owned",c:STATUS_COLORS["owned"]},{s:"wishlist",l:"Wishlist",c:STATUS_COLORS["wishlist"]},{s:"to test",l:"To Test",c:STATUS_COLORS["to test"]}].map(opt => (
-                <button key={opt.s} onClick={() => addToCollection(frag, opt.s)} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer", background: `${opt.c}12`, border: `1px solid ${opt.c}40`, fontFamily: ff.body, fontSize: 11, color: opt.c, letterSpacing: 1, textTransform: "uppercase", textAlign: "center" }}>{opt.l}</button>
-              ))
-            )}
-          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 110 }}>
+          {exists || justAdded ? (
+            <div style={{ padding: "10px 14px", borderRadius: 8, textAlign: "center", background: `${PAL.sage}15`, border: `1px solid ${PAL.sage}40`, fontFamily: ff.body, fontSize: 11, color: PAL.sage }}>✓ {justAdded ? "Added" : "In collection"}</div>
+          ) : (
+            [{s:"owned",l:"Owned",c:STATUS_COLORS["owned"]},{s:"tester",l:"Tester",c:TESTER_COLOR},{s:"wishlist",l:"Wishlist",c:STATUS_COLORS["wishlist"]},{s:"to test",l:"To Test",c:STATUS_COLORS["to test"]}].map(opt => (
+              <button key={opt.s} onClick={() => addToCollection(frag, opt.s)} style={{ padding: "6px 12px", borderRadius: 8, cursor: "pointer", background: `${opt.c}12`, border: `1px solid ${opt.c}40`, fontFamily: ff.body, fontSize: 10, color: opt.c, letterSpacing: 1, textTransform: "uppercase", textAlign: "center" }}>{opt.l}</button>
+            ))
+          )}
         </div>
       </div>
     );
@@ -144,13 +163,13 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
 
   return (
     <div>
-      <SectionTitle title="Discover Fragrances" sub="Personalized recommendations · browse 295+ · optional live search" />
+      <SectionTitle title="Discover Fragrances" sub="Personalized recommendations · browse 295+ · live API search" />
       <style>{`@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       {/* Section toggle */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap" }}>
-        {[{k:"recs",l:"For You",ic:"✦"},{k:"browse",l:"Browse All",ic:"📚"}].map(s => (
-          <button key={s.k} onClick={() => setActiveSection(s.k)} style={{ background: activeSection === s.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${activeSection === s.k ? PAL.gold + "44" : PAL.border}`, borderRadius: 20, padding: "7px 16px", fontFamily: ff.body, fontSize: 11, color: activeSection === s.k ? PAL.gold : PAL.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><span style={{ fontSize: 13 }}>{s.ic}</span>{s.l}</button>
+      <div style={{ display: "flex", gap: 5, marginBottom: 18, flexWrap: "wrap" }}>
+        {[{k:"recs",l:"For You",ic:"✦"},{k:"browse",l:"Browse",ic:"📚"},{k:"similar",l:"Similar",ic:"🔗"},{k:"notes",l:"By Notes",ic:"🎵"}].map(s => (
+          <button key={s.k} onClick={() => setActiveSection(s.k)} style={{ background: activeSection === s.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${activeSection === s.k ? PAL.gold + "44" : PAL.border}`, borderRadius: 20, padding: "6px 14px", fontFamily: ff.body, fontSize: 10, color: activeSection === s.k ? PAL.gold : PAL.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><span style={{ fontSize: 12 }}>{s.ic}</span>{s.l}</button>
         ))}
       </div>
 
@@ -162,7 +181,6 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
               <div style={{ fontSize: 36, marginBottom: 12, opacity: .4 }}>✦</div>
               <p style={{ fontFamily: ff.display, fontSize: 17, color: PAL.cream }}>Add notes to build recommendations</p>
               <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, marginTop: 6, lineHeight: 1.6, maxWidth: 360, margin: "6px auto 0" }}>Open Edit Collection and add fragrance notes to your owned bottles. The more notes you add, the better the recommendations.</p>
-              <button onClick={() => setActiveSection("browse")} style={{ marginTop: 16, background: `${PAL.gold}14`, border: `1px solid ${PAL.gold}44`, borderRadius: 8, padding: "10px 24px", color: PAL.gold, fontFamily: ff.body, fontSize: 12, cursor: "pointer" }}>Browse All Fragrances</button>
             </div>
           ) : (
             <>
@@ -176,18 +194,37 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
         </div>
       )}
 
-
       {/* ─── BROWSE ALL ─── */}
       {activeSection === "browse" && (
         <div>
-          <div style={{ display: "flex", gap: 4, marginBottom: 12 }}>
-            {[{k:"local",l:"Curated (offline)",ic:"📚"},{k:"api",l:"Fragella API (live)",ic:"🌐"}].map(v => (
-              <button key={v.k} onClick={() => { setSearchMode(v.k); setApiResults([]); setApiError(null); }} style={{ background: searchMode === v.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${searchMode === v.k ? PAL.gold + "44" : PAL.border}`, borderRadius: 8, padding: "6px 14px", fontFamily: ff.body, fontSize: 10, color: searchMode === v.k ? PAL.gold : PAL.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><span style={{ fontSize: 12 }}>{v.ic}</span>{v.l}</button>
+          <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
+            {[{k:"local",l:"Curated (295)",ic:"📚"},{k:"api",l:"Fragella API (74K+)",ic:"🌐"}].map(v => (
+              <button key={v.k} onClick={() => { setSearchMode(v.k); setApiResults([]); setApiError(null); }} style={{ background: searchMode === v.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${searchMode === v.k ? PAL.gold + "44" : PAL.border}`, borderRadius: 8, padding: "5px 12px", fontFamily: ff.body, fontSize: 10, color: searchMode === v.k ? PAL.gold : PAL.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><span style={{ fontSize: 11 }}>{v.ic}</span>{v.l}</button>
             ))}
           </div>
+          {searchMode === "api" && (
+            <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
+              {[{k:"name",l:"By Name"},{k:"house",l:"By House"},{k:"noteSearch",l:"By Notes"}].map(t => (
+                <button key={t.k} onClick={() => { setApiSearchType(t.k); setApiResults([]); }} style={{ background: apiSearchType === t.k ? `${PAL.cream}08` : "transparent", border: `1px solid ${apiSearchType === t.k ? PAL.cream + "22" : PAL.border}`, borderRadius: 6, padding: "4px 10px", fontFamily: ff.body, fontSize: 9, color: apiSearchType === t.k ? PAL.cream : PAL.muted, cursor: "pointer" }}>{t.l}</button>
+              ))}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            <input value={query} onChange={e => { setQuery(e.target.value); if (searchMode === "local") setApiResults([]); }} onKeyDown={e => { if (e.key === "Enter" && searchMode === "api") searchApi(query); }} placeholder={searchMode === "api" ? "Search 74,000+ fragrances…" : "Search by name, house, or note…"} style={{ flex: 1, background: `${PAL.cream}06`, border: `1px solid ${PAL.border}`, borderRadius: 10, padding: "12px 16px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
-            {searchMode === "api" && <button onClick={() => searchApi(query)} disabled={apiLoading || query.length < 3} style={{ background: `${PAL.gold}20`, border: `1px solid ${PAL.gold}40`, borderRadius: 10, padding: "0 20px", color: PAL.gold, fontFamily: ff.body, fontSize: 12, cursor: apiLoading ? "wait" : "pointer", opacity: apiLoading || query.length < 3 ? .4 : 1 }}>{apiLoading ? "…" : "Search"}</button>}
+            <input value={query} onChange={e => { setQuery(e.target.value); if (searchMode === "local") setApiResults([]); }}
+              onKeyDown={e => {
+                if (e.key === "Enter" && searchMode === "api") {
+                  if (apiSearchType === "name") searchByName(query);
+                  else if (apiSearchType === "house") searchByHouse(query);
+                  else if (apiSearchType === "noteSearch") searchByNotes(query);
+                }
+              }}
+              placeholder={searchMode === "api" ? (apiSearchType === "house" ? "Enter house name…" : apiSearchType === "noteSearch" ? "Enter notes: vetiver, myrrh, amber…" : "Search fragrances…") : "Search by name, house, or note…"}
+              style={{ flex: 1, background: `${PAL.cream}06`, border: `1px solid ${PAL.border}`, borderRadius: 10, padding: "12px 16px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+            {searchMode === "api" && (
+              <button onClick={() => { if (apiSearchType === "name") searchByName(query); else if (apiSearchType === "house") searchByHouse(query); else searchByNotes(query); }}
+                disabled={apiLoading || query.length < 2}
+                style={{ background: `${PAL.gold}20`, border: `1px solid ${PAL.gold}40`, borderRadius: 10, padding: "0 20px", color: PAL.gold, fontFamily: ff.body, fontSize: 12, cursor: apiLoading ? "wait" : "pointer", opacity: apiLoading || query.length < 2 ? .4 : 1 }}>{apiLoading ? "…" : "Search"}</button>
+            )}
           </div>
           {apiError && <div style={{ marginBottom: 14, padding: "10px 14px", background: `${PAL.rose}10`, border: `1px solid ${PAL.rose}30`, borderRadius: 8 }}><p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.rose, margin: 0 }}>{apiError}</p></div>}
           {searchMode === "local" && (
@@ -204,9 +241,104 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
               <span style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, marginLeft: "auto" }}>{results.length} result{results.length !== 1 ? "s" : ""}</span>
             </div>
           )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 520, overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: `${PAL.border} transparent`, paddingRight: 4 }}>
-            {results.length === 0 && <div style={{ textAlign: "center", padding: "40px 20px" }}><p style={{ fontFamily: ff.display, fontSize: 16, color: PAL.cream }}>No matches</p><p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, marginTop: 4 }}>Try a different search or clear filters</p></div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 600, overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: `${PAL.border} transparent`, paddingRight: 4 }}>
+            {results.length === 0 && !apiLoading && <div style={{ textAlign: "center", padding: "40px 20px" }}><p style={{ fontFamily: ff.display, fontSize: 16, color: PAL.cream }}>No matches</p><p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, marginTop: 4 }}>{searchMode === "api" ? "Try a different search term" : "Try a different search or clear filters"}</p></div>}
+            {apiLoading && <div style={{ textAlign: "center", padding: "40px 20px" }}><p style={{ fontFamily: ff.display, fontSize: 16, color: PAL.muted, fontStyle: "italic" }}>Searching…</p></div>}
             {results.map((f, i) => renderFragCard(f, i, false))}
+          </div>
+        </div>
+      )}
+
+      {/* ─── FIND SIMILAR ─── */}
+      {activeSection === "similar" && (
+        <div>
+          <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, marginBottom: 10 }}>Find fragrances similar to one you love</p>
+          {/* Quick picks from collection */}
+          <div style={{ marginBottom: 14 }}>
+            <span style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, marginBottom: 6, display: "block" }}>From your collection</span>
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+              {bottles.filter(b => b.name.trim() && (b.status === "owned" || b.status === "tester" || b.hasTester)).slice(0, 20).map((b, i) => (
+                <button key={i} onClick={() => { setSimilarSource(b); searchSimilar(b.name); }}
+                  style={{
+                    background: similarSource?.name === b.name ? `${PAL.gold}14` : "transparent",
+                    border: `1px solid ${similarSource?.name === b.name ? PAL.gold + "44" : PAL.border}`,
+                    borderRadius: 8, padding: "5px 12px", fontFamily: ff.body, fontSize: 10, color: similarSource?.name === b.name ? PAL.gold : PAL.muted, cursor: "pointer",
+                  }}>{b.name}</button>
+              ))}
+            </div>
+          </div>
+          {/* Or type a name */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+            <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { setSimilarSource({ name: query }); searchSimilar(query); } }}
+              placeholder="Or type any fragrance name…"
+              style={{ flex: 1, background: `${PAL.cream}06`, border: `1px solid ${PAL.border}`, borderRadius: 10, padding: "12px 16px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+            <button onClick={() => { setSimilarSource({ name: query }); searchSimilar(query); }} disabled={apiLoading || query.length < 2}
+              style={{ background: `${PAL.gold}20`, border: `1px solid ${PAL.gold}40`, borderRadius: 10, padding: "0 20px", color: PAL.gold, fontFamily: ff.body, fontSize: 12, cursor: apiLoading ? "wait" : "pointer", opacity: apiLoading || query.length < 2 ? .4 : 1 }}>{apiLoading ? "…" : "Find Similar"}</button>
+          </div>
+          {apiError && <div style={{ marginBottom: 14, padding: "10px 14px", background: `${PAL.rose}10`, border: `1px solid ${PAL.rose}30`, borderRadius: 8 }}><p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.rose, margin: 0 }}>{apiError}</p></div>}
+          {similarSource && !apiLoading && (
+            <div style={{ marginBottom: 14, padding: "10px 14px", background: `${PAL.gold}06`, border: `1px solid ${PAL.gold}15`, borderRadius: 10 }}>
+              <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.muted }}>Showing fragrances similar to</span>
+              <span style={{ fontFamily: ff.display, fontSize: 16, fontStyle: "italic", color: PAL.cream, marginLeft: 8 }}>{similarSource.name}</span>
+              {similarSource.house && <span style={{ fontSize: 11, color: PAL.muted, marginLeft: 6 }}>— {similarSource.house}</span>}
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 600, overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: `${PAL.border} transparent` }}>
+            {apiLoading && <div style={{ textAlign: "center", padding: "40px 20px" }}><p style={{ fontFamily: ff.display, fontSize: 16, color: PAL.muted, fontStyle: "italic" }}>Finding similar fragrances…</p></div>}
+            {!apiLoading && apiResults.length === 0 && similarSource && <div style={{ textAlign: "center", padding: "30px 20px" }}><p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted }}>No similar fragrances found. Try the Fragella API — add your API key in Vercel settings.</p></div>}
+            {apiResults.map((f, i) => renderFragCard(f, i, false))}
+          </div>
+        </div>
+      )}
+
+      {/* ─── BY NOTES ─── */}
+      {activeSection === "notes" && (
+        <div>
+          <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, marginBottom: 10 }}>Search for fragrances containing specific notes</p>
+          {/* Quick note pills from user's top notes */}
+          <div style={{ marginBottom: 12 }}>
+            <span style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, marginBottom: 6, display: "block" }}>Your top notes</span>
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+              {Object.entries(userNoteProfile).sort((a, b) => b[1] - a[1]).slice(0, 15).map(([note]) => {
+                const isSelected = noteInputs.toLowerCase().includes(note);
+                return (
+                  <button key={note} onClick={() => setNoteInputs(prev => prev ? `${prev}, ${note}` : note)}
+                    style={{ fontSize: 9, letterSpacing: 1, textTransform: "uppercase", padding: "3px 9px", borderRadius: 4, cursor: "pointer", background: isSelected ? `${getNoteColor(note)}20` : "transparent", border: `1px solid ${isSelected ? getNoteColor(note) + "50" : PAL.border}`, color: isSelected ? getNoteColor(note) : PAL.muted, fontFamily: ff.body }}>{note}</button>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+            <input value={noteInputs} onChange={e => setNoteInputs(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  searchByNotes(noteInputs);
+                  /* Also filter local */
+                  const noteList = noteInputs.split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+                  if (noteList.length > 0) {
+                    const local = FRAGRANCE_DB.filter(f => noteList.some(n => f.notes.some(fn => fn.toLowerCase().includes(n))));
+                    if (local.length > 0 && apiResults.length === 0) setApiResults(local);
+                  }
+                }
+              }}
+              placeholder="vetiver, myrrh, amber…"
+              style={{ flex: 1, background: `${PAL.cream}06`, border: `1px solid ${PAL.border}`, borderRadius: 10, padding: "12px 16px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+            <button onClick={() => {
+              searchByNotes(noteInputs);
+              const noteList = noteInputs.split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+              if (noteList.length > 0) {
+                const local = FRAGRANCE_DB.filter(f => noteList.some(n => f.notes.some(fn => fn.toLowerCase().includes(n))));
+                if (local.length > 0) setApiResults(prev => prev.length > 0 ? prev : local);
+              }
+            }}
+              disabled={apiLoading || noteInputs.trim().length < 2}
+              style={{ background: `${PAL.gold}20`, border: `1px solid ${PAL.gold}40`, borderRadius: 10, padding: "0 20px", color: PAL.gold, fontFamily: ff.body, fontSize: 12, cursor: apiLoading ? "wait" : "pointer", opacity: apiLoading || noteInputs.trim().length < 2 ? .4 : 1 }}>{apiLoading ? "…" : "Search"}</button>
+          </div>
+          {apiError && <div style={{ marginBottom: 14, padding: "10px 14px", background: `${PAL.rose}10`, border: `1px solid ${PAL.rose}30`, borderRadius: 8 }}><p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.rose, margin: 0 }}>{apiError}</p></div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 600, overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: `${PAL.border} transparent` }}>
+            {apiLoading && <div style={{ textAlign: "center", padding: "40px 20px" }}><p style={{ fontFamily: ff.display, fontSize: 16, color: PAL.muted, fontStyle: "italic" }}>Searching by notes…</p></div>}
+            {!apiLoading && apiResults.length === 0 && noteInputs.trim() && <div style={{ textAlign: "center", padding: "30px 20px" }}><p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted }}>No results yet. Hit Search to find fragrances with those notes.</p></div>}
+            {apiResults.map((f, i) => renderFragCard(f, i, false))}
           </div>
         </div>
       )}
