@@ -73,30 +73,64 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
   const results = searchMode === "api" && apiResults.length > 0 ? apiResults : localResults;
 
   /* ─── API search functions ─── */
-  const parseApiResults = (data) => (Array.isArray(data) ? data : data?.results || data?.data || []).map(f => ({
-    name: f.Name || f.name || "", house: f.Brand || f.brand || "", cost: parseFloat(f.Price || f.price) || 0, ml: 0,
-    notes: (f["General Notes"] || f.notes || []).map(n => typeof n === "string" ? n.toLowerCase() : n),
-    description: [f.Longevity ? `${f.Longevity} longevity` : "", f.Sillage ? `${f.Sillage} sillage` : "", f.Description || ""].filter(Boolean).join(" · "),
-    _api: true,
-  }));
+  const parseApiResults = (data) => {
+    /* Fragella can return: flat array, { data: [...] }, or single object */
+    let list = [];
+    if (Array.isArray(data)) list = data;
+    else if (data?.data && Array.isArray(data.data)) list = data.data;
+    else if (data?.results && Array.isArray(data.results)) list = data.results;
+    else if (data?.Name || data?.name) list = [data];
+    return list.map(f => ({
+      name: f.Name || f.name || "",
+      house: f.Brand || f.brand || "",
+      cost: parseFloat(f.Price || f.price) || 0,
+      ml: 0,
+      notes: [
+        ...(f["Top Notes"] || f.top_notes || []),
+        ...(f["Middle Notes"] || f.middle_notes || []),
+        ...(f["Base Notes"] || f.base_notes || []),
+        ...(f["General Notes"] || f.notes || []),
+      ].map(n => typeof n === "string" ? n.toLowerCase() : (n?.name || "").toLowerCase()).filter(Boolean),
+      description: [
+        f.Description || "",
+        f.Longevity ? `${f.Longevity} longevity` : "",
+        f.Sillage ? `${f.Sillage} sillage` : "",
+        f.similarity_score ? `${Math.round(f.similarity_score)}% similar` : "",
+      ].filter(Boolean).join(" · "),
+      _api: true,
+    })).filter(f => f.name);
+  };
 
   const apiCall = async (endpoint, params) => {
     setApiLoading(true); setApiError(null);
     try {
       const qp = new URLSearchParams({ endpoint, ...params });
       const res = await fetch(`/api/fragella?${qp}`);
-      if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
-      setApiResults(parseApiResults(data));
-    } catch {
-      setApiError("Fragella API not configured. Add FRAGELLA_API_KEY in Vercel → Settings → Environment Variables.");
+      if (!res.ok) {
+        if (res.status === 500 && data?.error === "API key not configured") {
+          setApiError("Fragella API key not configured. Add FRAGELLA_API_KEY in Vercel → Settings → Environment Variables, then redeploy.");
+        } else {
+          setApiError(`API error (${res.status}): ${data?.error || data?.message || "Unknown error"}. Check your Fragella API key and subscription.`);
+        }
+        setApiResults([]);
+      } else {
+        setApiResults(parseApiResults(data));
+      }
+    } catch (err) {
+      setApiError(`Could not reach the API proxy: ${err.message}. Make sure /api/fragella is deployed — try redeploying your Vercel project.`);
       setApiResults([]);
     }
     setApiLoading(false);
   };
 
   const searchByName = (q) => { if (q.length >= 2) apiCall("search", { search: q, limit: "20" }); };
-  const searchByNotes = (notes) => { if (notes.trim()) apiCall("notes", { notes: notes.trim(), limit: "20" }); };
+  const searchByNotes = (notes) => {
+    if (!notes.trim()) return;
+    /* Use the match endpoint with notes split into top/middle/base */
+    const noteList = notes.split(",").map(n => n.trim()).filter(Boolean).join(",");
+    apiCall("match", { top: noteList, limit: "20" });
+  };
   const searchByHouse = (house) => { if (house.trim()) apiCall("brand", { brandName: house.trim(), limit: "20" }); };
   const searchSimilar = (name) => { if (name.trim()) apiCall("similar", { name: name.trim(), limit: "15" }); };
 
