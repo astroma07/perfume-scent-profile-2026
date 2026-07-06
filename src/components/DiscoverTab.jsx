@@ -325,11 +325,24 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
               <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.muted }}>Showing fragrances similar to</span>
               <span style={{ fontFamily: ff.display, fontSize: 16, fontStyle: "italic", color: PAL.cream, marginLeft: 8 }}>{similarSource.name}</span>
               {similarSource.house && <span style={{ fontSize: 11, color: PAL.muted, marginLeft: 6 }}>— {similarSource.house}</span>}
+              <button onClick={() => { searchSimilar(similarSource.name); }}
+                style={{ marginLeft: 12, background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "3px 10px", fontFamily: ff.body, fontSize: 9, color: PAL.muted, cursor: "pointer" }}>Retry</button>
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 600, overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: `${PAL.border} transparent` }}>
             {apiLoading && <div style={{ textAlign: "center", padding: "40px 20px" }}><p style={{ fontFamily: ff.display, fontSize: 16, color: PAL.muted, fontStyle: "italic" }}>Finding similar fragrances…</p></div>}
-            {!apiLoading && apiResults.length === 0 && similarSource && <div style={{ textAlign: "center", padding: "30px 20px" }}><p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted }}>No similar fragrances found. Try the Fragella API — add your API key in Vercel settings.</p></div>}
+            {!apiLoading && apiResults.length === 0 && similarSource && (
+              <div style={{ textAlign: "center", padding: "30px 20px" }}>
+                <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted }}>No results from the API for "{similarSource.name}". The fragrance may not be in Fragella's database under that exact name.</p>
+                <button onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/fragella?endpoint=similar&name=${encodeURIComponent(similarSource.name)}&limit=5`);
+                    const raw = await res.text();
+                    setApiError(`Debug similar (${res.status}): ${raw.slice(0, 500)}`);
+                  } catch (e) { setApiError(`Debug failed: ${e.message}`); }
+                }} style={{ marginTop: 10, background: `${PAL.cream}06`, border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "8px 16px", fontFamily: ff.body, fontSize: 11, color: PAL.muted, cursor: "pointer" }}>Debug: Show raw API response</button>
+              </div>
+            )}
             {apiResults.map((f, i) => renderFragCard(f, i, false))}
           </div>
         </div>
