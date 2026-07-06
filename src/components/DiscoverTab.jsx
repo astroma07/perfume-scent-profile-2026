@@ -235,6 +235,16 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
             {[{k:"local",l:"Curated (295)",ic:"📚"},{k:"api",l:"Fragella API (74K+)",ic:"🌐"}].map(v => (
               <button key={v.k} onClick={() => { setSearchMode(v.k); setApiResults([]); setApiError(null); }} style={{ background: searchMode === v.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${searchMode === v.k ? PAL.gold + "44" : PAL.border}`, borderRadius: 8, padding: "5px 12px", fontFamily: ff.body, fontSize: 10, color: searchMode === v.k ? PAL.gold : PAL.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><span style={{ fontSize: 11 }}>{v.ic}</span>{v.l}</button>
             ))}
+            {searchMode === "api" && (
+              <button onClick={async () => {
+                setApiError(null);
+                try {
+                  const res = await fetch("/api/fragella?endpoint=search&search=Sauvage&limit=1");
+                  const raw = await res.text();
+                  setApiError(`Test result (${res.status}): ${raw.slice(0, 300)}`);
+                } catch (e) { setApiError(`Test failed: ${e.message}`); }
+              }} style={{ marginLeft: "auto", background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "4px 10px", fontFamily: ff.body, fontSize: 9, color: PAL.muted, cursor: "pointer" }}>Test API</button>
+            )}
           </div>
           {searchMode === "api" && (
             <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
