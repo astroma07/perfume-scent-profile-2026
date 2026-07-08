@@ -884,7 +884,7 @@ export default function ScentDashboard() {
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
                 <button onClick={() => setEditing(true)} style={{ background: `${PAL.gold}12`, border: `1px solid ${PAL.gold}33`, borderRadius: 8, padding: "8px 16px", color: PAL.gold, fontFamily: ff.body, fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer" }}>✎ Edit Collection</button>
               </div>
-              <TestedTab testedScents={testedScents} setTestedScents={setTestedScents} bottles={bottles} setBottles={setBottles} />
+              <TestedTab testedScents={testedScents} setTestedScents={setTestedScents} bottles={bottles} setBottles={setBottles} bottleRatings={bottleRatings} setBottleRatings={setBottleRatings} />
             </div>
           )}
 
