@@ -16,7 +16,7 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
     const wishlist = bottles.filter(b => b.status === "wishlist" && b.name.trim());
     return wishlist.map((b, i) => {
       const saved = (purchaseData || {})[b.name] || {};
-      return { ...b, id: b.name, priority: saved.priority ?? i + 1, whereToBuy: saved.whereToBuy || "", budgetNote: saved.budgetNote || "", purchased: saved.purchased || false, notes: (b.userNotes || "").split(",").map(n => n.trim()).filter(Boolean) };
+      return { ...b, id: b.name, priority: saved.priority ?? i + 1, whereToBuy: saved.whereToBuy || "", budgetNote: saved.budgetNote || "", purchaseNotes: saved.purchaseNotes || "", purchased: saved.purchased || false, notes: (b.userNotes || "").split(",").map(n => n.trim()).filter(Boolean) };
     });
   }, [bottles, purchaseData]);
 
@@ -158,6 +158,10 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
                       <label style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 4 }}>Budget Note</label>
                       <input style={inputCss} value={item.budgetNote} onChange={e => updateItem(item.name, { budgetNote: e.target.value })} placeholder="Wait for sale, birthday…" />
                     </div>
+                  </div>
+                  <div style={{ marginTop: 10 }}>
+                    <label style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 4 }}>Notes</label>
+                    <textarea style={{ ...inputCss, minHeight: 50, resize: "vertical", lineHeight: 1.5 }} value={item.purchaseNotes || ""} onChange={e => updateItem(item.name, { purchaseNotes: e.target.value })} placeholder="Why you want it, sizing thoughts, layering ideas…" />
                   </div>
                 </div>
               )}

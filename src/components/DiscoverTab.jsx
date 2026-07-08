@@ -101,28 +101,36 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
     })).filter(f => f.name);
   };
 
-  /* Parse Fragrantica results */
+  /* Parse Fragrantica results — uses Croatian field names from the original site */
   const parseFragranticaResults = (data) => {
-    let list = Array.isArray(data) ? data : data?.results || data?.data || [];
+    let list = [];
+    if (data?.data?.hits) list = data.data.hits;
+    else if (Array.isArray(data)) list = data;
+    else if (data?.results) list = data.results;
+    else if (data?.data && Array.isArray(data.data)) list = data.data;
     return list.map(f => {
       const notes = [];
+      /* Full detail responses have structured notes */
       if (f.notes) {
-        if (f.notes.top) notes.push(...f.notes.top);
-        if (f.notes.middle) notes.push(...f.notes.middle);
-        if (f.notes.base) notes.push(...f.notes.base);
+        if (f.notes.top) notes.push(...(Array.isArray(f.notes.top) ? f.notes.top : []));
+        if (f.notes.middle) notes.push(...(Array.isArray(f.notes.middle) ? f.notes.middle : []));
+        if (f.notes.base) notes.push(...(Array.isArray(f.notes.base) ? f.notes.base : []));
       }
-      if (f.main_accords) notes.push(...f.main_accords.map(a => a.name || a).filter(Boolean));
+      if (f.main_accords) notes.push(...f.main_accords.map(a => typeof a === "string" ? a : a.name || "").filter(Boolean));
       return {
-        name: f.name || f.title || "",
-        house: f.brand || f.designer || "",
+        name: f.naslov || f.name || f.title || "",
+        house: f.dizajner || f.brand || f.designer || "",
         cost: 0, ml: 0,
         notes: [...new Set(notes.map(n => (typeof n === "string" ? n : "").toLowerCase()).filter(Boolean))],
         description: [
-          f.description || "",
-          f.rating_value ? `${f.rating_value}★ (${f.rating_count || "?"} reviews)` : "",
-          f.year ? `Released ${f.year}` : "",
+          f.rating_rounded ? `${f.rating_rounded}★` : "",
+          f.spol || f.gender || "",
+          f.godina || f.year ? `${f.godina || f.year}` : "",
+          f.collection ? `${f.collection} collection` : "",
         ].filter(Boolean).join(" · "),
         _api: true, _source: "fragrantica",
+        _slug: f.slug || "",
+        _id: f.id || f.objectID || "",
       };
     }).filter(f => f.name);
   };
@@ -218,7 +226,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
             <span style={{ fontFamily: ff.display, fontSize: 18, fontStyle: "italic", color: PAL.cream }}>{frag.name}</span>
             <span style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted }}>— {frag.house}</span>
             {showScore && frag.pct > 0 && <span style={{ fontFamily: ff.display, fontSize: 14, color: PAL.gold, background: `${PAL.gold}12`, borderRadius: 10, padding: "2px 10px" }}>{frag.pct}%</span>}
-            {frag._api && <span style={{ fontSize: 8, color: PAL.muted, border: `1px solid ${PAL.border}`, borderRadius: 3, padding: "1px 5px" }}>API</span>}
+            {frag._api && <span style={{ fontSize: 8, color: frag._source === "fragrantica" ? "#c49bd4" : PAL.muted, border: `1px solid ${frag._source === "fragrantica" ? "#c49bd450" : PAL.border}`, borderRadius: 3, padding: "1px 5px" }}>{frag._source === "fragrantica" ? "Fragrantica" : "Fragella"}</span>}
           </div>
           {frag.description && <p style={{ fontFamily: ff.body, fontSize: 12, color: `${PAL.cream}77`, marginTop: 6, lineHeight: 1.5 }}>{frag.description}</p>}
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 8 }}>
@@ -231,6 +239,29 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
             {frag.cost > 0 && <span style={{ fontFamily: ff.display, fontSize: 18, color: PAL.cream }}>${frag.cost}</span>}
             {frag.ml > 0 && frag.cost > 0 && <span style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted }}>{frag.ml}mL</span>}
             {/* Find Similar button */}
+            {frag._source === "fragrantica" && frag.notes.length === 0 && frag._slug && (
+              <button onClick={async () => {
+                try {
+                  const res = await fetch(`/api/fragrantica?endpoint=details&url=https://www.fragrantica.com/perfume/${frag._slug}.html`);
+                  const data = await res.json();
+                  if (res.ok && data) {
+                    const notes = [];
+                    const d = data?.data || data;
+                    if (d.top_notes) notes.push(...d.top_notes.map(n => typeof n === "string" ? n : n.name || ""));
+                    if (d.middle_notes) notes.push(...d.middle_notes.map(n => typeof n === "string" ? n : n.name || ""));
+                    if (d.base_notes) notes.push(...d.base_notes.map(n => typeof n === "string" ? n : n.name || ""));
+                    if (d.main_accords) notes.push(...d.main_accords.map(a => typeof a === "string" ? a : a.accord || a.name || ""));
+                    if (notes.length > 0) {
+                      setApiResults(prev => prev.map(r => r.name === frag.name && r._source === "fragrantica"
+                        ? { ...r, notes: [...new Set(notes.map(n => n.toLowerCase()).filter(Boolean))] }
+                        : r
+                      ));
+                    }
+                  }
+                } catch {}
+              }}
+              style={{ background: `${PAL.gold}10`, border: `1px solid ${PAL.gold}30`, borderRadius: 6, padding: "3px 10px", color: PAL.gold, fontFamily: ff.body, fontSize: 9, cursor: "pointer", letterSpacing: 1 }}>Load Notes</button>
+            )}
             <button onClick={() => { setSimilarSource(frag); setActiveSection("similar"); if (searchMode === "api") searchSimilar(frag.name); }}
               style={{ marginLeft: "auto", background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "3px 10px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, cursor: "pointer", letterSpacing: 1 }}>Find Similar</button>
             {/* Browse House button */}
