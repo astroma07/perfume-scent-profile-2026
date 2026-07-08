@@ -159,8 +159,11 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
     if (!query || query.length < 2) return;
     try {
       const res = await fetch(`/api/fragrantica?endpoint=search&query=${encodeURIComponent(query)}&limit=15`);
-      if (!res.ok) return;
       const data = await res.json();
+      if (!res.ok) {
+        if (!apiError) setApiError(`Fragrantica (${res.status}): ${data?.error || "Unknown error"}`);
+        return;
+      }
       const results = parseFragranticaResults(data);
       if (results.length > 0) {
         setApiResults(prev => {
@@ -169,7 +172,9 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
           return [...prev, ...newResults];
         });
       }
-    } catch { /* Fragrantica unavailable, continue with Fragella results */ }
+    } catch (e) {
+      if (!apiError) setApiError(`Fragrantica unavailable: ${e.message}`);
+    }
   };
 
   const fragranticaDetails = async (url) => {
@@ -290,13 +295,17 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
             {[{k:"local",l:"Curated (295)",ic:"📚"},{k:"api",l:"Fragella (74K+)",ic:"🌐"},{k:"fragrantica",l:"Fragrantica",ic:"🔍"}].map(v => (
               <button key={v.k} onClick={() => { setSearchMode(v.k); setApiResults([]); setApiError(null); }} style={{ background: searchMode === v.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${searchMode === v.k ? PAL.gold + "44" : PAL.border}`, borderRadius: 8, padding: "5px 12px", fontFamily: ff.body, fontSize: 10, color: searchMode === v.k ? PAL.gold : PAL.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><span style={{ fontSize: 11 }}>{v.ic}</span>{v.l}</button>
             ))}
-            {searchMode === "api" && (
+            {(searchMode === "api" || searchMode === "fragrantica") && (
               <button onClick={async () => {
                 setApiError(null);
+                const isF = searchMode === "fragrantica";
+                const url = isF
+                  ? "/api/fragrantica?endpoint=search&query=Santal&limit=3"
+                  : "/api/fragella?endpoint=search&search=Sauvage&limit=1";
                 try {
-                  const res = await fetch("/api/fragella?endpoint=search&search=Sauvage&limit=1");
+                  const res = await fetch(url);
                   const raw = await res.text();
-                  setApiError(`Test result (${res.status}): ${raw.slice(0, 300)}`);
+                  setApiError(`Test ${isF ? "Fragrantica" : "Fragella"} (${res.status}): ${raw.slice(0, 400)}`);
                 } catch (e) { setApiError(`Test failed: ${e.message}`); }
               }} style={{ marginLeft: "auto", background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "4px 10px", fontFamily: ff.body, fontSize: 9, color: PAL.muted, cursor: "pointer" }}>Test API</button>
             )}
