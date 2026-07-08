@@ -185,6 +185,38 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
           );
         })}
 
+        {/* ── Testers section (cross-listed from all categories) ── */}
+        {(() => {
+          const testerItems = bottles.map((b, i) => ({ ...b, _i: i })).filter(b => b.hasTester);
+          return (
+            <div style={{ marginBottom: 18 }}>
+              <h4 onClick={() => toggleSection("_testers")} style={{
+                fontFamily: ff.body, fontSize: 11, letterSpacing: 3, textTransform: "uppercase",
+                color: TESTER_COLOR, margin: "0 0 8px",
+                borderBottom: `1px solid ${TESTER_COLOR}22`, paddingBottom: 6,
+                cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none",
+              }}>
+                <span style={{ fontSize: 8, transition: "transform .2s", transform: collapsedSections["_testers"] ? "rotate(-90deg)" : "rotate(0deg)" }}>▼</span>
+                testers ({testerItems.length})
+              </h4>
+              {!collapsedSections["_testers"] && testerItems.map(b => {
+                const i = b._i;
+                return (
+                  <div key={`tester-${i}`} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, padding: "8px 12px", background: `${TESTER_COLOR}06`, border: `1px solid ${TESTER_COLOR}18`, borderRadius: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: STATUS_COLORS[b.status] || PAL.muted, flexShrink: 0 }} />
+                    <span style={{ fontFamily: ff.display, fontSize: 14, fontStyle: "italic", color: PAL.cream, flex: 1 }}>{b.name}</span>
+                    <span style={{ fontSize: 10, color: PAL.muted }}>{b.house}</span>
+                    <span style={{ fontSize: 8, letterSpacing: 1.5, textTransform: "uppercase", color: STATUS_COLORS[b.status] || PAL.muted, background: `${STATUS_COLORS[b.status] || PAL.muted}14`, border: `1px solid ${STATUS_COLORS[b.status] || PAL.muted}30`, borderRadius: 10, padding: "2px 8px", fontFamily: ff.body }}>{b.status}</span>
+                    <button onClick={() => { const a = [...bottles]; a[i] = { ...a[i], hasTester: false }; setBottles(a); }}
+                      style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "3px 8px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, cursor: "pointer" }}>Remove tester</button>
+                  </div>
+                );
+              })}
+              {testerItems.length === 0 && !collapsedSections["_testers"] && <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, padding: "4px 0" }}>No testers — use the ◉ toggle on any fragrance to mark it as a tester</p>}
+            </div>
+          );
+        })()}
+
         <button onClick={() => setBottles([...bottles, { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "to test", userNotes: "", thoughts: "", tags: {}, hasTester: false }])} style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: 10, color: PAL.gold, cursor: "pointer", fontFamily: ff.body, fontSize: 12, width: "100%" }}>+ Add Fragrance</button>
 
         <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${PAL.border}` }}>
