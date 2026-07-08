@@ -46,10 +46,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
         </div>
 
         {STATUSES.map(status => {
-          const items = bottles.map((b, i) => ({ ...b, _i: i })).filter(b => {
-            if (status === "tester") return b.status === "tester" || b.hasTester;
-            return b.status === status;
-          });
+          const items = bottles.map((b, i) => ({ ...b, _i: i })).filter(b => b.status === status);
           return (
             <div key={status} style={{ marginBottom: 18 }}>
               <h4 onClick={() => toggleSection(status)} style={{

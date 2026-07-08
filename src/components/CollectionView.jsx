@@ -9,8 +9,8 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
   const [expandedIdx, setExpandedIdx] = useState(null);
 
   const sorted = useMemo(() => {
-    let list = bottles.map((b, i) => ({ ...b, _idx: i })).filter(b => b.name.trim());
-    if (filterStatus) list = list.filter(b => filterStatus === "tester" ? (b.status === "tester" || b.hasTester) : b.status === filterStatus);
+    let list = bottles.map((b, i) => ({ ...b, _idx: i })).filter(b => b.name.trim() && b.status !== "to test");
+    if (filterStatus) list = list.filter(b => filterStatus === "tester" ? b.hasTester : b.status === filterStatus);
     if (sortBy === "name") list.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === "house") list.sort((a, b) => (a.house || "").localeCompare(b.house || ""));
     else if (sortBy === "cost") list.sort((a, b) => (b.cost || 0) - (a.cost || 0));
@@ -53,7 +53,7 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
         ))}
         <span style={{ width: 1, height: 16, background: PAL.border, margin: "0 4px" }} />
         <span style={{ fontFamily: ff.body, fontSize: 9, color: PAL.muted, letterSpacing: 2, textTransform: "uppercase", marginRight: 4 }}>Filter</span>
-        {STATUSES.map(s => (
+        {STATUSES.filter(s => s !== "to test").map(s => (
           <button key={s} onClick={() => setFilterStatus(filterStatus === s ? null : s)} style={{
             background: filterStatus === s ? `${STATUS_COLORS[s]}18` : "transparent",
             border: `1px solid ${filterStatus === s ? STATUS_COLORS[s] + "44" : PAL.border}`,
@@ -62,6 +62,13 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
             cursor: "pointer", textTransform: "capitalize",
           }}>{s}</button>
         ))}
+        <button onClick={() => setFilterStatus(filterStatus === "tester" ? null : "tester")} style={{
+          background: filterStatus === "tester" ? `${TESTER_COLOR}18` : "transparent",
+          border: `1px solid ${filterStatus === "tester" ? TESTER_COLOR + "44" : PAL.border}`,
+          borderRadius: 16, padding: "4px 12px",
+          fontFamily: ff.body, fontSize: 10, color: filterStatus === "tester" ? TESTER_COLOR : PAL.muted,
+          cursor: "pointer",
+        }}>Tester</button>
       </div>
 
       {/* Collection cards */}
@@ -104,7 +111,7 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
                   borderRadius: 12, color: statusColor, background: `${statusColor}14`,
                   border: `1px solid ${statusColor}30`, fontFamily: ff.body, flexShrink: 0,
                 }}>{b.status}</span>
-                {b.hasTester && (
+                {b.hasTester && b.status !== "tester" && (
                   <span style={{
                     fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", padding: "3px 10px",
                     borderRadius: 12, color: TESTER_COLOR, background: `${TESTER_COLOR}14`,

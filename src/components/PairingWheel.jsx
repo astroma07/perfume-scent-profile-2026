@@ -11,7 +11,7 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
 
   /* Split: owned on inner ring, testers on outer ring. Owned+hasTester appear on BOTH rings visually */
   const ownedBottles = useMemo(() => bottles.filter(b => b.status === "owned" && (b.userNotes || "").trim()), [bottles]);
-  const testerBottles = useMemo(() => bottles.filter(b => (b.status === "tester" || b.hasTester) && b.status !== "owned" && (b.userNotes || "").trim()), [bottles]);
+  const testerBottles = useMemo(() => bottles.filter(b => b.hasTester && b.status !== "owned" && (b.userNotes || "").trim()), [bottles]);
   /* Owned bottles that ALSO have samples — shown on outer ring too */
   const ownedWithSample = useMemo(() => ownedBottles.filter(b => b.hasTester), [ownedBottles]);
   /* allActive: unique list for pairing calculations */
