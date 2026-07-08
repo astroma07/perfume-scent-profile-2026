@@ -74,7 +74,6 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
 
   /* ─── API search functions ─── */
   const parseApiResults = (data) => {
-    /* Fragella can return: flat array, { data: [...] }, or single object */
     let list = [];
     if (Array.isArray(data)) list = data;
     else if (data?.similar_fragrances && Array.isArray(data.similar_fragrances)) list = data.similar_fragrances;
@@ -93,13 +92,39 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
         ...(f["General Notes"] || f.notes || []),
       ].map(n => typeof n === "string" ? n.toLowerCase() : (n?.name || "").toLowerCase()).filter(Boolean),
       description: [
-        f.Description || "",
+        f.Description || f.description || "",
         f.Longevity ? `${f.Longevity} longevity` : "",
         f.Sillage ? `${f.Sillage} sillage` : "",
         f.similarity_score ? `${Math.round(f.similarity_score)}% similar` : "",
       ].filter(Boolean).join(" · "),
-      _api: true,
+      _api: true, _source: "fragella",
     })).filter(f => f.name);
+  };
+
+  /* Parse Fragrantica results */
+  const parseFragranticaResults = (data) => {
+    let list = Array.isArray(data) ? data : data?.results || data?.data || [];
+    return list.map(f => {
+      const notes = [];
+      if (f.notes) {
+        if (f.notes.top) notes.push(...f.notes.top);
+        if (f.notes.middle) notes.push(...f.notes.middle);
+        if (f.notes.base) notes.push(...f.notes.base);
+      }
+      if (f.main_accords) notes.push(...f.main_accords.map(a => a.name || a).filter(Boolean));
+      return {
+        name: f.name || f.title || "",
+        house: f.brand || f.designer || "",
+        cost: 0, ml: 0,
+        notes: [...new Set(notes.map(n => (typeof n === "string" ? n : "").toLowerCase()).filter(Boolean))],
+        description: [
+          f.description || "",
+          f.rating_value ? `${f.rating_value}★ (${f.rating_count || "?"} reviews)` : "",
+          f.year ? `Released ${f.year}` : "",
+        ].filter(Boolean).join(" · "),
+        _api: true, _source: "fragrantica",
+      };
+    }).filter(f => f.name);
   };
 
   const apiCall = async (endpoint, params) => {
@@ -112,28 +137,57 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
         if (res.status === 500 && data?.error === "API key not configured") {
           setApiError("Fragella API key not configured. Add FRAGELLA_API_KEY in Vercel → Settings → Environment Variables, then redeploy.");
         } else {
-          setApiError(`API error (${res.status}): ${data?.error || data?.message || "Unknown error"}. Check your Fragella API key and subscription.`);
+          setApiError(`Fragella error (${res.status}): ${data?.error || "Unknown"}`);
         }
         setApiResults([]);
       } else {
-        setApiResults(parseApiResults(data));
+        const results = parseApiResults(data);
+        setApiResults(results);
+        /* If Fragella returns few/no results, auto-fallback to Fragrantica */
+        if (results.length < 3 && endpoint === "search") {
+          fragranticaSearch(params.search || params.name || "");
+        }
       }
     } catch (err) {
-      setApiError(`Could not reach the API proxy: ${err.message}. Make sure /api/fragella is deployed — try redeploying your Vercel project.`);
+      setApiError(`Could not reach API: ${err.message}`);
       setApiResults([]);
     }
     setApiLoading(false);
   };
 
-  const searchByName = (q) => { if (q.length >= 2) apiCall("search", { search: q, limit: "20" }); };
+  const fragranticaSearch = async (query) => {
+    if (!query || query.length < 2) return;
+    try {
+      const res = await fetch(`/api/fragrantica?endpoint=search&query=${encodeURIComponent(query)}&limit=15`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const results = parseFragranticaResults(data);
+      if (results.length > 0) {
+        setApiResults(prev => {
+          const existingNames = new Set(prev.map(r => r.name.toLowerCase()));
+          const newResults = results.filter(r => !existingNames.has(r.name.toLowerCase()));
+          return [...prev, ...newResults];
+        });
+      }
+    } catch { /* Fragrantica unavailable, continue with Fragella results */ }
+  };
+
+  const fragranticaDetails = async (url) => {
+    try {
+      const res = await fetch(`/api/fragrantica?endpoint=details&url=${encodeURIComponent(url)}`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch { return null; }
+  };
+
+  const searchByName = (q) => { if (q.length >= 2) { apiCall("search", { search: q, limit: "20" }); fragranticaSearch(q); } };
   const searchByNotes = (notes) => {
     if (!notes.trim()) return;
-    /* Use the match endpoint with notes split into top/middle/base */
     const noteList = notes.split(",").map(n => n.trim()).filter(Boolean).join(",");
     apiCall("match", { top: noteList, limit: "20" });
   };
-  const searchByHouse = (house) => { if (house.trim()) apiCall("brand", { brandName: house.trim(), limit: "20" }); };
-  const searchSimilar = (name) => { if (name.trim()) apiCall("similar", { name: name.trim(), limit: "15" }); };
+  const searchByHouse = (house) => { if (house.trim()) { apiCall("brand", { brandName: house.trim(), limit: "20" }); fragranticaSearch(house.trim()); } };
+  const searchSimilar = (name) => { if (name.trim()) { apiCall("similar", { name: name.trim(), limit: "15" }); fragranticaSearch(name.trim()); } };
 
   const alreadyInCollection = (name) => bottles.some(b => b.name.toLowerCase() === name.toLowerCase());
 
@@ -233,7 +287,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
       {activeSection === "browse" && (
         <div>
           <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
-            {[{k:"local",l:"Curated (295)",ic:"📚"},{k:"api",l:"Fragella API (74K+)",ic:"🌐"}].map(v => (
+            {[{k:"local",l:"Curated (295)",ic:"📚"},{k:"api",l:"Fragella (74K+)",ic:"🌐"},{k:"fragrantica",l:"Fragrantica",ic:"🔍"}].map(v => (
               <button key={v.k} onClick={() => { setSearchMode(v.k); setApiResults([]); setApiError(null); }} style={{ background: searchMode === v.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${searchMode === v.k ? PAL.gold + "44" : PAL.border}`, borderRadius: 8, padding: "5px 12px", fontFamily: ff.body, fontSize: 10, color: searchMode === v.k ? PAL.gold : PAL.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><span style={{ fontSize: 11 }}>{v.ic}</span>{v.l}</button>
             ))}
             {searchMode === "api" && (
@@ -257,16 +311,24 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
             <input value={query} onChange={e => { setQuery(e.target.value); if (searchMode === "local") setApiResults([]); }}
               onKeyDown={e => {
-                if (e.key === "Enter" && searchMode === "api") {
-                  if (apiSearchType === "name") searchByName(query);
-                  else if (apiSearchType === "house") searchByHouse(query);
-                  else if (apiSearchType === "noteSearch") searchByNotes(query);
+                if (e.key === "Enter") {
+                  if (searchMode === "fragrantica") { setApiResults([]); fragranticaSearch(query); }
+                  else if (searchMode === "api") {
+                    if (apiSearchType === "name") searchByName(query);
+                    else if (apiSearchType === "house") searchByHouse(query);
+                    else if (apiSearchType === "noteSearch") searchByNotes(query);
+                  }
                 }
               }}
               placeholder={searchMode === "api" ? (apiSearchType === "house" ? "Enter house name…" : apiSearchType === "noteSearch" ? "Enter notes: vetiver, myrrh, amber…" : "Search fragrances…") : "Search by name, house, or note…"}
               style={{ flex: 1, background: `${PAL.cream}06`, border: `1px solid ${PAL.border}`, borderRadius: 10, padding: "12px 16px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
-            {searchMode === "api" && (
-              <button onClick={() => { if (apiSearchType === "name") searchByName(query); else if (apiSearchType === "house") searchByHouse(query); else searchByNotes(query); }}
+            {(searchMode === "api" || searchMode === "fragrantica") && (
+              <button onClick={() => {
+                if (searchMode === "fragrantica") { setApiResults([]); fragranticaSearch(query); }
+                else if (apiSearchType === "name") searchByName(query);
+                else if (apiSearchType === "house") searchByHouse(query);
+                else searchByNotes(query);
+              }}
                 disabled={apiLoading || query.length < 2}
                 style={{ background: `${PAL.gold}20`, border: `1px solid ${PAL.gold}40`, borderRadius: 10, padding: "0 20px", color: PAL.gold, fontFamily: ff.body, fontSize: 12, cursor: apiLoading ? "wait" : "pointer", opacity: apiLoading || query.length < 2 ? .4 : 1 }}>{apiLoading ? "…" : "Search"}</button>
             )}
