@@ -70,7 +70,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
     return filtered;
   }, [query, filterHouse, filterNote]);
 
-  const results = searchMode === "api" && apiResults.length > 0 ? apiResults : localResults;
+  const results = (searchMode === "api" || searchMode === "fragrantica") && apiResults.length > 0 ? apiResults : localResults;
 
   /* ─── API search functions ─── */
   const parseApiResults = (data) => {
@@ -110,23 +110,29 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
     else if (data?.data && Array.isArray(data.data)) list = data.data;
     return list.map(f => {
       const notes = [];
-      /* Full detail responses have structured notes */
       if (f.notes) {
         if (f.notes.top) notes.push(...(Array.isArray(f.notes.top) ? f.notes.top : []));
         if (f.notes.middle) notes.push(...(Array.isArray(f.notes.middle) ? f.notes.middle : []));
         if (f.notes.base) notes.push(...(Array.isArray(f.notes.base) ? f.notes.base : []));
       }
       if (f.main_accords) notes.push(...f.main_accords.map(a => typeof a === "string" ? a : a.name || "").filter(Boolean));
+      /* Parse slug as fallback: "Louis-Vuitton/Imagination" → brand: "Louis Vuitton", name: "Imagination" */
+      let slugName = "", slugBrand = "";
+      if (f.slug) {
+        const parts = f.slug.split("/");
+        if (parts.length >= 2) { slugBrand = parts[0].replace(/-/g, " "); slugName = parts.slice(1).join(" ").replace(/-/g, " "); }
+        else { slugName = f.slug.replace(/-/g, " "); }
+      }
       return {
-        name: f.naslov || f.name || f.title || "",
-        house: f.dizajner || f.brand || f.designer || "",
+        name: f.naslov || f.name || f.title || slugName || "",
+        house: f.dizajner || f.brand || f.designer || slugBrand || "",
         cost: 0, ml: 0,
         notes: [...new Set(notes.map(n => (typeof n === "string" ? n : "").toLowerCase()).filter(Boolean))],
         description: [
-          f.rating_rounded ? `${f.rating_rounded}★` : "",
+          f.rating_rounded ? `${f.rating_rounded}★` : f.rating ? `${Math.round(f.rating * 10) / 10}★` : "",
           f.spol || f.gender || "",
           f.godina || f.year ? `${f.godina || f.year}` : "",
-          f.collection ? `${f.collection} collection` : "",
+          f.collection || "",
         ].filter(Boolean).join(" · "),
         _api: true, _source: "fragrantica",
         _slug: f.slug || "",
