@@ -6,6 +6,7 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
   const [showForm, setShowForm] = useState(false);
   const [editIdx, setEditIdx] = useState(null);
   const [sortBy, setSortBy] = useState("date");
+  const [collapsedSections, setCollapsedSections] = useState({});
   const emptyForm = { name: "", house: "", date: new Date().toISOString().split("T")[0], notes: "", thoughts: "", overall: 0, sillage: 0, longevity: 0, scent: 0, tags: {}, concentration: "", hasTester: false };
   const [form, setForm] = useState(emptyForm);
 
@@ -75,9 +76,12 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
 
   return (
     <div>
-      <SectionTitle title="Tested Fragrances" sub={`${testedScents.length} scent${testedScents.length !== 1 ? "s" : ""} sampled`} />
+      <div onClick={() => setCollapsedSections(p => ({ ...p, tested: !p.tested }))} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 8, marginBottom: 14, userSelect: "none" }}>
+        <span style={{ fontSize: 10, color: PAL.muted, transition: "transform .2s", transform: collapsedSections.tested ? "rotate(-90deg)" : "rotate(0deg)" }}>▼</span>
+        <SectionTitle title="Tested Fragrances" sub={`${testedScents.length} scent${testedScents.length !== 1 ? "s" : ""} sampled`} />
+      </div>
 
-      {!showForm && (
+      {!collapsedSections.tested && !showForm && (
         <button onClick={() => { setShowForm(true); setEditIdx(null); setForm(emptyForm); }} style={{
           width: "100%", padding: "14px", marginBottom: 20, background: `${PAL.gold}10`,
           border: `1px dashed ${PAL.gold}44`, borderRadius: 10, color: PAL.gold,
@@ -85,7 +89,7 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
         }}>+ Log a tested fragrance</button>
       )}
 
-      {showForm && (
+      {!collapsedSections.tested && showForm && (
         <div style={{ background: `${PAL.cream}03`, border: `1px solid ${PAL.gold}22`, borderRadius: 14, padding: "20px 18px", marginBottom: 20, animation: "cardIn .3s both" }}>
 
           {/* Row 1: Name, House, Date */}
@@ -165,7 +169,7 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
       )}
 
       {/* Sort controls */}
-      {testedScents.length > 1 && (
+      {!collapsedSections.tested && testedScents.length > 1 && (
         <div style={{ display: "flex", gap: 4, marginBottom: 14 }}>
           {[{ k: "date", l: "Recent" }, { k: "rating", l: "Top Rated" }, { k: "name", l: "A–Z" }].map(s => (
             <button key={s.k} onClick={() => setSortBy(s.k)} style={{
@@ -179,7 +183,7 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
       )}
 
       {/* Entries list */}
-      {sorted.length === 0 && !showForm && (
+      {!collapsedSections.tested && sorted.length === 0 && !showForm && (
         <div style={{ textAlign: "center", padding: "40px 20px" }}>
           <div style={{ fontSize: 36, marginBottom: 12, opacity: .4 }}>◉</div>
           <p style={{ fontFamily: ff.display, fontSize: 16, color: PAL.cream }}>No scents tested yet</p>
@@ -189,6 +193,7 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
         </div>
       )}
 
+      {!collapsedSections.tested && (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {sorted.map((entry, idx) => {
           const i = entry._origIdx;
@@ -261,6 +266,7 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
           );
         })}
       </div>
+      )}
 
       {/* To Test section */}
       {(() => {
@@ -268,7 +274,11 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
         if (toTestItems.length === 0) return null;
         return (
           <div style={{ marginTop: 24, borderTop: `1px solid ${PAL.border}`, paddingTop: 16 }}>
-            <SectionTitle title="To Test" sub={`${toTestItems.length} fragrance${toTestItems.length !== 1 ? "s" : ""} on your list`} />
+            <div onClick={() => setCollapsedSections(p => ({ ...p, toTest: !p.toTest }))} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 8, marginBottom: 14, userSelect: "none" }}>
+              <span style={{ fontSize: 10, color: PAL.muted, transition: "transform .2s", transform: collapsedSections.toTest ? "rotate(-90deg)" : "rotate(0deg)" }}>▼</span>
+              <SectionTitle title="To Test" sub={`${toTestItems.length} fragrance${toTestItems.length !== 1 ? "s" : ""} on your list`} />
+            </div>
+            {!collapsedSections.toTest && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {toTestItems.map((b, idx) => (
                 <div key={idx} style={{ display: "flex", alignItems: "center", gap: 12, background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 12, padding: "12px 16px" }}>
@@ -291,6 +301,7 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
                 </div>
               ))}
             </div>
+            )}
           </div>
         );
       })()}
