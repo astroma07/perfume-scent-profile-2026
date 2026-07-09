@@ -261,6 +261,39 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
           );
         })}
       </div>
+
+      {/* To Test section */}
+      {(() => {
+        const toTestItems = bottles.filter(b => b.status === "to test" && b.name.trim());
+        if (toTestItems.length === 0) return null;
+        return (
+          <div style={{ marginTop: 24, borderTop: `1px solid ${PAL.border}`, paddingTop: 16 }}>
+            <SectionTitle title="To Test" sub={`${toTestItems.length} fragrance${toTestItems.length !== 1 ? "s" : ""} on your list`} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {toTestItems.map((b, idx) => (
+                <div key={idx} style={{ display: "flex", alignItems: "center", gap: 12, background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 12, padding: "12px 16px" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontFamily: ff.display, fontSize: 16, fontStyle: "italic", color: PAL.cream }}>{b.name}</span>
+                      {b.house && <span style={{ fontSize: 11, color: PAL.muted }}>— {b.house}</span>}
+                    </div>
+                    {(b.userNotes || "").trim() && (
+                      <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 6 }}>
+                        {b.userNotes.split(",").map(n => n.trim()).filter(Boolean).map((n, j) => (
+                          <span key={j} style={{ fontSize: 8, letterSpacing: 1, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3, color: PAL.gold, background: `${PAL.gold}10`, border: `1px solid ${PAL.gold}20` }}>{n}</span>
+                        ))}
+                      </div>
+                    )}
+                    {b.thoughts && <p style={{ fontFamily: ff.body, fontSize: 11, color: `${PAL.cream}55`, margin: "6px 0 0", fontStyle: "italic" }}>"{b.thoughts}"</p>}
+                  </div>
+                  <button onClick={() => { setForm({ ...emptyForm, name: b.name, house: b.house || "", notes: b.userNotes || "", thoughts: b.thoughts || "" }); setEditIdx(null); setShowForm(true); }}
+                    style={{ padding: "6px 12px", borderRadius: 6, background: `${STATUS_COLORS["to test"]}10`, border: `1px solid ${STATUS_COLORS["to test"]}35`, color: STATUS_COLORS["to test"], fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1, flexShrink: 0 }}>Log Test</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

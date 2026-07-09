@@ -9,7 +9,7 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
   const [expandedIdx, setExpandedIdx] = useState(null);
 
   const sorted = useMemo(() => {
-    let list = bottles.map((b, i) => ({ ...b, _idx: i })).filter(b => b.name.trim() && b.status !== "to test");
+    let list = bottles.map((b, i) => ({ ...b, _idx: i })).filter(b => b.name.trim());
     if (filterStatus) list = list.filter(b => filterStatus === "tester" ? b.hasTester : b.status === filterStatus);
     if (sortBy === "name") list.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === "house") list.sort((a, b) => (a.house || "").localeCompare(b.house || ""));
@@ -53,7 +53,7 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
         ))}
         <span style={{ width: 1, height: 16, background: PAL.border, margin: "0 4px" }} />
         <span style={{ fontFamily: ff.body, fontSize: 9, color: PAL.muted, letterSpacing: 2, textTransform: "uppercase", marginRight: 4 }}>Filter</span>
-        {STATUSES.filter(s => s !== "to test").map(s => (
+        {STATUSES.map(s => (
           <button key={s} onClick={() => setFilterStatus(filterStatus === s ? null : s)} style={{
             background: filterStatus === s ? `${STATUS_COLORS[s]}18` : "transparent",
             border: `1px solid ${filterStatus === s ? STATUS_COLORS[s] + "44" : PAL.border}`,
