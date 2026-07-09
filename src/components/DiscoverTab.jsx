@@ -163,17 +163,21 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
     setApiLoading(false);
   };
 
-  const fragranticaSearch = async (query) => {
+  const fragranticaSearch = async (query, replace = false) => {
     if (!query || query.length < 2) return;
+    if (replace) { setApiLoading(true); setApiError(null); }
     try {
-      const res = await fetch(`/api/fragrantica?endpoint=search&query=${encodeURIComponent(query)}&limit=15`);
+      const res = await fetch(`/api/fragrantica?endpoint=search&query=${encodeURIComponent(query)}&limit=20`);
       const data = await res.json();
       if (!res.ok) {
         if (!apiError) setApiError(`Fragrantica (${res.status}): ${data?.error || "Unknown error"}`);
+        if (replace) setApiLoading(false);
         return;
       }
       const results = parseFragranticaResults(data);
-      if (results.length > 0) {
+      if (replace) {
+        setApiResults(results);
+      } else if (results.length > 0) {
         setApiResults(prev => {
           const existingNames = new Set(prev.map(r => r.name.toLowerCase()));
           const newResults = results.filter(r => !existingNames.has(r.name.toLowerCase()));
@@ -183,6 +187,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
     } catch (e) {
       if (!apiError) setApiError(`Fragrantica unavailable: ${e.message}`);
     }
+    if (replace) setApiLoading(false);
   };
 
   const fragranticaDetails = async (url) => {
@@ -331,7 +336,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
                 setApiError(null);
                 const isF = searchMode === "fragrantica";
                 const url = isF
-                  ? "/api/fragrantica?endpoint=search&query=Santal&limit=3"
+                  ? `/api/fragrantica?endpoint=search&query=${encodeURIComponent(query || "Louis Vuitton")}&limit=3`
                   : "/api/fragella?endpoint=search&search=Sauvage&limit=1";
                 try {
                   const res = await fetch(url);
@@ -352,7 +357,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
             <input value={query} onChange={e => { setQuery(e.target.value); if (searchMode === "local") setApiResults([]); }}
               onKeyDown={e => {
                 if (e.key === "Enter") {
-                  if (searchMode === "fragrantica") { setApiResults([]); fragranticaSearch(query); }
+                  if (searchMode === "fragrantica") { fragranticaSearch(query, true); }
                   else if (searchMode === "api") {
                     if (apiSearchType === "name") searchByName(query);
                     else if (apiSearchType === "house") searchByHouse(query);
@@ -364,7 +369,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
               style={{ flex: 1, background: `${PAL.cream}06`, border: `1px solid ${PAL.border}`, borderRadius: 10, padding: "12px 16px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
             {(searchMode === "api" || searchMode === "fragrantica") && (
               <button onClick={() => {
-                if (searchMode === "fragrantica") { setApiResults([]); fragranticaSearch(query); }
+                if (searchMode === "fragrantica") { fragranticaSearch(query, true); }
                 else if (apiSearchType === "name") searchByName(query);
                 else if (apiSearchType === "house") searchByHouse(query);
                 else searchByNotes(query);
