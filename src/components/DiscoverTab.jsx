@@ -335,13 +335,14 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
               <button onClick={async () => {
                 setApiError(null);
                 const isF = searchMode === "fragrantica";
+                const q = query.trim() || "Imagination";
                 const url = isF
-                  ? `/api/fragrantica?endpoint=search&query=${encodeURIComponent(query || "Louis Vuitton")}&limit=3`
-                  : "/api/fragella?endpoint=search&search=Sauvage&limit=1";
+                  ? `/api/fragrantica?endpoint=search&query=${encodeURIComponent(q)}&limit=5`
+                  : `/api/fragella?endpoint=search&search=${encodeURIComponent(q)}&limit=3`;
                 try {
                   const res = await fetch(url);
                   const raw = await res.text();
-                  setApiError(`Test ${isF ? "Fragrantica" : "Fragella"} (${res.status}): ${raw.slice(0, 400)}`);
+                  setApiError(`Test "${q}" → ${url}\n(${res.status}): ${raw.slice(0, 500)}`);
                 } catch (e) { setApiError(`Test failed: ${e.message}`); }
               }} style={{ marginLeft: "auto", background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "4px 10px", fontFamily: ff.body, fontSize: 9, color: PAL.muted, cursor: "pointer" }}>Test API</button>
             )}
