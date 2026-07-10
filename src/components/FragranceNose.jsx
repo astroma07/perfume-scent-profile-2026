@@ -234,12 +234,13 @@ const FragranceNose = ({ bottles, testedScents, noteOverrides, likedNotes, setLi
 
           {/* Category labels */}
           {profile.map((f, i) => {
-            const p = getPos(i, maxR + 44);
+            const p = getPos(i, maxR + 50);
             return (
               <g key={`label-${i}`}>
-                <circle cx={p.x} cy={p.y} r={12} fill={f.color} opacity={f.pct * 0.25} />
-                <text x={p.x} y={p.y - 9} textAnchor="middle" dominantBaseline="middle" fill={f.color} fontSize="16" fontWeight="600" fontFamily={ff.body} letterSpacing="1" style={{ textTransform: "uppercase" }}>{f.label}</text>
-                <text x={p.x} y={p.y + 7} textAnchor="middle" dominantBaseline="middle" fill={PAL.muted} fontSize="9" fontFamily={ff.body}>{f.fragrances.length} frag{f.fragrances.length !== 1 ? "s" : ""} · {Math.round(f.pct * 100)}%</text>
+                <circle cx={p.x} cy={p.y} r={14} fill={f.color} opacity={f.pct * 0.25} />
+                <text x={p.x} y={p.y - 12} textAnchor="middle" dominantBaseline="middle" fill={f.color} fontSize="18" fontWeight="600" fontFamily={ff.body} letterSpacing="1.5" style={{ textTransform: "uppercase" }}>{f.label}</text>
+                <text x={p.x} y={p.y + 8} textAnchor="middle" dominantBaseline="middle" fill={PAL.cream} fontSize="14" fontFamily={ff.display} fontStyle="italic">{f.fragrances.length} fragrance{f.fragrances.length !== 1 ? "s" : ""}</text>
+                <text x={p.x} y={p.y + 24} textAnchor="middle" dominantBaseline="middle" fill={PAL.muted} fontSize="12" fontFamily={ff.body}>{Math.round(f.pct * 100)}%</text>
               </g>
             );
           })}
