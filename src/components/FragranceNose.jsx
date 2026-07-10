@@ -203,29 +203,34 @@ const FragranceNose = ({ bottles, testedScents, noteOverrides, likedNotes, setLi
           <circle cx={cx} cy={cy} r={4} fill={PAL.gold} opacity="0.5" />
 
           {/* Fragrance dots */}
-          {profile.map((f, i) => f.fragrances.map((frag, j) => {
-            const baseR = 90 + (frag.weight / 5) * (f.pct * maxR * 0.7);
-            const jitter = (j * 17 + i * 31) % 20 - 10;
-            const angleOff = ((j - f.fragrances.length / 2) * 0.04);
-            const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + angleOff;
-            const r = baseR + jitter;
-            const x = cx + Math.cos(angle) * r, y = cy + Math.sin(angle) * r;
-            const isHov = hovered === `${f.key}-${j}`;
-            const dotSize = 3 + frag.weight * 1;
-            return (
-              <g key={`dot-${f.key}-${j}`} onMouseEnter={() => setHovered(`${f.key}-${j}`)} onMouseLeave={() => setHovered(null)} style={{ cursor: "pointer" }}>
-                <circle cx={x} cy={y} r={isHov ? 22 : 10} fill={f.color} opacity={isHov ? 0.15 : 0.03 + Math.sin(t * 0.5 + j + i) * 0.02} style={{ transition: "all .3s" }} />
-                <circle cx={x} cy={y} r={isHov ? dotSize + 3 : dotSize} fill={f.color} opacity={isHov ? 1 : 0.7} stroke={isHov ? PAL.cream : "none"} strokeWidth={isHov ? 1.5 : 0} style={{ transition: "all .2s" }} />
-                {isHov && (
-                  <g>
-                    <rect x={x - 80} y={y - 44} width="160" height="38" rx="8" fill={PAL.bg} stroke={f.color} strokeWidth="1" opacity="0.95" />
-                    <text x={x} y={y - 30} textAnchor="middle" dominantBaseline="middle" fill={PAL.cream} fontSize="14" fontFamily={ff.display} fontStyle="italic">{frag.name}</text>
-                    <text x={x} y={y - 15} textAnchor="middle" dominantBaseline="middle" fill={PAL.muted} fontSize="9" fontFamily={ff.body}>{frag.house}</text>
-                  </g>
-                )}
-              </g>
-            );
-          }))}
+          {profile.map((f, i) => {
+            const sectorAngle = (1 / n) * Math.PI * 2;
+            const sectorStart = (i / n) * Math.PI * 2 - Math.PI / 2 - sectorAngle * 0.3;
+            const sectorWidth = sectorAngle * 0.6;
+            return f.fragrances.map((frag, j) => {
+              const baseR = 90 + (frag.weight / 6) * (f.pct * maxR * 0.65);
+              const jitter = ((j * 7 + i * 13) % 14 - 7);
+              const r = Math.min(baseR + jitter, 80 + f.pct * (maxR - 80) - 8);
+              const anglePos = f.fragrances.length <= 1 ? 0.5 : j / (f.fragrances.length - 1);
+              const angle = sectorStart + anglePos * sectorWidth;
+              const x = cx + Math.cos(angle) * r, y = cy + Math.sin(angle) * r;
+              const isHov = hovered === `${f.key}-${j}`;
+              const dotSize = 2 + frag.weight * 0.6;
+              return (
+                <g key={`dot-${f.key}-${j}`} onMouseEnter={() => setHovered(`${f.key}-${j}`)} onMouseLeave={() => setHovered(null)} style={{ cursor: "pointer" }}>
+                  <circle cx={x} cy={y} r={isHov ? 18 : 7} fill={f.color} opacity={isHov ? 0.15 : 0.03 + Math.sin(t * 0.5 + j + i) * 0.02} style={{ transition: "all .3s" }} />
+                  <circle cx={x} cy={y} r={isHov ? dotSize + 2 : dotSize} fill={f.color} opacity={isHov ? 1 : 0.7} stroke={isHov ? PAL.cream : "none"} strokeWidth={isHov ? 1 : 0} style={{ transition: "all .2s" }} />
+                  {isHov && (
+                    <g>
+                      <rect x={x - 80} y={y - 44} width="160" height="38" rx="8" fill={PAL.bg} stroke={f.color} strokeWidth="1" opacity="0.95" />
+                      <text x={x} y={y - 30} textAnchor="middle" dominantBaseline="middle" fill={PAL.cream} fontSize="14" fontFamily={ff.display} fontStyle="italic">{frag.name}</text>
+                      <text x={x} y={y - 15} textAnchor="middle" dominantBaseline="middle" fill={PAL.muted} fontSize="9" fontFamily={ff.body}>{frag.house}</text>
+                    </g>
+                  )}
+                </g>
+              );
+            });
+          })}
 
           {/* Category labels */}
           {profile.map((f, i) => {
