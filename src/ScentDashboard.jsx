@@ -20,6 +20,7 @@ import DiscoverTab from "./components/DiscoverTab.jsx";
 import PairingWheel from "./components/PairingWheel.jsx";
 import CollectionView from "./components/CollectionView.jsx";
 import PurchaseList from "./components/PurchaseList.jsx";
+import FragranceNose from "./components/FragranceNose.jsx";
 
 export default function ScentDashboard() {
   const [tab, setTab] = useState(0);
@@ -53,6 +54,9 @@ export default function ScentDashboard() {
   const [rejectedPairings, setRejectedPairings] = useState(() => loadStored("rejectedPairings", []));
   const [purchaseData, setPurchaseData] = useState(() => loadStored("purchaseData", {}));
   const [collectionSubTab, setCollectionSubTab] = useState("collection");
+  const [notesSubTab, setNotesSubTab] = useState("doughnut");
+  const [likedNotes, setLikedNotes] = useState(() => loadStored("likedNotes", []));
+  const [dislikedNotes, setDislikedNotes] = useState(() => loadStored("dislikedNotes", []));
   const [visibleTabs, setVisibleTabs] = useState(() => loadStored("visibleTabs", { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true }));
   const [theme, setTheme] = useState(() => loadStored("theme", { preset: "apothecary" }));
 
@@ -127,6 +131,8 @@ export default function ScentDashboard() {
         if (data.pairingRatings) setPairingRatings(data.pairingRatings);
         if (data.rejectedPairings) setRejectedPairings(data.rejectedPairings);
         if (data.purchaseData) setPurchaseData(data.purchaseData);
+        if (data.likedNotes) setLikedNotes(data.likedNotes);
+        if (data.dislikedNotes) setDislikedNotes(data.dislikedNotes);
         try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
         setShowWelcome(false);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
@@ -151,11 +157,13 @@ export default function ScentDashboard() {
   useEffect(() => { try { localStorage.setItem("scent_pairingRatings", JSON.stringify(pairingRatings)); } catch {} }, [pairingRatings]);
   useEffect(() => { try { localStorage.setItem("scent_rejectedPairings", JSON.stringify(rejectedPairings)); } catch {} }, [rejectedPairings]);
   useEffect(() => { try { localStorage.setItem("scent_purchaseData", JSON.stringify(purchaseData)); } catch {} }, [purchaseData]);
+  useEffect(() => { try { localStorage.setItem("scent_likedNotes", JSON.stringify(likedNotes)); } catch {} }, [likedNotes]);
+  useEffect(() => { try { localStorage.setItem("scent_dislikedNotes", JSON.stringify(dislikedNotes)); } catch {} }, [dislikedNotes]);
 
   /* ─── Export / Import ─── */
 
   const exportData = () => {
-    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, opposingPairs, pairingNotes, pairingRatings, rejectedPairings, purchaseData, exportedAt: new Date().toISOString() };
+    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, opposingPairs, pairingNotes, pairingRatings, rejectedPairings, purchaseData, likedNotes, dislikedNotes, exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -184,6 +192,8 @@ export default function ScentDashboard() {
         if (data.pairingRatings) setPairingRatings(data.pairingRatings);
         if (data.rejectedPairings) setRejectedPairings(data.rejectedPairings);
         if (data.purchaseData) setPurchaseData(data.purchaseData);
+        if (data.likedNotes) setLikedNotes(data.likedNotes);
+        if (data.dislikedNotes) setDislikedNotes(data.dislikedNotes);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
     };
     input.click();
@@ -465,6 +475,23 @@ export default function ScentDashboard() {
           {/* ═══ NOTES ══════════════════════════════════ */}
           {tab === 0 && (
             <div>
+              <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
+                {[{k:"doughnut",l:"Notes Breakdown"},{k:"nose",l:"Your Nose"}].map(v => (
+                  <button key={v.k} onClick={() => setNotesSubTab(v.k)} style={{
+                    background: notesSubTab === v.k ? `${PAL.gold}14` : "transparent",
+                    border: `1px solid ${notesSubTab === v.k ? PAL.gold + "44" : PAL.border}`,
+                    borderRadius: 20, padding: "6px 18px",
+                    fontFamily: ff.body, fontSize: 11, color: notesSubTab === v.k ? PAL.gold : PAL.muted,
+                    cursor: "pointer",
+                  }}>{v.l}</button>
+                ))}
+              </div>
+
+              {notesSubTab === "nose" && (
+                <FragranceNose bottles={bottles} testedScents={testedScents} noteOverrides={noteOverrides} likedNotes={likedNotes} setLikedNotes={setLikedNotes} dislikedNotes={dislikedNotes} setDislikedNotes={setDislikedNotes} />
+              )}
+
+              {notesSubTab === "doughnut" && (<div>
               <SectionTitle title="Fragrance Notes" sub={displayNotes.length > 0 ? "Computed from your collection & tested scents" : "Add notes to your fragrances to build your profile"} />
 
               {displayNotes.length === 0 ? (
@@ -586,6 +613,7 @@ export default function ScentDashboard() {
                   )}
                 </>
               )}
+            </div>)}
             </div>
           )}
 
