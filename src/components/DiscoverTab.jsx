@@ -252,24 +252,41 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
             {/* Find Similar button */}
             {frag._source === "fragrantica" && frag.notes.length === 0 && frag._slug && (
               <button onClick={async () => {
+                const url = `https://www.fragrantica.com/perfume/${frag._slug}.html`;
                 try {
-                  const res = await fetch(`/api/fragrantica?endpoint=details&url=https://www.fragrantica.com/perfume/${frag._slug}.html`);
+                  const res = await fetch(`/api/fragrantica?endpoint=details&url=${encodeURIComponent(url)}`);
                   const data = await res.json();
                   if (res.ok && data) {
                     const notes = [];
+                    /* Try multiple response structures */
                     const d = data?.data || data;
-                    if (d.top_notes) notes.push(...d.top_notes.map(n => typeof n === "string" ? n : n.name || ""));
-                    if (d.middle_notes) notes.push(...d.middle_notes.map(n => typeof n === "string" ? n : n.name || ""));
-                    if (d.base_notes) notes.push(...d.base_notes.map(n => typeof n === "string" ? n : n.name || ""));
-                    if (d.main_accords) notes.push(...d.main_accords.map(a => typeof a === "string" ? a : a.accord || a.name || ""));
+                    /* Parse.bot returns notes in various formats */
+                    ["top_notes", "middle_notes", "base_notes", "Top Notes", "Middle Notes", "Base Notes"].forEach(key => {
+                      if (d[key] && Array.isArray(d[key])) notes.push(...d[key].map(n => typeof n === "string" ? n : n.name || n.note || ""));
+                    });
+                    ["main_accords", "Main Accords", "accords"].forEach(key => {
+                      if (d[key] && Array.isArray(d[key])) notes.push(...d[key].map(a => typeof a === "string" ? a : a.accord || a.name || ""));
+                    });
+                    /* If structured notes not found, try to find any array of strings */
+                    if (notes.length === 0) {
+                      Object.values(d).forEach(val => {
+                        if (Array.isArray(val) && val.length > 0 && typeof val[0] === "string") notes.push(...val);
+                      });
+                    }
                     if (notes.length > 0) {
                       setApiResults(prev => prev.map(r => r.name === frag.name && r._source === "fragrantica"
                         ? { ...r, notes: [...new Set(notes.map(n => n.toLowerCase()).filter(Boolean))] }
                         : r
                       ));
+                    } else {
+                      setApiError(`Notes loaded but empty. Raw keys: ${Object.keys(d).join(", ")}`);
                     }
+                  } else {
+                    setApiError(`Load Notes failed (${res.status}): ${JSON.stringify(data).slice(0, 200)}`);
                   }
-                } catch {}
+                } catch (e) {
+                  setApiError(`Load Notes error: ${e.message}`);
+                }
               }}
               style={{ background: `${PAL.gold}10`, border: `1px solid ${PAL.gold}30`, borderRadius: 6, padding: "3px 10px", color: PAL.gold, fontFamily: ff.body, fontSize: 9, cursor: "pointer", letterSpacing: 1 }}>Load Notes</button>
             )}
