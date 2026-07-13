@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { PAL, ff, STATUS_COLORS, STATUSES, TESTER_COLOR } from "../constants.js";
-import { FAMILY_COLORS, getNoteFamily } from "../noteCategories.js";
+import { FAMILY_COLORS, FAMILY_ORDER, getNoteFamily } from "../noteCategories.js";
 import { RATING_CATEGORIES, RatingSlider, RatingBadge, SectionTitle, FragranceTags, TagIcons } from "./ui.jsx";
 
 const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, noteOverrides }) => {
@@ -14,7 +14,18 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
     if (sortBy === "name") list.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === "house") list.sort((a, b) => (a.house || "").localeCompare(b.house || ""));
     else if (sortBy === "cost") list.sort((a, b) => (b.cost || 0) - (a.cost || 0));
-    else if (sortBy === "rating") {
+    else if (sortBy === "notes") {
+      const getFam = (b) => {
+        const notes = (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+        if (notes.length === 0) return "zzz";
+        const counts = {};
+        notes.forEach(n => { const f = getNoteFamily(n, noteOverrides); counts[f] = (counts[f] || 0) + 1; });
+        let best = "zzz", max = 0;
+        for (const [f, c] of Object.entries(counts)) { if (c > max) { max = c; best = f; } }
+        return best;
+      };
+      list.sort((a, b) => FAMILY_ORDER.indexOf(getFam(a)) - FAMILY_ORDER.indexOf(getFam(b)) || a.name.localeCompare(b.name));
+    } else if (sortBy === "rating") {
       list.sort((a, b) => {
         const ra = bottleRatings[a.name] || {};
         const rb = bottleRatings[b.name] || {};
@@ -42,7 +53,7 @@ const CollectionView = ({ bottles, setBottles, bottleRatings, setBottleRatings, 
       {/* Sort + Filter bar */}
       <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         <span style={{ fontFamily: ff.body, fontSize: 9, color: PAL.muted, letterSpacing: 2, textTransform: "uppercase", marginRight: 4 }}>Sort</span>
-        {[{k:"status",l:"Status"},{k:"name",l:"A-Z"},{k:"house",l:"House"},{k:"cost",l:"Cost"},{k:"rating",l:"Rating"}].map(s => (
+        {[{k:"status",l:"Status"},{k:"name",l:"A-Z"},{k:"house",l:"House"},{k:"notes",l:"Notes"},{k:"cost",l:"Cost"},{k:"rating",l:"Rating"}].map(s => (
           <button key={s.k} onClick={() => setSortBy(s.k)} style={{
             background: sortBy === s.k ? `${PAL.gold}14` : "transparent",
             border: `1px solid ${sortBy === s.k ? PAL.gold + "44" : PAL.border}`,
