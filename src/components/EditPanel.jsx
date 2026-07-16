@@ -4,245 +4,250 @@ import { FAMILY_ORDER, FAMILY_COLORS, FAMILY_LABELS, getNoteFamily } from "../no
 import { FragranceTags } from "./ui.jsx";
 
 const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNoteOverrides, testedScents, setTestedScents }) => {
-  const [newHouseInput, setNewHouseInput] = useState({});
-  const inputCss = { background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "7px 10px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box" };
-  const selectCss = { ...inputCss, appearance: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%238a7e6b' stroke-width='1.5'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", paddingRight: 28 };
-  const lab = { fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, marginBottom: 3, display: "block" };
+  const [selectedIdx, setSelectedIdx] = useState(bottles.length > 0 ? 0 : null);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState(null);
+  const [resetStep, setResetStep] = useState(0);
+  const [resetInput, setResetInput] = useState("");
+  const mouseDownTarget = useRef(null);
 
-  const [collapsedSections, setCollapsedSections] = useState({});
-  const toggleSection = (s) => setCollapsedSections(prev => ({ ...prev, [s]: !prev[s] }));
+  const inputCss = { background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "10px 14px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box" };
+  const selectCss = { ...inputCss, appearance: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%238a7e6b' stroke-width='1.5'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", paddingRight: 30 };
+  const lab = { fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 4 };
 
   const allHouses = useMemo(() => [...new Set(bottles.map(b => b.house).filter(Boolean))].sort(), [bottles]);
 
-  const handleHouseChange = (i, val) => {
-    if (val === "__new__") {
-      setNewHouseInput(prev => ({ ...prev, [i]: "" }));
-    } else {
-      const a = [...bottles]; a[i] = { ...a[i], house: val, fullName: a[i].name + (val ? ` — ${val}` : "") }; setBottles(a);
-      setNewHouseInput(prev => { const n = { ...prev }; delete n[i]; return n; });
+  const filtered = useMemo(() => {
+    let list = bottles.map((b, i) => ({ ...b, _i: i }));
+    if (filterStatus === "_tester") list = list.filter(b => b.hasTester);
+    else if (filterStatus) list = list.filter(b => b.status === filterStatus);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(b => b.name.toLowerCase().includes(q) || (b.house || "").toLowerCase().includes(q) || (b.userNotes || "").toLowerCase().includes(q));
     }
+    return list;
+  }, [bottles, filterStatus, search]);
+
+  const selected = selectedIdx !== null ? bottles[selectedIdx] : null;
+
+  const updateField = (field, value) => {
+    const a = [...bottles];
+    a[selectedIdx] = { ...a[selectedIdx], [field]: value };
+    if (field === "name" || field === "house") {
+      const name = field === "name" ? value : a[selectedIdx].name;
+      const house = field === "house" ? value : a[selectedIdx].house;
+      a[selectedIdx].fullName = name + (house ? ` — ${house}` : "");
+    }
+    setBottles(a);
   };
 
-  const confirmNewHouse = (i) => {
-    const val = (newHouseInput[i] || "").trim();
-    if (val) { const a = [...bottles]; a[i] = { ...a[i], house: val, fullName: a[i].name + ` — ${val}` }; setBottles(a); }
-    setNewHouseInput(prev => { const n = { ...prev }; delete n[i]; return n; });
+  const addNew = () => {
+    const newBottle = { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "to test", userNotes: "", thoughts: "", tags: {}, hasTester: false, concentration: "" };
+    setBottles(prev => [...prev, newBottle]);
+    setSelectedIdx(bottles.length);
+    setSearch("");
+    setFilterStatus(null);
   };
 
-  const [resetStep, setResetStep] = useState(0);
-  const [resetInput, setResetInput] = useState("");
+  const deleteSelected = () => {
+    if (selectedIdx === null) return;
+    setBottles(prev => prev.filter((_, i) => i !== selectedIdx));
+    setSelectedIdx(Math.max(0, selectedIdx - 1));
+  };
 
-  const mouseDownTarget = useRef(null);
+  const isTested = selected ? testedScents.some(t => t.name.toLowerCase() === selected.name.toLowerCase()) : false;
 
   return (
     <div
       onMouseDown={e => { mouseDownTarget.current = e.target; }}
       onClick={e => { if (e.target === e.currentTarget && mouseDownTarget.current === e.currentTarget) onClose(); }}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: PAL.bg, border: `1px solid ${PAL.border}`, borderRadius: 16, padding: 28, width: "96%", maxWidth: 1000, maxHeight: "85vh", overflowY: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
-          <h3 style={{ fontFamily: ff.display, fontSize: 20, color: PAL.cream, margin: 0 }}>Edit Collection</h3>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: PAL.muted, fontSize: 22, cursor: "pointer" }}>✕</button>
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: PAL.bg, border: `1px solid ${PAL.border}`, borderRadius: 16, width: "96%", maxWidth: 1100, height: "88vh", display: "flex", overflow: "hidden" }}>
+
+        {/* ── LEFT SIDEBAR ── */}
+        <div style={{ width: 300, borderRight: `1px solid ${PAL.border}`, display: "flex", flexDirection: "column", flexShrink: 0 }}>
+          <div style={{ padding: "18px 14px 10px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <h3 style={{ fontFamily: ff.display, fontSize: 18, fontStyle: "italic", margin: 0 }}>Edit Collection</h3>
+              <button onClick={onClose} style={{ background: "none", border: "none", color: PAL.muted, fontSize: 20, cursor: "pointer", padding: "0 4px" }}>✕</button>
+            </div>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, house, notes…"
+              style={{ ...inputCss, fontSize: 12, padding: "8px 12px", marginBottom: 8 }} />
+            <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+              <button onClick={() => setFilterStatus(null)} style={{ padding: "3px 7px", borderRadius: 10, fontSize: 8, cursor: "pointer", fontFamily: ff.body, background: !filterStatus ? `${PAL.gold}14` : "transparent", border: `1px solid ${!filterStatus ? PAL.gold + "44" : PAL.border}`, color: !filterStatus ? PAL.gold : PAL.muted }}>All ({bottles.length})</button>
+              {STATUSES.map(s => (
+                <button key={s} onClick={() => setFilterStatus(filterStatus === s ? null : s)} style={{ padding: "3px 7px", borderRadius: 10, fontSize: 8, cursor: "pointer", fontFamily: ff.body, textTransform: "capitalize", background: filterStatus === s ? `${STATUS_COLORS[s]}18` : "transparent", border: `1px solid ${filterStatus === s ? STATUS_COLORS[s] + "44" : PAL.border}`, color: filterStatus === s ? STATUS_COLORS[s] : PAL.muted }}>{s} ({bottles.filter(b => b.status === s).length})</button>
+              ))}
+              <button onClick={() => setFilterStatus(filterStatus === "_tester" ? null : "_tester")} style={{ padding: "3px 7px", borderRadius: 10, fontSize: 8, cursor: "pointer", fontFamily: ff.body, background: filterStatus === "_tester" ? `${TESTER_COLOR}18` : "transparent", border: `1px solid ${filterStatus === "_tester" ? TESTER_COLOR + "44" : PAL.border}`, color: filterStatus === "_tester" ? TESTER_COLOR : PAL.muted }}>Tester ({bottles.filter(b => b.hasTester).length})</button>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, overflowY: "auto", padding: "0 6px", scrollbarWidth: "thin", scrollbarColor: `${PAL.border} transparent` }}>
+            {filtered.map(b => {
+              const isSelected = b._i === selectedIdx;
+              return (
+                <div key={b._i} onClick={() => setSelectedIdx(b._i)}
+                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 10px", borderRadius: 8, cursor: "pointer", marginBottom: 1, background: isSelected ? `${PAL.gold}0a` : "transparent", border: `1px solid ${isSelected ? PAL.gold + "28" : "transparent"}`, transition: "all .15s" }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 10 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: STATUS_COLORS[b.status] || PAL.muted }} />
+                    {b.hasTester && <span style={{ width: 4, height: 4, borderRadius: "50%", border: `1px solid ${TESTER_COLOR}` }} />}
+                  </div>
+                  <div style={{ flex: 1, overflow: "hidden" }}>
+                    <div style={{ fontFamily: ff.display, fontSize: 13, fontStyle: "italic", color: b.name.trim() ? PAL.cream : PAL.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name || "Unnamed"}</div>
+                    <div style={{ fontSize: 9, color: PAL.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.house || "—"}</div>
+                  </div>
+                  {b.cost > 0 && <span style={{ fontSize: 10, color: PAL.muted, flexShrink: 0 }}>${b.cost}</span>}
+                </div>
+              );
+            })}
+            {filtered.length === 0 && <div style={{ textAlign: "center", padding: "24px 10px", color: PAL.muted, fontSize: 11 }}>No matches</div>}
+          </div>
+
+          <div style={{ padding: "10px 14px", borderTop: `1px solid ${PAL.border}` }}>
+            <button onClick={addNew} style={{ width: "100%", padding: "9px", background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, color: PAL.gold, fontFamily: ff.body, fontSize: 11, cursor: "pointer" }}>+ Add Fragrance</button>
+          </div>
         </div>
 
-        {STATUSES.map(status => {
-          const items = bottles.map((b, i) => ({ ...b, _i: i })).filter(b => b.status === status);
-          return (
-            <div key={status} style={{ marginBottom: 18 }}>
-              <h4 onClick={() => toggleSection(status)} style={{
-                fontFamily: ff.body, fontSize: 11, letterSpacing: 3, textTransform: "uppercase",
-                color: STATUS_COLORS[status], margin: "0 0 8px",
-                borderBottom: `1px solid ${STATUS_COLORS[status]}22`, paddingBottom: 6,
-                cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none",
-              }}>
-                <span style={{ fontSize: 8, transition: "transform .2s", transform: collapsedSections[status] ? "rotate(-90deg)" : "rotate(0deg)" }}>▼</span>
-                {status} ({items.length})
-              </h4>
-              {!collapsedSections[status] && items.map(b => {
-                const i = b._i;
-                const isNewHouse = newHouseInput.hasOwnProperty(i);
-                const isTested = testedScents.some(t => t.name.toLowerCase() === b.name.toLowerCase());
-                return (
-                  <div key={`${status}-${i}`} style={{ marginBottom: 10, padding: "10px 12px", background: `${PAL.cream}02`, border: `1px solid ${b.hasTester && b.status !== status ? TESTER_COLOR + "33" : PAL.border}`, borderRadius: 10, position: "relative" }}>
-                    {b.hasTester && b.status !== "tester" && status === "tester" && (
-                      <div style={{ position: "absolute", top: 6, right: 10, fontSize: 8, letterSpacing: 1.5, textTransform: "uppercase", color: STATUS_COLORS[b.status], background: `${STATUS_COLORS[b.status]}14`, border: `1px solid ${STATUS_COLORS[b.status]}30`, borderRadius: 10, padding: "2px 8px", fontFamily: ff.body }}>
-                        also {b.status}
-                      </div>
-                    )}
-                    {/* LINE 1: Name, House, Status, Tester, Type, Cost, mL, Freq, Delete */}
-                    <div style={{ display: "grid", gap: 6, alignItems: "end", gridTemplateColumns: "2fr 1.5fr 1fr auto 75px 70px 55px 55px 28px" }}>
-                      <div><label style={lab}>Name *</label><input style={{ ...inputCss, borderColor: !b.name.trim() ? `${PAL.rose}44` : undefined }} placeholder="Fragrance name…" value={b.name} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], name: e.target.value, fullName: e.target.value + (b.house ? ` — ${b.house}` : "") }; setBottles(a); }} /></div>
-                      <div>
-                        <label style={lab}>House</label>
-                        {isNewHouse ? (
-                          <div style={{ display: "flex", gap: 4 }}>
-                            <input style={{ ...inputCss, flex: 1 }} placeholder="House name…" value={newHouseInput[i]} autoFocus
-                              onChange={e => setNewHouseInput(prev => ({ ...prev, [i]: e.target.value }))}
-                              onKeyDown={e => { if (e.key === "Enter") confirmNewHouse(i); if (e.key === "Escape") setNewHouseInput(prev => { const n = { ...prev }; delete n[i]; return n; }); }} />
-                            <button onClick={() => confirmNewHouse(i)} style={{ background: `${PAL.gold}18`, border: `1px solid ${PAL.gold}40`, borderRadius: 6, padding: "0 8px", color: PAL.gold, fontSize: 12, cursor: "pointer" }}>✓</button>
-                          </div>
-                        ) : (
-                          <select style={selectCss} value={b.house || ""} onChange={e => handleHouseChange(i, e.target.value)}>
-                            <option value="" style={{ background: PAL.bg, color: PAL.muted }}>— select —</option>
-                            {allHouses.map(h => <option key={h} value={h} style={{ background: PAL.bg, color: PAL.cream }}>{h}</option>)}
-                            <option value="__new__" style={{ background: PAL.bg, color: PAL.gold }}>+ Add new…</option>
-                          </select>
-                        )}
-                      </div>
-                      <div><label style={lab}>Status</label>
-                        <select style={selectCss} value={b.status} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], status: e.target.value }; setBottles(a); }}>
-                          {STATUSES.map(s => <option key={s} value={s} style={{ background: PAL.bg, color: PAL.cream }}>{s}</option>)}
+        {/* ── RIGHT PANEL ── */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px", scrollbarWidth: "thin", scrollbarColor: `${PAL.border} transparent` }}>
+          {selected ? (
+            <div>
+              {/* Name + House */}
+              <div style={{ marginBottom: 20 }}>
+                <input value={selected.name} onChange={e => updateField("name", e.target.value)}
+                  style={{ background: "transparent", border: "none", outline: "none", fontFamily: ff.display, fontSize: 28, fontStyle: "italic", color: PAL.cream, width: "100%", padding: 0, marginBottom: 4 }}
+                  placeholder="Fragrance name" />
+                <input value={selected.house || ""} onChange={e => updateField("house", e.target.value)}
+                  style={{ background: "transparent", border: "none", outline: "none", fontFamily: ff.body, fontSize: 15, color: PAL.muted, width: "100%", padding: 0 }}
+                  placeholder="House / brand" />
+              </div>
+
+              {/* Status + Type + Tester + Cost row */}
+              <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "end" }}>
+                <div style={{ minWidth: 120 }}>
+                  <label style={lab}>Status</label>
+                  <select style={selectCss} value={selected.status} onChange={e => updateField("status", e.target.value)}>
+                    {STATUSES.map(s => <option key={s} value={s} style={{ background: PAL.bg }}>{s}</option>)}
+                  </select>
+                </div>
+                <div style={{ minWidth: 90 }}>
+                  <label style={lab}>Type</label>
+                  <select style={{ ...selectCss, padding: "10px 28px 10px 12px" }} value={selected.concentration || ""} onChange={e => updateField("concentration", e.target.value)}>
+                    <option value="" style={{ background: PAL.bg }}>—</option>
+                    <option value="parfum" style={{ background: PAL.bg }}>Parfum</option>
+                    <option value="edp" style={{ background: PAL.bg }}>EDP</option>
+                    <option value="edt" style={{ background: PAL.bg }}>EDT</option>
+                    <option value="edc" style={{ background: PAL.bg }}>EDC</option>
+                    <option value="body" style={{ background: PAL.bg }}>Body</option>
+                    <option value="oil" style={{ background: PAL.bg }}>Oil</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={lab}>Tester</label>
+                  <button onClick={() => updateField("hasTester", !selected.hasTester)}
+                    style={{ width: 42, height: 42, borderRadius: 10, cursor: "pointer", background: selected.hasTester ? `${TESTER_COLOR}20` : "transparent", border: `2px solid ${selected.hasTester ? TESTER_COLOR : PAL.border}`, color: selected.hasTester ? TESTER_COLOR : PAL.muted, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s" }}>
+                    {selected.hasTester ? "◉" : "○"}</button>
+                </div>
+                <div style={{ minWidth: 80 }}>
+                  <label style={lab}>Cost ($)</label>
+                  <input style={inputCss} type="number" value={selected.cost || 0} onChange={e => updateField("cost", +e.target.value)} />
+                </div>
+                <div style={{ minWidth: 70 }}>
+                  <label style={lab}>Size (mL)</label>
+                  <input style={inputCss} type="number" value={selected.ml || 0} onChange={e => updateField("ml", +e.target.value)} />
+                </div>
+                <div style={{ minWidth: 60 }}>
+                  <label style={lab}>Frequency</label>
+                  <input style={inputCss} type="number" value={selected.freq || 0} onChange={e => updateField("freq", +e.target.value)} />
+                </div>
+              </div>
+
+              {/* Notes + Category pills */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={lab}>Fragrance Notes</label>
+                <input style={inputCss} value={selected.userNotes || ""} onChange={e => updateField("userNotes", e.target.value)}
+                  placeholder="sandalwood, vetiver, amber, musk" />
+                {(selected.userNotes || "").trim() && (
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 8 }}>
+                    {selected.userNotes.split(",").map(n => n.trim().toLowerCase()).filter(Boolean).map((note, j) => {
+                      const family = getNoteFamily(note, noteOverrides);
+                      const color = FAMILY_COLORS[family];
+                      return (
+                        <select key={j} value={family}
+                          onChange={e => setNoteOverrides(prev => ({ ...prev, [note]: e.target.value }))}
+                          style={{ appearance: "none", cursor: "pointer", background: `${color}20`, border: `1px solid ${color}50`, borderRadius: 5, padding: "3px 20px 3px 8px", color, fontFamily: ff.body, fontSize: 9, letterSpacing: 0.5, outline: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath d='M2 3l2 2 2-2' fill='none' stroke='${encodeURIComponent(color)}' stroke-width='1'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 5px center" }}>
+                          {FAMILY_ORDER.map(f => (
+                            <option key={f} value={f} style={{ background: PAL.bg, color: FAMILY_COLORS[f] }}>{note} → {FAMILY_LABELS[f]}</option>
+                          ))}
                         </select>
-                      </div>
-                      <div style={{ textAlign: "center" }}>
-                        <label style={lab}>Tester</label>
-                        <button onClick={() => { const a = [...bottles]; a[i] = { ...a[i], hasTester: !b.hasTester }; setBottles(a); }}
-                          style={{
-                            width: 34, height: 34, borderRadius: 8, cursor: "pointer",
-                            background: b.hasTester ? `${TESTER_COLOR}20` : "transparent",
-                            border: `1.5px solid ${b.hasTester ? TESTER_COLOR : PAL.border}`,
-                            color: b.hasTester ? TESTER_COLOR : PAL.muted,
-                            fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-                            transition: "all .2s",
-                          }}>{b.hasTester ? "◉" : "○"}</button>
-                      </div>
-                      <div>
-                        <label style={lab}>Type</label>
-                        <select style={{ ...selectCss, fontSize: 10, padding: "7px 22px 7px 6px" }} value={b.concentration || ""} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], concentration: e.target.value }; setBottles(a); }}>
-                          <option value="" style={{ background: PAL.bg, color: PAL.muted }}>—</option>
-                          <option value="parfum" style={{ background: PAL.bg }}>Parfum</option>
-                          <option value="edp" style={{ background: PAL.bg }}>EDP</option>
-                          <option value="edt" style={{ background: PAL.bg }}>EDT</option>
-                          <option value="edc" style={{ background: PAL.bg }}>EDC</option>
-                          <option value="body" style={{ background: PAL.bg }}>Body</option>
-                          <option value="oil" style={{ background: PAL.bg }}>Oil</option>
-                        </select>
-                      </div>
-                      <div><label style={lab}>Cost $</label><input style={inputCss} type="number" value={b.cost} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], cost: +e.target.value }; setBottles(a); }} /></div>
-                      <div><label style={lab}>mL</label><input style={inputCss} type="number" value={b.ml} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], ml: +e.target.value }; setBottles(a); }} /></div>
-                      <div><label style={lab}>Freq</label><input style={inputCss} type="number" value={b.freq} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], freq: +e.target.value }; setBottles(a); }} /></div>
-                      <button onClick={() => setBottles(bottles.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: PAL.rose, fontSize: 18, cursor: "pointer", marginBottom: 2 }}>−</button>
-                    </div>
-
-                    {/* LINE 2: Notes + Category Pills | Tags */}
-                    <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 6 }}>
-                      <div style={{ flex: 1 }}>
-                        <input style={inputCss} value={b.userNotes || ""} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], userNotes: e.target.value }; setBottles(a); }} placeholder="Notes: sandalwood, vetiver, amber, musk" />
-                        {(b.userNotes || "").trim() && (
-                          <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 4 }}>
-                            {(b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean).map((note, j) => {
-                              const family = getNoteFamily(note, noteOverrides);
-                              const color = FAMILY_COLORS[family];
-                              return (
-                                <select key={j} value={family}
-                                  onChange={e => setNoteOverrides(prev => ({ ...prev, [note]: e.target.value }))}
-                                  style={{
-                                    appearance: "none", cursor: "pointer",
-                                    background: `${color}20`, border: `1px solid ${color}50`,
-                                    borderRadius: 4, padding: "2px 18px 2px 6px",
-                                    color, fontFamily: ff.body, fontSize: 8, letterSpacing: 0.5, outline: "none",
-                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath d='M2 3l2 2 2-2' fill='none' stroke='${encodeURIComponent(color)}' stroke-width='1'/%3E%3C/svg%3E")`,
-                                    backgroundRepeat: "no-repeat", backgroundPosition: "right 4px center",
-                                  }}>
-                                  {FAMILY_ORDER.map(f => (
-                                    <option key={f} value={f} style={{ background: PAL.bg, color: FAMILY_COLORS[f] }}>{note} → {FAMILY_LABELS[f]}</option>
-                                  ))}
-                                </select>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ flexShrink: 0, paddingTop: 2 }}>
-                        <FragranceTags compact tags={b.tags || {}} onChange={t => { const a = [...bottles]; a[i] = { ...a[i], tags: t }; setBottles(a); }} />
-                      </div>
-                    </div>
-
-                    {/* LINE 3: Thoughts (full width) + Add to Tested */}
-                    <div style={{ marginTop: 6, display: "flex", gap: 8, alignItems: "flex-start" }}>
-                      <textarea style={{ ...inputCss, flex: 1, minHeight: 32, resize: "vertical", lineHeight: 1.4, fontSize: 12 }} value={b.thoughts || ""} onChange={e => { const a = [...bottles]; a[i] = { ...a[i], thoughts: e.target.value }; setBottles(a); }} placeholder="Thoughts, impressions, memories…" />
-                      {b.hasTester && b.name.trim() && (
-                        <button onClick={() => {
-                          if (isTested) return;
-                          setTestedScents(prev => [...prev, { name: b.name, house: b.house || "", date: new Date().toISOString().split("T")[0], notes: b.userNotes || "", thoughts: b.thoughts || "", ratings: {}, id: Date.now() }]);
-                        }}
-                        style={{
-                          flexShrink: 0, background: isTested ? `${PAL.sage}12` : `${PAL.plum}12`,
-                          border: `1px solid ${isTested ? PAL.sage + "40" : PAL.plum + "40"}`,
-                          borderRadius: 6, padding: "6px 10px",
-                          color: isTested ? PAL.sage : PAL.plum,
-                          fontFamily: ff.body, fontSize: 8, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase",
-                        }}>
-                          {isTested ? "✓ Tested" : "→ Tested"}
-                        </button>
-                      )}
-                    </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-              {items.length === 0 && !collapsedSections[status] && <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, padding: "4px 0" }}>No fragrances in this category</p>}
-            </div>
-          );
-        })}
+                )}
+              </div>
 
-        {/* ── Testers section (cross-listed from all categories) ── */}
-        {(() => {
-          const testerItems = bottles.map((b, i) => ({ ...b, _i: i })).filter(b => b.hasTester);
-          return (
-            <div style={{ marginBottom: 18 }}>
-              <h4 onClick={() => toggleSection("_testers")} style={{
-                fontFamily: ff.body, fontSize: 11, letterSpacing: 3, textTransform: "uppercase",
-                color: TESTER_COLOR, margin: "0 0 8px",
-                borderBottom: `1px solid ${TESTER_COLOR}22`, paddingBottom: 6,
-                cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none",
-              }}>
-                <span style={{ fontSize: 8, transition: "transform .2s", transform: collapsedSections["_testers"] ? "rotate(-90deg)" : "rotate(0deg)" }}>▼</span>
-                testers ({testerItems.length})
-              </h4>
-              {!collapsedSections["_testers"] && testerItems.map(b => {
-                const i = b._i;
-                return (
-                  <div key={`tester-${i}`} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, padding: "8px 12px", background: `${TESTER_COLOR}06`, border: `1px solid ${TESTER_COLOR}18`, borderRadius: 8 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: STATUS_COLORS[b.status] || PAL.muted, flexShrink: 0 }} />
-                    <span style={{ fontFamily: ff.display, fontSize: 14, fontStyle: "italic", color: PAL.cream, flex: 1 }}>{b.name}</span>
-                    <span style={{ fontSize: 10, color: PAL.muted }}>{b.house}</span>
-                    <span style={{ fontSize: 8, letterSpacing: 1.5, textTransform: "uppercase", color: STATUS_COLORS[b.status] || PAL.muted, background: `${STATUS_COLORS[b.status] || PAL.muted}14`, border: `1px solid ${STATUS_COLORS[b.status] || PAL.muted}30`, borderRadius: 10, padding: "2px 8px", fontFamily: ff.body }}>{b.status}</span>
-                    <button onClick={() => { const a = [...bottles]; a[i] = { ...a[i], hasTester: false }; setBottles(a); }}
-                      style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "3px 8px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, cursor: "pointer" }}>Remove tester</button>
-                  </div>
-                );
-              })}
-              {testerItems.length === 0 && !collapsedSections["_testers"] && <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, padding: "4px 0" }}>No testers — use the ◉ toggle on any fragrance to mark it as a tester</p>}
-            </div>
-          );
-        })()}
+              {/* Tags */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={lab}>When to Wear</label>
+                <FragranceTags tags={selected.tags || {}} onChange={t => updateField("tags", t)} />
+              </div>
 
-        <button onClick={() => setBottles([...bottles, { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "to test", userNotes: "", thoughts: "", tags: {}, hasTester: false }])} style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: 10, color: PAL.gold, cursor: "pointer", fontFamily: ff.body, fontSize: 12, width: "100%" }}>+ Add Fragrance</button>
+              {/* Thoughts */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={lab}>Thoughts & Impressions</label>
+                <textarea style={{ ...inputCss, minHeight: 70, resize: "vertical", lineHeight: 1.6 }}
+                  value={selected.thoughts || ""} onChange={e => updateField("thoughts", e.target.value)}
+                  placeholder="Your impressions, memories, when you wear it…" />
+              </div>
 
-        <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${PAL.border}` }}>
-          {resetStep === 0 && (
-            <button onClick={() => setResetStep(1)} style={{ background: `${PAL.rose}08`, border: `1px solid ${PAL.rose}25`, borderRadius: 8, padding: "8px 16px", color: PAL.rose, fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>Reset All Data</button>
-          )}
-          {resetStep === 1 && (
-            <div style={{ background: `${PAL.rose}06`, border: `1px solid ${PAL.rose}20`, borderRadius: 10, padding: "14px 18px" }}>
-              <p style={{ fontFamily: ff.body, fontSize: 13, color: PAL.cream, margin: "0 0 10px" }}>Are you sure you want to reset all data? This will delete your entire collection, wear history, ratings, pairings, and all settings.</p>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => setResetStep(2)} style={{ background: `${PAL.rose}18`, border: `1px solid ${PAL.rose}40`, borderRadius: 8, padding: "8px 18px", color: PAL.rose, fontFamily: ff.body, fontSize: 11, cursor: "pointer", fontWeight: 600 }}>Yes, I'm sure</button>
-                <button onClick={() => setResetStep(0)} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "8px 18px", color: PAL.muted, fontFamily: ff.body, fontSize: 11, cursor: "pointer" }}>Cancel</button>
+              {/* Add to Tested button */}
+              {selected.hasTester && selected.name.trim() && (
+                <div style={{ marginBottom: 20 }}>
+                  <button onClick={() => {
+                    if (isTested) return;
+                    setTestedScents(prev => [...prev, { name: selected.name, house: selected.house || "", date: new Date().toISOString().split("T")[0], notes: selected.userNotes || "", thoughts: selected.thoughts || "", ratings: {}, id: Date.now() }]);
+                  }}
+                  style={{ padding: "10px 20px", borderRadius: 8, cursor: "pointer", background: isTested ? `${PAL.sage}12` : `${TESTER_COLOR}12`, border: `1px solid ${isTested ? PAL.sage + "40" : TESTER_COLOR + "40"}`, color: isTested ? PAL.sage : TESTER_COLOR, fontFamily: ff.body, fontSize: 11, letterSpacing: 1, textTransform: "uppercase" }}>
+                    {isTested ? "✓ In Tested" : "→ Add to Tested"}
+                  </button>
+                </div>
+              )}
+
+              {/* Delete + Reset */}
+              <div style={{ paddingTop: 16, borderTop: `1px solid ${PAL.border}`, display: "flex", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+                <button onClick={() => { if (window.confirm(`Remove "${selected.name}" from your collection?`)) deleteSelected(); }}
+                  style={{ background: `${PAL.rose}08`, border: `1px solid ${PAL.rose}25`, borderRadius: 8, padding: "8px 16px", color: PAL.rose, fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>Remove Fragrance</button>
+
+                <div style={{ marginLeft: "auto" }}>
+                  {resetStep === 0 && (
+                    <button onClick={() => setResetStep(1)} style={{ background: `${PAL.rose}06`, border: `1px solid ${PAL.rose}15`, borderRadius: 8, padding: "8px 14px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>Reset All Data</button>
+                  )}
+                  {resetStep === 1 && (
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <span style={{ fontSize: 11, color: PAL.rose }}>Are you sure?</span>
+                      <button onClick={() => setResetStep(2)} style={{ padding: "6px 12px", borderRadius: 6, background: `${PAL.rose}18`, border: `1px solid ${PAL.rose}40`, color: PAL.rose, fontSize: 10, fontFamily: ff.body, cursor: "pointer" }}>Yes</button>
+                      <button onClick={() => setResetStep(0)} style={{ padding: "6px 12px", borderRadius: 6, background: "transparent", border: `1px solid ${PAL.border}`, color: PAL.muted, fontSize: 10, fontFamily: ff.body, cursor: "pointer" }}>Cancel</button>
+                    </div>
+                  )}
+                  {resetStep === 2 && (
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <span style={{ fontSize: 11, color: PAL.rose }}>Type <strong>reset</strong>:</span>
+                      <input value={resetInput} onChange={e => setResetInput(e.target.value)} autoFocus
+                        style={{ width: 80, background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.rose}40`, borderRadius: 6, padding: "6px 10px", color: PAL.cream, fontFamily: ff.body, fontSize: 12, outline: "none" }} />
+                      <button onClick={() => { if (resetInput.toLowerCase().trim() === "reset") { onReset(); setResetStep(0); setResetInput(""); } }}
+                        disabled={resetInput.toLowerCase().trim() !== "reset"}
+                        style={{ padding: "6px 12px", borderRadius: 6, background: resetInput.toLowerCase().trim() === "reset" ? `${PAL.rose}30` : `${PAL.rose}08`, border: `1px solid ${resetInput.toLowerCase().trim() === "reset" ? PAL.rose : PAL.rose + "25"}`, color: resetInput.toLowerCase().trim() === "reset" ? PAL.cream : PAL.muted, fontSize: 10, fontFamily: ff.body, cursor: resetInput.toLowerCase().trim() === "reset" ? "pointer" : "not-allowed" }}>Delete All</button>
+                      <button onClick={() => { setResetStep(0); setResetInput(""); }} style={{ padding: "6px 10px", borderRadius: 6, background: "transparent", border: `1px solid ${PAL.border}`, color: PAL.muted, fontSize: 10, fontFamily: ff.body, cursor: "pointer" }}>Cancel</button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          )}
-          {resetStep === 2 && (
-            <div style={{ background: `${PAL.rose}08`, border: `1px solid ${PAL.rose}30`, borderRadius: 10, padding: "14px 18px" }}>
-              <p style={{ fontFamily: ff.body, fontSize: 13, color: PAL.cream, margin: "0 0 4px" }}>Type <strong style={{ color: PAL.rose }}>reset</strong> to confirm permanent deletion:</p>
-              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                <input value={resetInput} onChange={e => setResetInput(e.target.value)} placeholder="Type reset…"
-                  style={{ background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.rose}40`, borderRadius: 6, padding: "8px 12px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none", flex: 1 }} autoFocus />
-                <button onClick={() => { if (resetInput.toLowerCase().trim() === "reset") { onReset(); setResetStep(0); setResetInput(""); } }}
-                  disabled={resetInput.toLowerCase().trim() !== "reset"}
-                  style={{ background: resetInput.toLowerCase().trim() === "reset" ? `${PAL.rose}30` : `${PAL.rose}08`, border: `1px solid ${resetInput.toLowerCase().trim() === "reset" ? PAL.rose : PAL.rose + "25"}`, borderRadius: 8, padding: "8px 18px", color: resetInput.toLowerCase().trim() === "reset" ? PAL.cream : PAL.muted, fontFamily: ff.body, fontSize: 11, cursor: resetInput.toLowerCase().trim() === "reset" ? "pointer" : "not-allowed", fontWeight: 600, transition: "all .2s" }}>Delete Everything</button>
-                <button onClick={() => { setResetStep(0); setResetInput(""); }} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "8px 14px", color: PAL.muted, fontFamily: ff.body, fontSize: 11, cursor: "pointer" }}>Cancel</button>
-              </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "80px 20px" }}>
+              <div style={{ fontSize: 40, marginBottom: 12, opacity: .3 }}>❋</div>
+              <p style={{ fontFamily: ff.display, fontSize: 18, color: PAL.cream }}>Select a fragrance to edit</p>
+              <p style={{ fontSize: 12, color: PAL.muted, marginTop: 4 }}>Or click "+ Add Fragrance" to add a new one</p>
             </div>
           )}
         </div>
