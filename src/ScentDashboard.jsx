@@ -920,7 +920,7 @@ export default function ScentDashboard() {
           {/* ═══ MY COLLECTION ═══════════════════════════ */}
           {tab === 5 && (
             <div>
-              <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
+              <div style={{ display: "flex", gap: 4, marginBottom: 16, alignItems: "center" }}>
                 {[{k:"collection",l:"My Collection"},{k:"purchases",l:"Purchases"}].map(v => (
                   <button key={v.k} onClick={() => setCollectionSubTab(v.k)} style={{
                     background: collectionSubTab === v.k ? `${PAL.gold}14` : "transparent",
@@ -930,6 +930,11 @@ export default function ScentDashboard() {
                     cursor: "pointer",
                   }}>{v.l}</button>
                 ))}
+                <button onClick={() => setEditing(true)} style={{
+                  marginLeft: "auto", background: `${PAL.gold}12`, border: `1px solid ${PAL.gold}33`,
+                  borderRadius: 8, padding: "7px 16px", color: PAL.gold, fontFamily: ff.body,
+                  fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer",
+                }}>✎ Edit Collection</button>
               </div>
               {collectionSubTab === "collection" && (
                 <CollectionView bottles={bottles} setBottles={setBottles} bottleRatings={bottleRatings} setBottleRatings={setBottleRatings} noteOverrides={noteOverrides} />
