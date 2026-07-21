@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { PAL, ff } from "../constants.js";
+import { PAL, ff, STATUS_COLORS } from "../constants.js";
 import { FAMILY_ORDER, FAMILY_COLORS, FAMILY_LABELS, getNoteFamily } from "../noteCategories.js";
 
 const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, setPairingNotes, pairingRatings, setPairingRatings, rejectedPairings, setRejectedPairings, customPairings, setCustomPairings }) => {
