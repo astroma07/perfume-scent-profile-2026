@@ -2,12 +2,15 @@ import { useState, useMemo, useCallback } from "react";
 import { PAL, ff } from "../constants.js";
 import { FAMILY_ORDER, FAMILY_COLORS, FAMILY_LABELS, getNoteFamily } from "../noteCategories.js";
 
-const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, setPairingNotes, pairingRatings, setPairingRatings, rejectedPairings, setRejectedPairings }) => {
+const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, setPairingNotes, pairingRatings, setPairingRatings, rejectedPairings, setRejectedPairings, customPairings, setCustomPairings }) => {
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
   const [hovType, setHovType] = useState(null);
   const [pairMode, setPairMode] = useState("all");
   const [showRejected, setShowRejected] = useState(false);
+  const [creatingPairing, setCreatingPairing] = useState(false);
+  const [newPairingSelection, setNewPairingSelection] = useState([]);
+  const [pairingSearchQ, setPairingSearchQ] = useState("");
 
   /* Split: owned on inner ring, testers on outer ring. Owned+hasTester appear on BOTH rings visually */
   const ownedBottles = useMemo(() => bottles.filter(b => b.status === "owned" && (b.userNotes || "").trim()), [bottles]);
@@ -480,6 +483,105 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
           )}
         </div>
       )}
+      {/* ═══ CUSTOM PAIRINGS ═══ */}
+      <div style={{ marginTop: 28, borderTop: `1px solid ${PAL.border}`, paddingTop: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div>
+            <h3 style={{ fontFamily: ff.display, fontSize: 18, fontStyle: "italic", margin: "0 0 2px", color: PAL.cream }}>Custom Pairings</h3>
+            <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, margin: 0 }}>Create and rate your own fragrance combinations</p>
+          </div>
+          {!creatingPairing && (
+            <button onClick={() => { setCreatingPairing(true); setNewPairingSelection([]); setPairingSearchQ(""); }}
+              style={{ background: `${PAL.gold}10`, border: `1px dashed ${PAL.gold}44`, borderRadius: 8, padding: "8px 16px", color: PAL.gold, fontFamily: ff.body, fontSize: 11, cursor: "pointer" }}>+ New Pairing</button>
+          )}
+        </div>
+
+        {creatingPairing && (
+          <div style={{ background: `${PAL.cream}03`, border: `1px solid ${PAL.gold}22`, borderRadius: 14, padding: "16px 18px", marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
+              <label style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 4 }}>Select 2–4 fragrances</label>
+              <input value={pairingSearchQ} onChange={e => setPairingSearchQ(e.target.value)} placeholder="Search your collection…"
+                style={{ width: "100%", background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "8px 12px", color: PAL.cream, fontFamily: ff.body, fontSize: 12, outline: "none", boxSizing: "border-box" }} />
+            </div>
+            {newPairingSelection.length > 0 && (
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 10 }}>
+                {newPairingSelection.map((name, i) => (
+                  <span key={i} onClick={() => setNewPairingSelection(prev => prev.filter(n => n !== name))}
+                    style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: `${PAL.gold}14`, border: `1px solid ${PAL.gold}30`, color: PAL.gold, fontFamily: ff.body, cursor: "pointer" }}>{name} ✕</span>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: 3, maxHeight: 180, overflowY: "auto", marginBottom: 12, scrollbarWidth: "thin", scrollbarColor: `${PAL.border} transparent` }}>
+              {bottles.filter(b => b.name.trim() && (b.status === "owned" || b.status === "had" || b.status === "tried it" || b.hasTester)).filter(b => {
+                if (newPairingSelection.includes(b.name)) return false;
+                if (!pairingSearchQ.trim()) return true;
+                const q = pairingSearchQ.toLowerCase();
+                return b.name.toLowerCase().includes(q) || (b.house || "").toLowerCase().includes(q);
+              }).map(b => (
+                <button key={b.name} onClick={() => { if (newPairingSelection.length < 4) setNewPairingSelection(prev => [...prev, b.name]); }}
+                  disabled={newPairingSelection.length >= 4}
+                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", borderRadius: 8, cursor: newPairingSelection.length >= 4 ? "not-allowed" : "pointer", background: "transparent", border: `1px solid ${PAL.border}`, textAlign: "left", opacity: newPairingSelection.length >= 4 ? 0.4 : 1 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: STATUS_COLORS[b.status] || PAL.muted }} />
+                  <span style={{ fontFamily: ff.body, fontSize: 12, color: PAL.cream }}>{b.name}</span>
+                  <span style={{ fontSize: 10, color: PAL.muted }}>— {b.house}</span>
+                </button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => {
+                if (newPairingSelection.length >= 2) {
+                  setCustomPairings(prev => [...prev, { id: Date.now(), fragrances: newPairingSelection, rating: 0, notes: "", createdAt: Date.now() }]);
+                  setCreatingPairing(false); setNewPairingSelection([]); setPairingSearchQ("");
+                }
+              }}
+                disabled={newPairingSelection.length < 2}
+                style={{ flex: 1, padding: "10px", background: newPairingSelection.length >= 2 ? `${PAL.gold}18` : `${PAL.gold}08`, border: `1px solid ${newPairingSelection.length >= 2 ? PAL.gold + "44" : PAL.border}`, borderRadius: 8, color: newPairingSelection.length >= 2 ? PAL.gold : PAL.muted, fontFamily: ff.body, fontSize: 12, cursor: newPairingSelection.length >= 2 ? "pointer" : "not-allowed" }}>
+                Save Pairing ({newPairingSelection.length}/4)
+              </button>
+              <button onClick={() => { setCreatingPairing(false); setNewPairingSelection([]); setPairingSearchQ(""); }}
+                style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 8, color: PAL.muted, fontFamily: ff.body, fontSize: 12, cursor: "pointer" }}>Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {(customPairings || []).length === 0 && !creatingPairing && (
+          <div style={{ textAlign: "center", padding: "24px 16px" }}>
+            <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted }}>No custom pairings yet. Create one to rate fragrance combinations you've tried wearing together.</p>
+          </div>
+        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {(customPairings || []).map((pairing, pIdx) => (
+            <div key={pairing.id} style={{ background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 14, padding: "14px 18px" }}>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10, alignItems: "center" }}>
+                {pairing.fragrances.map((name, i) => (
+                  <span key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {i > 0 && <span style={{ color: PAL.muted, fontSize: 11 }}>+</span>}
+                    <span style={{ fontFamily: ff.display, fontSize: 15, fontStyle: "italic", color: PAL.cream }}>{name}</span>
+                  </span>
+                ))}
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <label style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 4 }}>Rating</label>
+                <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => (
+                    <button key={v} onClick={() => setCustomPairings(prev => prev.map((p, i) => i === pIdx ? { ...p, rating: v } : p))}
+                      style={{ width: 28, height: 28, borderRadius: 6, cursor: "pointer", fontFamily: ff.body, fontSize: 11, border: `1px solid ${v <= pairing.rating ? PAL.gold + "55" : PAL.border}`, background: v <= pairing.rating ? `${PAL.gold}${Math.round((v / 10) * 30 + 10).toString(16)}` : "transparent", color: v <= pairing.rating ? PAL.gold : PAL.muted, transition: "all .15s" }}>{v}</button>
+                  ))}
+                  {pairing.rating > 0 && <span style={{ fontFamily: ff.display, fontSize: 18, color: PAL.gold, marginLeft: 8 }}>{pairing.rating}/10</span>}
+                </div>
+              </div>
+              <div style={{ marginBottom: 8 }}>
+                <label style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 4 }}>Pairing Notes</label>
+                <textarea value={pairing.notes || ""} onChange={e => setCustomPairings(prev => prev.map((p, i) => i === pIdx ? { ...p, notes: e.target.value } : p))}
+                  placeholder="How do they wear together? Which order? What's the effect?"
+                  style={{ width: "100%", background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "8px 12px", color: PAL.cream, fontFamily: ff.body, fontSize: 12, outline: "none", boxSizing: "border-box", minHeight: 50, resize: "vertical", lineHeight: 1.5 }} />
+              </div>
+              <button onClick={() => { if (window.confirm("Remove this pairing?")) setCustomPairings(prev => prev.filter((_, i) => i !== pIdx)); }}
+                style={{ background: "transparent", border: `1px solid ${PAL.rose}20`, borderRadius: 6, padding: "4px 12px", color: PAL.rose, fontFamily: ff.body, fontSize: 9, cursor: "pointer", opacity: 0.6, letterSpacing: 1 }}>Remove</button>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

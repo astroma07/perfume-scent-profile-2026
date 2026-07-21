@@ -53,6 +53,7 @@ export default function ScentDashboard() {
   const [pairingRatings, setPairingRatings] = useState(() => loadStored("pairingRatings", {}));
   const [rejectedPairings, setRejectedPairings] = useState(() => loadStored("rejectedPairings", []));
   const [purchaseData, setPurchaseData] = useState(() => loadStored("purchaseData", {}));
+  const [customPairings, setCustomPairings] = useState(() => loadStored("customPairings", []));
   const [collectionSubTab, setCollectionSubTab] = useState("collection");
   const [notesSubTab, setNotesSubTab] = useState("doughnut");
   const [likedNotes, setLikedNotes] = useState(() => loadStored("likedNotes", []));
@@ -131,6 +132,7 @@ export default function ScentDashboard() {
         if (data.pairingRatings) setPairingRatings(data.pairingRatings);
         if (data.rejectedPairings) setRejectedPairings(data.rejectedPairings);
         if (data.purchaseData) setPurchaseData(data.purchaseData);
+        if (data.customPairings) setCustomPairings(data.customPairings);
         if (data.likedNotes) setLikedNotes(data.likedNotes);
         if (data.dislikedNotes) setDislikedNotes(data.dislikedNotes);
         try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
@@ -157,13 +159,14 @@ export default function ScentDashboard() {
   useEffect(() => { try { localStorage.setItem("scent_pairingRatings", JSON.stringify(pairingRatings)); } catch {} }, [pairingRatings]);
   useEffect(() => { try { localStorage.setItem("scent_rejectedPairings", JSON.stringify(rejectedPairings)); } catch {} }, [rejectedPairings]);
   useEffect(() => { try { localStorage.setItem("scent_purchaseData", JSON.stringify(purchaseData)); } catch {} }, [purchaseData]);
+  useEffect(() => { try { localStorage.setItem("scent_customPairings", JSON.stringify(customPairings)); } catch {} }, [customPairings]);
   useEffect(() => { try { localStorage.setItem("scent_likedNotes", JSON.stringify(likedNotes)); } catch {} }, [likedNotes]);
   useEffect(() => { try { localStorage.setItem("scent_dislikedNotes", JSON.stringify(dislikedNotes)); } catch {} }, [dislikedNotes]);
 
   /* ─── Export / Import ─── */
 
   const exportData = () => {
-    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, opposingPairs, pairingNotes, pairingRatings, rejectedPairings, purchaseData, likedNotes, dislikedNotes, exportedAt: new Date().toISOString() };
+    const data = { notes, bottles, wearLog, bottleRatings, wearRatings, testedScents, noteOverrides, opposingPairs, pairingNotes, pairingRatings, rejectedPairings, purchaseData, customPairings, likedNotes, dislikedNotes, exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -192,6 +195,7 @@ export default function ScentDashboard() {
         if (data.pairingRatings) setPairingRatings(data.pairingRatings);
         if (data.rejectedPairings) setRejectedPairings(data.rejectedPairings);
         if (data.purchaseData) setPurchaseData(data.purchaseData);
+        if (data.customPairings) setCustomPairings(data.customPairings);
         if (data.likedNotes) setLikedNotes(data.likedNotes);
         if (data.dislikedNotes) setDislikedNotes(data.dislikedNotes);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
@@ -897,7 +901,7 @@ export default function ScentDashboard() {
               )}
 
               {collectionView === "pairings" && (
-                <PairingWheel bottles={bottles} noteOverrides={noteOverrides} opposingPairs={opposingPairs} pairingNotes={pairingNotes} setPairingNotes={setPairingNotes} pairingRatings={pairingRatings} setPairingRatings={setPairingRatings} rejectedPairings={rejectedPairings} setRejectedPairings={setRejectedPairings} />
+                <PairingWheel bottles={bottles} noteOverrides={noteOverrides} opposingPairs={opposingPairs} pairingNotes={pairingNotes} setPairingNotes={setPairingNotes} pairingRatings={pairingRatings} setPairingRatings={setPairingRatings} rejectedPairings={rejectedPairings} setRejectedPairings={setRejectedPairings} customPairings={customPairings} setCustomPairings={setCustomPairings} />
               )}
             </div>
           )}
