@@ -43,8 +43,9 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
 
   const addNew = () => {
     const newBottle = { name: "", fullName: "", house: "", cost: 0, ml: 0, freq: 0, status: "to test", userNotes: "", thoughts: "", tags: {}, hasTester: false, concentration: "" };
+    const newIdx = bottles.length;
     setBottles(prev => [...prev, newBottle]);
-    setSelectedIdx(bottles.length);
+    setTimeout(() => setSelectedIdx(newIdx), 0);
     setSearch("");
     setFilterStatus(null);
   };

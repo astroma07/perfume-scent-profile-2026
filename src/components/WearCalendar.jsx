@@ -8,6 +8,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState("");
   const pickerMouseDown = useRef(null);
 
   /* Show owned and tester-flagged bottles in the picker */
@@ -37,6 +38,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
     const key = dateKey(viewYear, viewMonth, day);
     setSelectedDay(key);
     setPickerOpen(true);
+    setPickerSearch("");
   };
 
   const toggleFragrance = (bottleName) => {
@@ -155,13 +157,21 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
               </div>
               <button onClick={() => setPickerOpen(false)} style={{ background: "none", border: "none", color: PAL.muted, fontSize: 20, cursor: "pointer" }}>✕</button>
             </div>
+            {ownedBottles.length > 4 && (
+              <input value={pickerSearch} onChange={e => setPickerSearch(e.target.value)} placeholder="Search fragrances…"
+                style={{ width: "100%", background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "8px 12px", color: PAL.cream, fontFamily: ff.body, fontSize: 12, outline: "none", boxSizing: "border-box", marginBottom: 10 }} />
+            )}
             {ownedBottles.length === 0 ? (
               <p style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted, textAlign: "center", padding: "20px 0", lineHeight: 1.6 }}>
                 No owned or tester fragrances yet. Add bottles to your collection to start logging wears.
               </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                {ownedBottles.map((b) => {
+                {ownedBottles.filter(b => {
+                  if (!pickerSearch.trim()) return true;
+                  const q = pickerSearch.toLowerCase();
+                  return b.name.toLowerCase().includes(q) || (b.house || "").toLowerCase().includes(q);
+                }).map((b) => {
                   const dayArr = wearLog[selectedDay] || [];
                   const isActive = dayArr.includes(b.name);
                   const color = bottleColor(b.name);
