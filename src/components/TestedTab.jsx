@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { PAL, ff, STATUS_COLORS, TESTER_COLOR } from "../constants.js";
+import { PAL, ff, STATUS_COLORS, STATUSES, TESTER_COLOR } from "../constants.js";
 import { RATING_CATEGORIES, RatingSlider, RatingBadge, SectionTitle, FragranceTags, TagIcons } from "./ui.jsx";
 
 const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleRatings, setBottleRatings }) => {
@@ -249,12 +249,26 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0, minWidth: 120 }}>
                   <button onClick={() => editEntry(i)} style={{ padding: "6px 12px", borderRadius: 6, background: "transparent", border: `1px solid ${PAL.border}`, color: PAL.muted, fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1 }}>Edit</button>
                   {!exists ? (
                     <>
-                      <button onClick={() => addToCollection(entry, "tester")} style={{ padding: "6px 12px", borderRadius: 6, background: `${TESTER_COLOR}10`, border: `1px solid ${TESTER_COLOR}35`, color: TESTER_COLOR, fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1 }}>+ Tester</button>
-                      <button onClick={() => addToCollection(entry, "wishlist")} style={{ padding: "6px 12px", borderRadius: 6, background: `${PAL.gold}10`, border: `1px solid ${PAL.gold}35`, color: PAL.gold, fontFamily: ff.body, fontSize: 10, cursor: "pointer", letterSpacing: 1 }}>+ Wishlist</button>
+                      <select onChange={e => { if (e.target.value) { addToCollection(entry, e.target.value); e.target.value = ""; } }}
+                        defaultValue=""
+                        style={{ padding: "6px 10px", borderRadius: 6, background: `${PAL.gold}08`, border: `1px solid ${PAL.gold}30`, color: PAL.gold, fontFamily: ff.body, fontSize: 10, cursor: "pointer", appearance: "none", textAlign: "center", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2.5 4l2.5 2.5 2.5-2.5' fill='none' stroke='%23c5a46d' stroke-width='1.2'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", paddingRight: 24 }}>
+                        <option value="" disabled>+ Add to…</option>
+                        {STATUSES.map(s => (
+                          <option key={s} value={s} style={{ background: PAL.bg, color: STATUS_COLORS[s] }}>{s}</option>
+                        ))}
+                      </select>
+                      <button onClick={() => {
+                        const updated = [...testedScents];
+                        const origIdx = testedScents.indexOf(testedScents.find(t => t.name === entry.name));
+                        if (origIdx >= 0) { updated[origIdx] = { ...updated[origIdx], hasTester: !entry.hasTester }; setTestedScents(updated); }
+                      }}
+                        style={{ padding: "5px 10px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, background: entry.hasTester ? `${TESTER_COLOR}15` : "transparent", border: `1px solid ${entry.hasTester ? TESTER_COLOR + "40" : PAL.border}`, color: entry.hasTester ? TESTER_COLOR : PAL.muted, fontFamily: ff.body, fontSize: 9 }}>
+                        {entry.hasTester ? "◉" : "○"} Tester
+                      </button>
                     </>
                   ) : (
                     <span style={{ fontFamily: ff.body, fontSize: 9, color: PAL.sage, textAlign: "center", letterSpacing: 1 }}>✓ In collection</span>

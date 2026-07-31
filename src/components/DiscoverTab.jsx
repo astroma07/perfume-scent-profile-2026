@@ -4,8 +4,9 @@ import { NOTE_TO_FRAGRANCES } from "../noteMap.js";
 import { FRAGRANCE_DB } from "../fragranceDB.js";
 import { getNoteFamily, FAMILY_COLORS } from "../noteCategories.js";
 import { SectionTitle } from "./ui.jsx";
+import VibeCalculator from "./VibeCalculator.jsx";
 
-const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
+const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap }) => {
   const [query, setQuery] = useState("");
   const [filterHouse, setFilterHouse] = useState(null);
   const [filterNote, setFilterNote] = useState(null);
@@ -321,7 +322,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
 
       {/* Section toggle */}
       <div style={{ display: "flex", gap: 5, marginBottom: 18, flexWrap: "wrap" }}>
-        {[{k:"recs",l:"For You",ic:"✦"},{k:"browse",l:"Browse",ic:"📚"},{k:"similar",l:"Similar",ic:"🔗"},{k:"notes",l:"By Notes",ic:"🎵"}].map(s => (
+        {[{k:"recs",l:"For You",ic:"✦"},{k:"browse",l:"Browse",ic:"📚"},{k:"similar",l:"Similar",ic:"🔗"},{k:"notes",l:"By Notes",ic:"🎵"},{k:"vibe",l:"Vibe",ic:"✧"}].map(s => (
           <button key={s.k} onClick={() => setActiveSection(s.k)} style={{ background: activeSection === s.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${activeSection === s.k ? PAL.gold + "44" : PAL.border}`, borderRadius: 20, padding: "6px 14px", fontFamily: ff.body, fontSize: 10, color: activeSection === s.k ? PAL.gold : PAL.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><span style={{ fontSize: 12 }}>{s.ic}</span>{s.l}</button>
         ))}
       </div>
@@ -531,7 +532,12 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist }) => {
           </div>
         </div>
       )}
+      {/* ─── VIBE CALCULATOR ─── */}
+      {activeSection === "vibe" && (
+        <VibeCalculator bottles={bottles} vibeMap={vibeMap} setVibeMap={setVibeMap} />
+      )}
     </div>
+
   );
 };
 
