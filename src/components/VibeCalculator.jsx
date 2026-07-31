@@ -76,6 +76,12 @@ const VibeCalculator = ({ bottles, vibeMap, setVibeMap }) => {
   const [activeVibes, setActiveVibes] = useState([]);
   const [hovered, setHovered] = useState(null);
   const [tick, setTick] = useState(0);
+  const [showEditor, setShowEditor] = useState(false);
+  const [editSearch, setEditSearch] = useState("");
+  const [newVibeName, setNewVibeName] = useState("");
+  const [newVibeNotes, setNewVibeNotes] = useState("");
+  const [editingVibe, setEditingVibe] = useState(null);
+  const [editVibeNotes, setEditVibeNotes] = useState("");
 
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 50);
@@ -108,12 +114,13 @@ const VibeCalculator = ({ bottles, vibeMap, setVibeMap }) => {
   }, [matchedVibes]);
 
   const scoredFragrances = useMemo(() => {
-    if (Object.keys(matchedNotes).length === 0) return [];
+    if (Object.keys(matchedNotes).length === 0 && activeVibes.length === 0) return [];
     return bottles.filter(b => b.name.trim() && (b.status === "owned" || b.status === "had" || b.status === "tried it" || b.hasTester))
       .map(frag => {
         const fragNotes = (frag.userNotes || "").split(",").map(n => n.trim().toLowerCase());
         let score = 0;
         const matched = [];
+        /* Score by note overlap */
         fragNotes.forEach(fn => {
           Object.entries(matchedNotes).forEach(([note, weight]) => {
             if (fn.includes(note.toLowerCase()) || note.toLowerCase().includes(fn)) {
@@ -122,9 +129,16 @@ const VibeCalculator = ({ bottles, vibeMap, setVibeMap }) => {
             }
           });
         });
+        /* Bonus for direct vibe tags on the bottle */
+        (frag.vibes || []).forEach(v => {
+          if (activeVibes.includes(v.toLowerCase())) {
+            score += 2;
+            matched.push(`✧ ${v}`);
+          }
+        });
         return { ...frag, score, matched: [...new Set(matched)] };
       }).filter(f => f.score > 0).sort((a, b) => b.score - a.score);
-  }, [matchedNotes, bottles]);
+  }, [matchedNotes, bottles, activeVibes]);
 
   const addVibe = (word) => {
     const w = word.trim().toLowerCase();
@@ -310,6 +324,94 @@ const VibeCalculator = ({ bottles, vibeMap, setVibeMap }) => {
           ))}
         </div>
       )}
+
+      {/* ═══ ADVANCED: VIBE MAP EDITOR ═══ */}
+      <div style={{ marginTop: 28, borderTop: `1px solid ${PAL.border}`, paddingTop: 16 }}>
+        <div onClick={() => setShowEditor(!showEditor)} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
+          <span style={{ fontSize: 10, color: PAL.muted, transition: "transform .2s", transform: showEditor ? "rotate(0deg)" : "rotate(-90deg)" }}>▼</span>
+          <h3 style={{ fontFamily: ff.display, fontSize: 16, fontStyle: "italic", margin: 0, color: PAL.muted }}>Edit Vibe Map</h3>
+          <span style={{ fontSize: 9, color: PAL.muted }}>({Object.keys(currentMap).length} vibes)</span>
+        </div>
+
+        {showEditor && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ background: `${PAL.cream}03`, border: `1px solid ${PAL.gold}18`, borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
+              <label style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 6 }}>Add New Vibe</label>
+              <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                <input value={newVibeName} onChange={e => setNewVibeName(e.target.value)} placeholder="Vibe name"
+                  style={{ flex: "0 0 140px", background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "8px 12px", color: PAL.cream, fontFamily: ff.display, fontStyle: "italic", fontSize: 13, outline: "none" }} />
+                <input value={newVibeNotes} onChange={e => setNewVibeNotes(e.target.value)} placeholder="Notes: petrichor, moss, earth, cedar"
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && newVibeName.trim() && newVibeNotes.trim()) {
+                      const notes = newVibeNotes.split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+                      if (notes.length > 0) { setVibeMap(prev => ({ ...DEFAULT_VIBE_MAP, ...prev, [newVibeName.trim().toLowerCase()]: notes })); setNewVibeName(""); setNewVibeNotes(""); }
+                    }
+                  }}
+                  style={{ flex: 1, background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "8px 12px", color: PAL.cream, fontFamily: ff.body, fontSize: 12, outline: "none" }} />
+                <button onClick={() => {
+                  if (newVibeName.trim() && newVibeNotes.trim()) {
+                    const notes = newVibeNotes.split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+                    if (notes.length > 0) { setVibeMap(prev => ({ ...DEFAULT_VIBE_MAP, ...prev, [newVibeName.trim().toLowerCase()]: notes })); setNewVibeName(""); setNewVibeNotes(""); }
+                  }
+                }}
+                  disabled={!newVibeName.trim() || !newVibeNotes.trim()}
+                  style={{ padding: "8px 16px", borderRadius: 8, cursor: newVibeName.trim() && newVibeNotes.trim() ? "pointer" : "not-allowed", background: `${PAL.gold}14`, border: `1px solid ${PAL.gold}35`, color: PAL.gold, fontFamily: ff.body, fontSize: 11, opacity: newVibeName.trim() && newVibeNotes.trim() ? 1 : 0.4 }}>Add</button>
+              </div>
+            </div>
+
+            <input value={editSearch} onChange={e => setEditSearch(e.target.value)} placeholder="Search vibes…"
+              style={{ width: "100%", background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "8px 12px", color: PAL.cream, fontFamily: ff.body, fontSize: 12, outline: "none", boxSizing: "border-box", marginBottom: 10 }} />
+
+            <div style={{ maxHeight: 400, overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: `${PAL.border} transparent` }}>
+              {Object.entries(currentMap)
+                .filter(([key]) => !editSearch.trim() || key.includes(editSearch.toLowerCase()))
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([vibe, notes]) => {
+                  const isCustom = vibeMap && vibeMap[vibe];
+                  const isEditing = editingVibe === vibe;
+                  return (
+                    <div key={vibe} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderBottom: `1px solid ${PAL.border}08`, borderRadius: 6 }}>
+                      {isEditing ? (
+                        <>
+                          <span style={{ fontFamily: ff.display, fontStyle: "italic", fontSize: 12, color: PAL.gold, minWidth: 90 }}>{vibe}</span>
+                          <input value={editVibeNotes} onChange={e => setEditVibeNotes(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") {
+                                const updated = editVibeNotes.split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+                                if (updated.length > 0) setVibeMap(prev => ({ ...DEFAULT_VIBE_MAP, ...prev, [vibe]: updated }));
+                                setEditingVibe(null);
+                              }
+                            }}
+                            style={{ flex: 1, background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.gold}30`, borderRadius: 6, padding: "6px 10px", color: PAL.cream, fontFamily: ff.body, fontSize: 11, outline: "none" }} />
+                          <button onClick={() => {
+                            const updated = editVibeNotes.split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+                            if (updated.length > 0) setVibeMap(prev => ({ ...DEFAULT_VIBE_MAP, ...prev, [vibe]: updated }));
+                            setEditingVibe(null);
+                          }} style={{ padding: "4px 10px", borderRadius: 5, background: `${PAL.gold}14`, border: `1px solid ${PAL.gold}30`, color: PAL.gold, fontSize: 9, fontFamily: ff.body, cursor: "pointer" }}>Save</button>
+                          <button onClick={() => setEditingVibe(null)} style={{ padding: "4px 8px", borderRadius: 5, background: "transparent", border: `1px solid ${PAL.border}`, color: PAL.muted, fontSize: 9, fontFamily: ff.body, cursor: "pointer" }}>✕</button>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{ fontFamily: ff.display, fontStyle: "italic", fontSize: 12, color: isCustom ? PAL.gold : PAL.cream, minWidth: 90 }}>{vibe}</span>
+                          {isCustom && <span style={{ fontSize: 7, letterSpacing: 1, textTransform: "uppercase", color: PAL.gold, background: `${PAL.gold}12`, borderRadius: 3, padding: "1px 5px" }}>custom</span>}
+                          <div style={{ flex: 1, display: "flex", gap: 3, flexWrap: "wrap" }}>
+                            {notes.map(n => <span key={n} style={{ fontSize: 8, color: getNoteColor(n), opacity: 0.7 }}>{n}</span>)}
+                          </div>
+                          <button onClick={() => { setEditingVibe(vibe); setEditVibeNotes(notes.join(", ")); }}
+                            style={{ padding: "3px 8px", borderRadius: 4, background: "transparent", border: `1px solid ${PAL.border}`, color: PAL.muted, fontSize: 8, fontFamily: ff.body, cursor: "pointer" }}>Edit</button>
+                          {isCustom && (
+                            <button onClick={() => setVibeMap(prev => { const n = { ...prev }; delete n[vibe]; return n; })}
+                              style={{ padding: "3px 8px", borderRadius: 4, background: "transparent", border: `1px solid ${PAL.rose}20`, color: PAL.rose, fontSize: 8, fontFamily: ff.body, cursor: "pointer", opacity: 0.6 }}>✕</button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

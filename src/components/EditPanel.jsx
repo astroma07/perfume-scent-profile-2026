@@ -193,6 +193,28 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
                 <FragranceTags tags={selected.tags || {}} onChange={t => updateField("tags", t)} />
               </div>
 
+              {/* Vibes */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={lab}>Vibes</label>
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 8 }}>
+                  {(selected.vibes || []).map((v, i) => (
+                    <span key={i} onClick={() => updateField("vibes", (selected.vibes || []).filter(x => x !== v))}
+                      style={{ fontSize: 10, padding: "4px 10px", borderRadius: 12, cursor: "pointer", fontFamily: ff.display, fontStyle: "italic", color: PAL.gold, background: `${PAL.gold}12`, border: `1px solid ${PAL.gold}30` }}>{v} ✕</span>
+                  ))}
+                </div>
+                <input placeholder="Add a vibe… (press Enter)"
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && e.target.value.trim()) {
+                      const v = e.target.value.trim().toLowerCase();
+                      if (!(selected.vibes || []).includes(v)) {
+                        updateField("vibes", [...(selected.vibes || []), v]);
+                      }
+                      e.target.value = "";
+                    }
+                  }}
+                  style={{ ...inputCss, fontSize: 12, fontFamily: ff.display, fontStyle: "italic" }} />
+              </div>
+
               {/* Thoughts */}
               <div style={{ marginBottom: 20 }}>
                 <label style={lab}>Thoughts & Impressions</label>
