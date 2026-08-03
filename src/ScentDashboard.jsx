@@ -22,7 +22,9 @@ import CollectionView from "./components/CollectionView.jsx";
 import PurchaseList from "./components/PurchaseList.jsx";
 import FragranceNose from "./components/FragranceNose.jsx";
 
-export default function ScentDashboard() {
+import { supabase } from "./supabaseClient.js";
+
+export default function ScentDashboard({ session }) {
   const [tab, setTab] = useState(0);
   const [hovered, setHovered] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
@@ -404,6 +406,9 @@ export default function ScentDashboard() {
               <button onClick={importData} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "7px 12px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer" }}>↑ Import</button>
               <button onClick={() => setShowSettings(true)} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "9px 14px", color: PAL.muted, fontFamily: ff.body, fontSize: 11, letterSpacing: 1.8, textTransform: "uppercase", cursor: "pointer" }}>⚙ Settings</button>
               <button onClick={() => setEditing(true)} style={{ background: `${PAL.gold}12`, border: `1px solid ${PAL.gold}33`, borderRadius: 8, padding: "9px 18px", color: PAL.gold, fontFamily: ff.body, fontSize: 11, letterSpacing: 1.8, textTransform: "uppercase", cursor: "pointer" }}>✎ Edit Collection</button>
+              {session && supabase && (
+                <button onClick={() => supabase.auth.signOut()} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "7px 12px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer", opacity: 0.6 }}>Logout</button>
+              )}
             </div>
           </div>
 
