@@ -21,16 +21,20 @@ const AuthPage = ({ onSkip }) => {
 
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        setMessage("Account created! You can now log in.");
-        setMode("login");
+        if (data?.user?.identities?.length === 0) {
+          setError("An account with this email already exists. Try logging in instead.");
+        } else {
+          setMessage("Account created! You can now log in.");
+          setMode("login");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || err?.error_description || err?.msg || JSON.stringify(err) || "Unknown error");
     }
     setLoading(false);
   };
