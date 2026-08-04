@@ -19,22 +19,32 @@ const AuthPage = ({ onSkip }) => {
     if (!email.trim() || !password.trim()) return;
     setLoading(true); setError(null); setMessage(null);
 
+    if (!supabase) { setError("Supabase not configured. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel."); setLoading(false); return; }
+
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        if (data?.user?.identities?.length === 0) {
+        const result = await supabase.auth.signUp({ email, password });
+        console.log("Signup result:", JSON.stringify(result));
+        if (result.error) {
+          setError(result.error?.message || result.error?.error_description || JSON.stringify(result.error));
+        } else if (result.data?.user?.identities?.length === 0) {
           setError("An account with this email already exists. Try logging in instead.");
-        } else {
-          setMessage("Account created! You can now log in.");
+        } else if (result.data?.user && !result.data?.session) {
+          setMessage("Account created! Check your email to confirm, then log in.");
           setMode("login");
+        } else {
+          setMessage("Account created!");
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const result = await supabase.auth.signInWithPassword({ email, password });
+        console.log("Login result:", JSON.stringify(result));
+        if (result.error) {
+          setError(result.error?.message || result.error?.error_description || JSON.stringify(result.error));
+        }
       }
     } catch (err) {
-      setError(err?.message || err?.error_description || err?.msg || JSON.stringify(err) || "Unknown error");
+      console.error("Auth catch:", err);
+      setError(`Unexpected error: ${err?.message || JSON.stringify(err)}`);
     }
     setLoading(false);
   };
