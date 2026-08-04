@@ -161,24 +161,23 @@ export default function ScentDashboard({ session }) {
     loadFromSupabase(userId).then(data => {
       if (data && data.bottles.length > 0) {
         setBottles(data.bottles);
-        setTestedScents(data.testedScents);
-        setWearLog(data.wearLog);
-        setWearRatings(data.wearRatings);
-        setBottleRatings(data.bottleRatings);
-        setCustomPairings(data.customPairings);
-        setPairingNotes(data.pairingNotes);
-        setPairingRatings(data.pairingRatings);
-        setRejectedPairings(data.rejectedPairings);
-        setLikedNotes(data.likedNotes);
-        setDislikedNotes(data.dislikedNotes);
-        setNoteOverrides(data.noteOverrides);
-        if (data.opposingPairs?.length > 0) setOpposingPairs(data.opposingPairs);
-        setVibeMap(data.vibeMap);
-        setPurchaseData(data.purchaseData);
-        if (data.visibleStats && Object.keys(data.visibleStats).length > 0) setVisibleStats(data.visibleStats);
-        if (data.visibleTabs && Object.keys(data.visibleTabs).length > 0) setVisibleTabs(data.visibleTabs);
+        if (data.testedScents.length > 0) setTestedScents(data.testedScents);
+        if (Object.keys(data.wearLog).length > 0) setWearLog(data.wearLog);
+        if (Object.keys(data.wearRatings).length > 0) setWearRatings(data.wearRatings);
+        if (Object.keys(data.bottleRatings).length > 0) setBottleRatings(data.bottleRatings);
+        if (data.customPairings.length > 0) setCustomPairings(data.customPairings);
+        if (Object.keys(data.pairingNotes).length > 0) setPairingNotes(data.pairingNotes);
+        if (Object.keys(data.pairingRatings).length > 0) setPairingRatings(data.pairingRatings);
+        if (data.rejectedPairings.length > 0) setRejectedPairings(data.rejectedPairings);
+        if (data.likedNotes.length > 0) setLikedNotes(data.likedNotes);
+        if (data.dislikedNotes.length > 0) setDislikedNotes(data.dislikedNotes);
+        if (Object.keys(data.noteOverrides).length > 0) setNoteOverrides(data.noteOverrides);
+        if (data.opposingPairs.length > 0) setOpposingPairs(data.opposingPairs);
+        if (Object.keys(data.vibeMap).length > 0) setVibeMap(data.vibeMap);
+        if (Object.keys(data.purchaseData).length > 0) setPurchaseData(data.purchaseData);
+        if (Object.keys(data.visibleStats).length > 0) setVisibleStats(data.visibleStats);
+        if (Object.keys(data.visibleTabs).length > 0) setVisibleTabs(data.visibleTabs);
         if (data.theme?.preset) setTheme(data.theme);
-        /* Skip welcome screen — user has cloud data */
         setShowWelcome(false);
         try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
       }
