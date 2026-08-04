@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { PAL, ff, NOTE_COLORS, MONTHS, DAYS_SHORT, getDaysInMonth, getFirstDayOfWeek, dateKey } from "../constants.js";
 import { RATING_CATEGORIES, RatingSlider } from "./ui.jsx";
+import { toWearArray } from "../normalizeData.js";
 
 const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRatings }) => {
   const today = new Date();
@@ -57,14 +58,11 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
     setPickerOpen(false);
   };
 
-  /* Normalize wearLog value to always be an array */
-  const toArr = (v) => !v ? [] : typeof v === "string" ? [v] : Array.isArray(v) ? v : [];
-
   const cells = [];
   for (let i = 0; i < firstDay; i++) cells.push(<div key={`e${i}`} />);
   for (let d = 1; d <= daysInMonth; d++) {
     const key = dateKey(viewYear, viewMonth, d);
-    const worn = toArr(wearLog[key]);
+    const worn = toWearArray(wearLog[key]);
     const isToday = key === todayKey;
     const hasWear = worn.length > 0;
     cells.push(
@@ -121,7 +119,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
       {/* Legend */}
       {(() => {
         const monthEntries = Object.entries(wearLog).filter(([k]) => k.startsWith(`${viewYear}-${String(viewMonth+1).padStart(2,"0")}`));
-        const uniqueNames = [...new Set(monthEntries.flatMap(([,v]) => toArr(v)))];
+        const uniqueNames = [...new Set(monthEntries.flatMap(([,v]) => toWearArray(v)))];
         if (uniqueNames.length === 0) return (
           <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, textAlign: "center", marginTop: 14 }}>
             Tap a day to log what you wore
@@ -156,7 +154,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
               <div>
                 <h4 style={{ fontFamily: ff.display, fontSize: 18, color: PAL.cream, margin: 0 }}>Log Your Wear</h4>
                 <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, margin: "2px 0 0" }}>
-                  {selectedDay} · {toArr(wearLog[selectedDay]).length > 0 ? `${toArr(wearLog[selectedDay]).length} selected` : "select fragrances"}
+                  {selectedDay} · {toWearArray(wearLog[selectedDay]).length > 0 ? `${toWearArray(wearLog[selectedDay]).length} selected` : "select fragrances"}
                 </p>
               </div>
               <button onClick={() => setPickerOpen(false)} style={{ background: "none", border: "none", color: PAL.muted, fontSize: 20, cursor: "pointer" }}>✕</button>
@@ -176,7 +174,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
                   const q = pickerSearch.toLowerCase();
                   return b.name.toLowerCase().includes(q) || (b.house || "").toLowerCase().includes(q);
                 }).map((b) => {
-                  const isActive = toArr(wearLog[selectedDay]).includes(b.name);
+                  const isActive = toWearArray(wearLog[selectedDay]).includes(b.name);
                   const color = bottleColor(b.name);
                   return (
                     <button key={b.name} onClick={() => toggleFragrance(b.name)} style={{
@@ -206,7 +204,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
               </div>
             )}
             {/* Daily wear rating */}
-            {toArr(wearLog[selectedDay]).length > 0 && (
+            {toWearArray(wearLog[selectedDay]).length > 0 && (
               <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${PAL.border}` }}>
                 <span style={{ fontFamily: ff.display, fontStyle: "italic", fontSize: 12, color: PAL.gold, display: "block", marginBottom: 10 }}>Rate today's wear</span>
                 {RATING_CATEGORIES.map(cat => (
@@ -232,7 +230,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
                 color: PAL.gold, fontFamily: ff.body, fontSize: 12, fontWeight: 500, cursor: "pointer",
                 letterSpacing: 1,
               }}>Done</button>
-              {toArr(wearLog[selectedDay]).length > 0 && (
+              {toWearArray(wearLog[selectedDay]).length > 0 && (
                 <button onClick={clearDay} style={{
                   padding: "11px 16px",
                   background: "transparent", border: `1px solid ${PAL.rose}44`, borderRadius: 8,

@@ -24,6 +24,8 @@ import FragranceNose from "./components/FragranceNose.jsx";
 
 import { supabase } from "./supabaseClient.js";
 import { loadFromSupabase, syncBottles, syncTestedScents, syncWearLog, syncBottleRatings, syncPairings, syncPreferences } from "./dataSync.js";
+import { normalizeBottles, normalizeAll, toWearArray } from "./normalizeData.js";
+import { useDataPersistence } from "./useDataPersistence.js";
 
 export default function ScentDashboard({ session }) {
   const [tab, setTab] = useState(0);
@@ -84,17 +86,10 @@ export default function ScentDashboard({ session }) {
   const [showWelcome, setShowWelcome] = useState(isFirstVisit);
 
   const [notes, setNotes] = useState(() => isFirstVisit ? [] : loadStored("notes", []));
-  /* Migrate old status names + convert tester status to hasTester flag */
-  const migrateStatuses = (list) => list.map(b => {
-    let status = b.status === "want to try" ? "to test" : b.status === "want" ? "wishlist" : b.status;
-    let hasTester = b.hasTester || false;
-    if (status === "tester") { status = "wishlist"; hasTester = true; }
-    return { ...b, status, hasTester };
-  });
 
   const [bottles, setBottles] = useState(() => {
     const raw = isFirstVisit ? [] : loadStored("bottles", INITIAL_BOTTLES);
-    return migrateStatuses(raw);
+    return normalizeBottles(raw);
   });
   const [wearLog, setWearLog] = useState(() => isFirstVisit ? {} : loadStored("wearLog", {}));
   const [bottleRatings, setBottleRatings] = useState(() => isFirstVisit ? {} : loadStored("bottleRatings", {}));
@@ -127,23 +122,26 @@ export default function ScentDashboard({ session }) {
       if (!file) return;
       try {
         const text = await file.text();
-        const data = JSON.parse(text);
-        if (data.bottles) setBottles(migrateStatuses(data.bottles));
-        if (data.notes) setNotes(data.notes);
-        if (data.wearLog) setWearLog(data.wearLog);
-        if (data.bottleRatings) setBottleRatings(data.bottleRatings);
-        if (data.wearRatings) setWearRatings(data.wearRatings);
-        if (data.testedScents) setTestedScents(data.testedScents);
-        if (data.noteOverrides) setNoteOverrides(data.noteOverrides);
-        if (data.opposingPairs) setOpposingPairs(data.opposingPairs);
-        if (data.pairingNotes) setPairingNotes(data.pairingNotes);
-        if (data.pairingRatings) setPairingRatings(data.pairingRatings);
-        if (data.rejectedPairings) setRejectedPairings(data.rejectedPairings);
-        if (data.purchaseData) setPurchaseData(data.purchaseData);
-        if (data.customPairings) setCustomPairings(data.customPairings);
-        if (data.vibeMap) setVibeMap(data.vibeMap);
-        if (data.likedNotes) setLikedNotes(data.likedNotes);
-        if (data.dislikedNotes) setDislikedNotes(data.dislikedNotes);
+        const raw = JSON.parse(text);
+        const data = normalizeAll(raw);
+        if (data) {
+          if (data.bottles.length > 0) setBottles(data.bottles);
+          if (data.notes.length > 0) setNotes(data.notes);
+          setWearLog(data.wearLog);
+          setBottleRatings(data.bottleRatings);
+          setWearRatings(data.wearRatings);
+          if (data.testedScents.length > 0) setTestedScents(data.testedScents);
+          setNoteOverrides(data.noteOverrides);
+          if (data.opposingPairs.length > 0) setOpposingPairs(data.opposingPairs);
+          setPairingNotes(data.pairingNotes);
+          setPairingRatings(data.pairingRatings);
+          setRejectedPairings(data.rejectedPairings);
+          setPurchaseData(data.purchaseData);
+          setCustomPairings(data.customPairings);
+          setVibeMap(data.vibeMap);
+          setLikedNotes(data.likedNotes);
+          setDislikedNotes(data.dislikedNotes);
+        }
         try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
         setShowWelcome(false);
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
@@ -188,27 +186,13 @@ export default function ScentDashboard({ session }) {
     });
   }, [userId]);
 
-  /* ─── Auto-save to localStorage + Supabase ─── */
-
-  useEffect(() => { try { localStorage.setItem("scent_notes", JSON.stringify(notes)); } catch {} }, [notes]);
-  useEffect(() => { try { localStorage.setItem("scent_bottles", JSON.stringify(bottles)); } catch {} if (dataLoaded && userId) syncBottles(userId, bottles); }, [bottles]);
-  useEffect(() => { try { localStorage.setItem("scent_wearLog", JSON.stringify(wearLog)); } catch {} if (dataLoaded && userId) syncWearLog(userId, wearLog, wearRatings); }, [wearLog]);
-  useEffect(() => { try { localStorage.setItem("scent_bottleRatings", JSON.stringify(bottleRatings)); } catch {} if (dataLoaded && userId) syncBottleRatings(userId, bottleRatings); }, [bottleRatings]);
-  useEffect(() => { try { localStorage.setItem("scent_wearRatings", JSON.stringify(wearRatings)); } catch {} if (dataLoaded && userId) syncWearLog(userId, wearLog, wearRatings); }, [wearRatings]);
-  useEffect(() => { try { localStorage.setItem("scent_testedScents", JSON.stringify(testedScents)); } catch {} if (dataLoaded && userId) syncTestedScents(userId, testedScents); }, [testedScents]);
-  useEffect(() => { try { localStorage.setItem("scent_customPairings", JSON.stringify(customPairings)); } catch {} if (dataLoaded && userId) syncPairings(userId, { customPairings, pairingNotes, pairingRatings, rejectedPairings }); }, [customPairings]);
-  useEffect(() => { try { localStorage.setItem("scent_pairingNotes", JSON.stringify(pairingNotes)); } catch {} if (dataLoaded && userId) syncPairings(userId, { customPairings, pairingNotes, pairingRatings, rejectedPairings }); }, [pairingNotes]);
-  useEffect(() => { try { localStorage.setItem("scent_pairingRatings", JSON.stringify(pairingRatings)); } catch {} if (dataLoaded && userId) syncPairings(userId, { customPairings, pairingNotes, pairingRatings, rejectedPairings }); }, [pairingRatings]);
-  useEffect(() => { try { localStorage.setItem("scent_rejectedPairings", JSON.stringify(rejectedPairings)); } catch {} if (dataLoaded && userId) syncPairings(userId, { customPairings, pairingNotes, pairingRatings, rejectedPairings }); }, [rejectedPairings]);
-  useEffect(() => { try { localStorage.setItem("scent_visibleStats", JSON.stringify(visibleStats)); } catch {} if (dataLoaded && userId) syncPreferences(userId, { likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme }); }, [visibleStats]);
-  useEffect(() => { try { localStorage.setItem("scent_noteOverrides", JSON.stringify(noteOverrides)); } catch {} if (dataLoaded && userId) syncPreferences(userId, { likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme }); }, [noteOverrides]);
-  useEffect(() => { try { localStorage.setItem("scent_opposingPairs", JSON.stringify(opposingPairs)); } catch {} if (dataLoaded && userId) syncPreferences(userId, { likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme }); }, [opposingPairs]);
-  useEffect(() => { try { localStorage.setItem("scent_visibleTabs", JSON.stringify(visibleTabs)); } catch {} if (dataLoaded && userId) syncPreferences(userId, { likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme }); }, [visibleTabs]);
-  useEffect(() => { try { localStorage.setItem("scent_theme", JSON.stringify(theme)); } catch {} if (dataLoaded && userId) syncPreferences(userId, { likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme }); }, [theme]);
-  useEffect(() => { try { localStorage.setItem("scent_purchaseData", JSON.stringify(purchaseData)); } catch {} if (dataLoaded && userId) syncPreferences(userId, { likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme }); }, [purchaseData]);
-  useEffect(() => { try { localStorage.setItem("scent_vibeMap", JSON.stringify(vibeMap)); } catch {} if (dataLoaded && userId) syncPreferences(userId, { likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme }); }, [vibeMap]);
-  useEffect(() => { try { localStorage.setItem("scent_likedNotes", JSON.stringify(likedNotes)); } catch {} if (dataLoaded && userId) syncPreferences(userId, { likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme }); }, [likedNotes]);
-  useEffect(() => { try { localStorage.setItem("scent_dislikedNotes", JSON.stringify(dislikedNotes)); } catch {} if (dataLoaded && userId) syncPreferences(userId, { likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme }); }, [dislikedNotes]);
+  /* ─── Persistence: localStorage + Supabase sync ─── */
+  useDataPersistence({
+    notes, bottles, wearLog, wearRatings, bottleRatings, testedScents,
+    visibleStats, noteOverrides, opposingPairs, visibleTabs, theme,
+    pairingNotes, pairingRatings, rejectedPairings, purchaseData,
+    customPairings, vibeMap, likedNotes, dislikedNotes,
+  }, userId, dataLoaded);
 
   /* ─── Export / Import ─── */
 
@@ -229,23 +213,26 @@ export default function ScentDashboard({ session }) {
       if (!file) return;
       try {
         const text = await file.text();
-        const data = JSON.parse(text);
-        if (data.bottles) setBottles(migrateStatuses(data.bottles));
-        if (data.notes) setNotes(data.notes);
-        if (data.wearLog) setWearLog(data.wearLog);
-        if (data.bottleRatings) setBottleRatings(data.bottleRatings);
-        if (data.wearRatings) setWearRatings(data.wearRatings);
-        if (data.testedScents) setTestedScents(data.testedScents);
-        if (data.noteOverrides) setNoteOverrides(data.noteOverrides);
-        if (data.opposingPairs) setOpposingPairs(data.opposingPairs);
-        if (data.pairingNotes) setPairingNotes(data.pairingNotes);
-        if (data.pairingRatings) setPairingRatings(data.pairingRatings);
-        if (data.rejectedPairings) setRejectedPairings(data.rejectedPairings);
-        if (data.purchaseData) setPurchaseData(data.purchaseData);
-        if (data.customPairings) setCustomPairings(data.customPairings);
-        if (data.vibeMap) setVibeMap(data.vibeMap);
-        if (data.likedNotes) setLikedNotes(data.likedNotes);
-        if (data.dislikedNotes) setDislikedNotes(data.dislikedNotes);
+        const raw = JSON.parse(text);
+        const data = normalizeAll(raw);
+        if (data) {
+          if (data.bottles.length > 0) setBottles(data.bottles);
+          if (data.notes.length > 0) setNotes(data.notes);
+          setWearLog(data.wearLog);
+          setBottleRatings(data.bottleRatings);
+          setWearRatings(data.wearRatings);
+          if (data.testedScents.length > 0) setTestedScents(data.testedScents);
+          setNoteOverrides(data.noteOverrides);
+          if (data.opposingPairs.length > 0) setOpposingPairs(data.opposingPairs);
+          setPairingNotes(data.pairingNotes);
+          setPairingRatings(data.pairingRatings);
+          setRejectedPairings(data.rejectedPairings);
+          setPurchaseData(data.purchaseData);
+          setCustomPairings(data.customPairings);
+          setVibeMap(data.vibeMap);
+          setLikedNotes(data.likedNotes);
+          setDislikedNotes(data.dislikedNotes);
+        }
       } catch { alert("Couldn't read that file. Make sure it's a valid scent profile export."); }
     };
     input.click();
@@ -257,17 +244,14 @@ export default function ScentDashboard({ session }) {
     requestAnimationFrame(() => setVis(true));
   }, []);
 
-  /* Normalize wearLog value to array */
-  const toWearArr = (v) => !v ? [] : typeof v === "string" ? [v] : Array.isArray(v) ? v : [];
-
   /* Derive monthly trends from wearLog */
   const calendarTrends = useMemo(() => {
     return MONTHS.map((name, i) => {
       const mk = `2026-${String(i + 1).padStart(2, "0")}`;
       const monthEntries = Object.entries(wearLog).filter(([k, v]) => k.startsWith(mk) && v);
       const daysWorn = monthEntries.length;
-      const totalApplications = monthEntries.reduce((s, [, v]) => s + toWearArr(v).length, 0);
-      const uniqueBottles = new Set(monthEntries.flatMap(([, v]) => toWearArr(v))).size;
+      const totalApplications = monthEntries.reduce((s, [, v]) => s + toWearArray(v).length, 0);
+      const uniqueBottles = new Set(monthEntries.flatMap(([, v]) => toWearArray(v))).size;
       return { month: name.slice(0, 3), daysWorn, applications: totalApplications, uniqueBottles };
     });
   }, [wearLog]);
@@ -277,7 +261,7 @@ export default function ScentDashboard({ session }) {
   const totalSpent = useMemo(() => sum(bottles.filter(b => b.status === "owned"), "cost"), [bottles]);
   const totalAll = useMemo(() => sum(bottles, "cost"), [bottles]);
   const totalMl = useMemo(() => sum(bottles.filter(b => b.status === "owned"), "ml"), [bottles]);
-  const totalWears = Object.values(wearLog).reduce((s, v) => s + toWearArr(v).length, 0);
+  const totalWears = Object.values(wearLog).reduce((s, v) => s + toWearArray(v).length, 0);
   const filteredBottles = useMemo(() => collectionFilter ? bottles.filter(b => b.status === collectionFilter) : bottles, [bottles, collectionFilter]);
 
   /* Rank want/want-to-try bottles by fit score */
@@ -849,7 +833,7 @@ export default function ScentDashboard({ session }) {
                         <p style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "0 0 14px" }}>Your last {ratedDays.length} rated sessions</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           {ratedDays.map(([day, r]) => {
-                            const worn = toWearArr(wearLog[day]);
+                            const worn = toWearArray(wearLog[day]);
                             const filled = RATING_CATEGORIES.filter(c => (r?.[c.key] || 0) > 0);
                             const avg = filled.length > 0 ? filled.reduce((s, c) => s + (r?.[c.key] || 0), 0) / filled.length : 0;
                             return (
