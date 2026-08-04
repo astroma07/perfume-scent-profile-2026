@@ -508,7 +508,7 @@ export default function ScentDashboard({ session }) {
         </header>
 
         {/* Tabs */}
-        <nav className="tab-bar" style={{ display: "flex", gap: 5, paddingTop: 28, flexWrap: "nowrap", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .2s" }}>
+        <nav className="tab-bar" style={{ display: "flex", gap: 5, paddingTop: 28, paddingRight: 20, flexWrap: "nowrap", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .2s" }}>
           {filteredTabs.map((t) => (
             <button key={t.origIdx} onClick={() => setTab(t.origIdx)} style={{
               background: tab === t.origIdx ? `${PAL.gold}14` : "transparent",
@@ -523,6 +523,7 @@ export default function ScentDashboard({ session }) {
               <span style={{ fontSize: 11 }}>{t.icon}</span>{t.label}
             </button>
           ))}
+          <div style={{ minWidth: 20, flexShrink: 0 }} />
         </nav>
 
         {/* Chart Card */}
