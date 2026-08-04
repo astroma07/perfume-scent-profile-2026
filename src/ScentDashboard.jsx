@@ -257,14 +257,17 @@ export default function ScentDashboard({ session }) {
     requestAnimationFrame(() => setVis(true));
   }, []);
 
-  /* Derive monthly trends from wearLog (string per day: { "2026-07-15": "Nosferatu" }) */
+  /* Normalize wearLog value to array */
+  const toWearArr = (v) => !v ? [] : typeof v === "string" ? [v] : Array.isArray(v) ? v : [];
+
+  /* Derive monthly trends from wearLog */
   const calendarTrends = useMemo(() => {
     return MONTHS.map((name, i) => {
       const mk = `2026-${String(i + 1).padStart(2, "0")}`;
       const monthEntries = Object.entries(wearLog).filter(([k, v]) => k.startsWith(mk) && v);
       const daysWorn = monthEntries.length;
-      const totalApplications = daysWorn;
-      const uniqueBottles = new Set(monthEntries.map(([, v]) => typeof v === "string" ? v : Array.isArray(v) ? v[0] : "").filter(Boolean)).size;
+      const totalApplications = monthEntries.reduce((s, [, v]) => s + toWearArr(v).length, 0);
+      const uniqueBottles = new Set(monthEntries.flatMap(([, v]) => toWearArr(v))).size;
       return { month: name.slice(0, 3), daysWorn, applications: totalApplications, uniqueBottles };
     });
   }, [wearLog]);
@@ -274,7 +277,7 @@ export default function ScentDashboard({ session }) {
   const totalSpent = useMemo(() => sum(bottles.filter(b => b.status === "owned"), "cost"), [bottles]);
   const totalAll = useMemo(() => sum(bottles, "cost"), [bottles]);
   const totalMl = useMemo(() => sum(bottles.filter(b => b.status === "owned"), "ml"), [bottles]);
-  const totalWears = Object.keys(wearLog).length;
+  const totalWears = Object.values(wearLog).reduce((s, v) => s + toWearArr(v).length, 0);
   const filteredBottles = useMemo(() => collectionFilter ? bottles.filter(b => b.status === collectionFilter) : bottles, [bottles, collectionFilter]);
 
   /* Rank want/want-to-try bottles by fit score */
@@ -846,8 +849,7 @@ export default function ScentDashboard({ session }) {
                         <p style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "0 0 14px" }}>Your last {ratedDays.length} rated sessions</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           {ratedDays.map(([day, r]) => {
-                            const wornRaw = wearLog[day] || "";
-                            const worn = typeof wornRaw === "string" ? (wornRaw ? [wornRaw] : []) : Array.isArray(wornRaw) ? wornRaw : [];
+                            const worn = toWearArr(wearLog[day]);
                             const filled = RATING_CATEGORIES.filter(c => (r?.[c.key] || 0) > 0);
                             const avg = filled.length > 0 ? filled.reduce((s, c) => s + (r?.[c.key] || 0), 0) / filled.length : 0;
                             return (

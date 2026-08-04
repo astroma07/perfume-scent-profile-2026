@@ -44,11 +44,12 @@ export async function loadFromSupabase(userId) {
       _dbId: t.id,
     }));
 
-    /* Convert wear log: array of rows → { date: bottleName } */
+    /* Convert wear log: multiple rows per day → { date: [name1, name2] } */
     const wearLog = {};
     const wearRatings = {};
     (wearData || []).forEach(w => {
-      wearLog[w.date] = w.bottle_name;
+      if (!wearLog[w.date]) wearLog[w.date] = [];
+      if (w.bottle_name) wearLog[w.date].push(w.bottle_name);
       if (w.rating) wearRatings[w.date] = w.rating;
     });
 
@@ -163,12 +164,14 @@ export function syncWearLog(userId, wearLog, wearRatings) {
   if (!supabase || !userId) return;
   debounce("wear", async () => {
     await supabase.from("wear_log").delete().eq("user_id", userId);
-    const entries = Object.entries(wearLog).filter(([, name]) => name);
-    if (entries.length > 0) {
-      const rows = entries.map(([date, bottle_name]) => ({
-        user_id: userId, date, bottle_name,
-        rating: wearRatings?.[date] || null,
-      }));
+    const rows = [];
+    Object.entries(wearLog).forEach(([date, val]) => {
+      const names = !val ? [] : typeof val === "string" ? [val] : Array.isArray(val) ? val : [];
+      names.forEach(bottle_name => {
+        if (bottle_name) rows.push({ user_id: userId, date, bottle_name, rating: wearRatings?.[date] || null });
+      });
+    });
+    if (rows.length > 0) {
       const { error } = await supabase.from("wear_log").insert(rows);
       if (error) console.error("Sync wear log error:", error);
     }
