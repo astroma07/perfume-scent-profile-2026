@@ -116,10 +116,13 @@ function debounce(key, fn, ms = 1000) {
 }
 
 export function syncBottles(userId, bottles) {
-  if (!supabase || !userId) return;
+  if (!supabase || !userId) { console.log("syncBottles skipped: no supabase or userId"); return; }
+  console.log("syncBottles queued for", bottles.length, "bottles, userId:", userId);
   debounce("bottles", async () => {
+    console.log("syncBottles executing...");
     /* Delete all and re-insert — simplest approach for array data */
-    await supabase.from("bottles").delete().eq("user_id", userId);
+    const { error: delErr } = await supabase.from("bottles").delete().eq("user_id", userId);
+    if (delErr) console.error("Delete bottles error:", delErr);
     if (bottles.length > 0) {
       const rows = bottles.filter(b => b.name && b.name.trim()).map((b, i) => ({
         user_id: userId, name: b.name, full_name: b.fullName || b.name,
@@ -130,8 +133,9 @@ export function syncBottles(userId, bottles) {
         concentration: b.concentration || "", vibes: b.vibes || [],
         sort_order: i,
       }));
-      const { error } = await supabase.from("bottles").insert(rows);
-      if (error) console.error("Sync bottles error:", error);
+      const { data, error } = await supabase.from("bottles").insert(rows).select();
+      if (error) console.error("Insert bottles error:", error);
+      else console.log("syncBottles success:", data?.length, "rows inserted");
     }
   });
 }
