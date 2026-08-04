@@ -11,6 +11,16 @@
       body { -webkit-font-smoothing: antialiased; }
       ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #2a2318; border-radius: 3px; }
+      /* Mobile responsive */
+      @media (max-width: 768px) {
+        .edit-modal-inner { flex-direction: column !important; height: 95vh !important; width: 100% !important; max-width: 100% !important; border-radius: 12px 12px 0 0 !important; }
+        .edit-sidebar { width: 100% !important; max-height: 40vh !important; border-right: none !important; border-bottom: 1px solid #2a2318 !important; }
+        .edit-detail { padding: 16px !important; }
+        .header-actions { flex-wrap: wrap !important; gap: 4px !important; }
+        .tab-bar { overflow-x: auto !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-wrap: nowrap !important; }
+        .tab-bar::-webkit-scrollbar { display: none; }
+        .stat-pills { flex-wrap: wrap !important; }
+      }
     </style>
   </head>
   <body>

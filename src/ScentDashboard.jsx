@@ -443,7 +443,7 @@ export default function ScentDashboard({ session }) {
       <div style={{ position: "fixed", top: -180, left: "30%", width: 500, height: 500, background: `radial-gradient(circle, ${PAL.gold}08 0%, transparent 70%)`, pointerEvents: "none" }} />
       <div style={{ position: "fixed", bottom: -200, right: "10%", width: 400, height: 400, background: `radial-gradient(circle, ${PAL.rose}06 0%, transparent 70%)`, pointerEvents: "none" }} />
 
-      <div style={{ position: "relative", zIndex: 2, maxWidth: 960, margin: "0 auto", padding: "0 24px" }}>
+      <div style={{ position: "relative", zIndex: 2, maxWidth: 960, margin: "0 auto", padding: "0 16px", overflowX: "hidden" }}>
 
         {/* Header */}
         <header style={{ paddingTop: 52, paddingBottom: 16, opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(-16px)", transition: "all .7s cubic-bezier(.16,1,.3,1)" }}>
@@ -453,7 +453,7 @@ export default function ScentDashboard({ session }) {
               <h1 style={{ fontFamily: ff.display, fontSize: "clamp(34px,5vw,52px)", fontWeight: 400, margin: "6px 0 0", lineHeight: 1.05, color: PAL.cream }}>Scent Profile</h1>
               <div style={{ width: 48, height: 2, background: `linear-gradient(90deg, ${PAL.gold}, transparent)`, marginTop: 14, borderRadius: 1 }} />
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <button onClick={exportData} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "7px 12px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer" }}>↓ Export</button>
               <button onClick={importData} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "7px 12px", color: PAL.muted, fontFamily: ff.body, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer" }}>↑ Import</button>
               <button onClick={() => setShowSettings(true)} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 8, padding: "9px 14px", color: PAL.muted, fontFamily: ff.body, fontSize: 11, letterSpacing: 1.8, textTransform: "uppercase", cursor: "pointer" }}>⚙ Settings</button>
@@ -465,7 +465,7 @@ export default function ScentDashboard({ session }) {
           </div>
 
           {/* Stats with show/hide */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 20 }}>
+          <div className="stat-pills" style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 20, flexWrap: "wrap" }}>
             <div style={{ position: "relative" }}>
               <button onClick={() => setStatsMenuOpen(!statsMenuOpen)} style={{ background: "transparent", border: `1px solid ${PAL.border}`, borderRadius: 6, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", color: PAL.muted, cursor: "pointer", fontSize: 14 }}>⚙</button>
               {statsMenuOpen && (
@@ -508,7 +508,7 @@ export default function ScentDashboard({ session }) {
         </header>
 
         {/* Tabs */}
-        <nav style={{ display: "flex", gap: 5, paddingTop: 28, flexWrap: "nowrap", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .2s" }}>
+        <nav className="tab-bar" style={{ display: "flex", gap: 5, paddingTop: 28, flexWrap: "nowrap", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)", transition: "all .7s cubic-bezier(.16,1,.3,1) .2s" }}>
           {filteredTabs.map((t) => (
             <button key={t.origIdx} onClick={() => setTab(t.origIdx)} style={{
               background: tab === t.origIdx ? `${PAL.gold}14` : "transparent",

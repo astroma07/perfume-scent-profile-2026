@@ -13,6 +13,8 @@ const PublicProfile = ({ username }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("collection");
+  const [sortBy, setSortBy] = useState("status");
+  const [filterStatus, setFilterStatus] = useState(null);
 
   useEffect(() => {
     if (!supabase || !username) return;
@@ -59,12 +61,35 @@ const PublicProfile = ({ username }) => {
   }, [username]);
 
   const sharing = profile?.sharing || {};
+  const STATUSES = ["owned", "had", "tried it", "wishlist", "to test"];
+
   const visibleBottles = useMemo(() => {
-    let list = bottles;
+    let list = [...bottles];
     if (sharing.wishlist === false) list = list.filter(b => b.status !== "wishlist" && b.status !== "to test");
     if (sharing.costs === false) list = list.map(b => ({ ...b, cost: 0 }));
+    if (filterStatus) {
+      if (filterStatus === "tester") list = list.filter(b => b.hasTester);
+      else list = list.filter(b => b.status === filterStatus);
+    }
+    if (sortBy === "name") list.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortBy === "house") list.sort((a, b) => (a.house || "").localeCompare(b.house || ""));
+    else if (sortBy === "notes") {
+      list.sort((a, b) => {
+        const getFam = (bot) => {
+          const notes = (bot.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+          if (notes.length === 0) return "zzz";
+          const counts = {};
+          notes.forEach(n => { const f = getNoteFamily(n, {}); counts[f] = (counts[f] || 0) + 1; });
+          let best = "zzz", max = 0;
+          for (const [f, c] of Object.entries(counts)) { if (c > max) { max = c; best = f; } }
+          return best;
+        };
+        return FAMILY_ORDER.indexOf(getFam(a)) - FAMILY_ORDER.indexOf(getFam(b)) || a.name.localeCompare(b.name);
+      });
+    } else if (sortBy === "cost") list.sort((a, b) => (b.cost || 0) - (a.cost || 0));
+    else list.sort((a, b) => STATUSES.indexOf(a.status) - STATUSES.indexOf(b.status) || a.name.localeCompare(b.name));
     return list;
-  }, [bottles, sharing]);
+  }, [bottles, sharing, filterStatus, sortBy]);
 
   const statusCounts = useMemo(() => {
     const counts = {};
@@ -120,7 +145,28 @@ const PublicProfile = ({ username }) => {
 
         {/* Collection view */}
         {activeTab === "collection" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div>
+            {/* Sort buttons */}
+            <div style={{ display: "flex", gap: 4, marginBottom: 10, flexWrap: "wrap" }}>
+              {[{k:"status",l:"Status"},{k:"name",l:"A-Z"},{k:"house",l:"House"},{k:"notes",l:"Notes"},{k:"cost",l:"Cost"}].map(s => (
+                <button key={s.k} onClick={() => setSortBy(s.k)} style={{ padding: "5px 12px", borderRadius: 8, cursor: "pointer", fontFamily: ff.body, fontSize: 10, background: sortBy === s.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${sortBy === s.k ? PAL.gold + "44" : PAL.border}`, color: sortBy === s.k ? PAL.gold : PAL.muted }}>{s.l}</button>
+              ))}
+            </div>
+            {/* Filter pills */}
+            <div style={{ display: "flex", gap: 4, marginBottom: 16, flexWrap: "wrap" }}>
+              <button onClick={() => setFilterStatus(null)} style={{ padding: "4px 10px", borderRadius: 14, cursor: "pointer", fontFamily: ff.body, fontSize: 9, background: !filterStatus ? `${PAL.gold}14` : "transparent", border: `1px solid ${!filterStatus ? PAL.gold + "44" : PAL.border}`, color: !filterStatus ? PAL.gold : PAL.muted }}>All ({bottles.length})</button>
+              {STATUSES.filter(s => sharing.wishlist !== false || (s !== "wishlist" && s !== "to test")).map(s => {
+                const count = bottles.filter(b => b.status === s).length;
+                if (count === 0) return null;
+                return (
+                  <button key={s} onClick={() => setFilterStatus(filterStatus === s ? null : s)} style={{ padding: "4px 10px", borderRadius: 14, cursor: "pointer", fontFamily: ff.body, fontSize: 9, textTransform: "capitalize", background: filterStatus === s ? `${STATUS_COLORS[s]}18` : "transparent", border: `1px solid ${filterStatus === s ? STATUS_COLORS[s] + "44" : PAL.border}`, color: filterStatus === s ? STATUS_COLORS[s] : PAL.muted }}>{s} ({count})</button>
+                );
+              })}
+              {bottles.some(b => b.hasTester) && (
+                <button onClick={() => setFilterStatus(filterStatus === "tester" ? null : "tester")} style={{ padding: "4px 10px", borderRadius: 14, cursor: "pointer", fontFamily: ff.body, fontSize: 9, background: filterStatus === "tester" ? `${TESTER_COLOR}18` : "transparent", border: `1px solid ${filterStatus === "tester" ? TESTER_COLOR + "44" : PAL.border}`, color: filterStatus === "tester" ? TESTER_COLOR : PAL.muted }}>Tester ({bottles.filter(b => b.hasTester).length})</button>
+              )}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {visibleBottles.map((b, i) => {
               const statusColor = STATUS_COLORS[b.status] || PAL.muted;
               return (
@@ -151,6 +197,7 @@ const PublicProfile = ({ username }) => {
                 </div>
               );
             })}
+          </div>
           </div>
         )}
 

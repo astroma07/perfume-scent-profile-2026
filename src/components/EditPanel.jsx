@@ -63,10 +63,10 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
       onMouseDown={e => { mouseDownTarget.current = e.target; }}
       onClick={e => { if (e.target === e.currentTarget && mouseDownTarget.current === e.currentTarget) onClose(); }}
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: PAL.bg, border: `1px solid ${PAL.border}`, borderRadius: 16, width: "96%", maxWidth: 1100, height: "88vh", display: "flex", overflow: "hidden" }}>
+      <div onClick={e => e.stopPropagation()} className="edit-modal-inner" style={{ background: PAL.bg, border: `1px solid ${PAL.border}`, borderRadius: 16, width: "96%", maxWidth: 1100, height: "88vh", display: "flex", overflow: "hidden" }}>
 
         {/* ── LEFT SIDEBAR ── */}
-        <div style={{ width: 300, borderRight: `1px solid ${PAL.border}`, display: "flex", flexDirection: "column", flexShrink: 0 }}>
+        <div className="edit-sidebar" style={{ width: 300, borderRight: `1px solid ${PAL.border}`, display: "flex", flexDirection: "column", flexShrink: 0 }}>
           <div style={{ padding: "18px 14px 10px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <h3 style={{ fontFamily: ff.display, fontSize: 18, fontStyle: "italic", margin: 0 }}>Edit Collection</h3>
@@ -110,7 +110,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
         </div>
 
         {/* ── RIGHT PANEL ── */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px", scrollbarWidth: "thin", scrollbarColor: `${PAL.border} transparent` }}>
+        <div className="edit-detail" style={{ flex: 1, overflowY: "auto", padding: "24px 28px", scrollbarWidth: "thin", scrollbarColor: `${PAL.border} transparent` }}>
           {selected ? (
             <div>
               {/* Name + House */}
@@ -125,7 +125,7 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
 
               {/* Status + Type + Tester + Cost row */}
               <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "end" }}>
-                <div style={{ minWidth: 120 }}>
+                <div style={{ minWidth: 120, flex: "1 1 120px" }}>
                   <label style={lab}>Status</label>
                   <select style={selectCss} value={selected.status} onChange={e => updateField("status", e.target.value)}>
                     {STATUSES.map(s => <option key={s} value={s} style={{ background: PAL.bg }}>{s}</option>)}
