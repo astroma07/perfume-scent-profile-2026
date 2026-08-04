@@ -63,6 +63,7 @@ export default function ScentDashboard({ session }) {
   const [likedNotes, setLikedNotes] = useState(() => loadStored("likedNotes", []));
   const [dislikedNotes, setDislikedNotes] = useState(() => loadStored("dislikedNotes", []));
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [profile, setProfile] = useState(null);
 
   const userId = session?.user?.id || null;
   const [visibleTabs, setVisibleTabs] = useState(() => loadStored("visibleTabs", { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true }));
@@ -153,6 +154,12 @@ export default function ScentDashboard({ session }) {
   /* ─── Load from Supabase on mount (if logged in) ─── */
   useEffect(() => {
     if (!userId) { setDataLoaded(true); return; }
+    /* Load profile */
+    if (supabase) {
+      supabase.from("profiles").select("*").eq("id", userId).single().then(({ data }) => {
+        if (data) setProfile(data);
+      });
+    }
     loadFromSupabase(userId).then(data => {
       if (data && data.bottles.length > 0) {
         setBottles(data.bottles);
@@ -1012,6 +1019,7 @@ export default function ScentDashboard({ session }) {
           opposingPairs={opposingPairs} setOpposingPairs={setOpposingPairs}
           theme={theme} setTheme={setTheme}
           tabLabels={tabs}
+          session={session} profile={profile} setProfile={setProfile}
         />
       )}
     </div>

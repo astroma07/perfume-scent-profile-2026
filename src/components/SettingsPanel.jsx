@@ -1,8 +1,13 @@
 import { useState, useRef } from "react";
 import { PAL, ff } from "../constants.js";
+import { supabase } from "../supabaseClient.js";
 import { FAMILY_ORDER, FAMILY_COLORS, FAMILY_LABELS, DEFAULT_OPPOSING, THEME_PRESETS } from "../noteCategories.js";
 
-const SettingsPanel = ({ onClose, visibleTabs, setVisibleTabs, opposingPairs, setOpposingPairs, theme, setTheme, tabLabels }) => {
+const SettingsPanel = ({ onClose, visibleTabs, setVisibleTabs, opposingPairs, setOpposingPairs, theme, setTheme, tabLabels, session, profile, setProfile }) => {
+  const [usernameInput, setUsernameInput] = useState(profile?.username || "");
+  const [usernameSaving, setUsernameSaving] = useState(false);
+  const [usernameMsg, setUsernameMsg] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [section, setSection] = useState("tabs");
   const [newA, setNewA] = useState("");
   const [newB, setNewB] = useState("");
@@ -193,6 +198,107 @@ const SettingsPanel = ({ onClose, visibleTabs, setVisibleTabs, opposingPairs, se
                       style={{ width: 36, height: 36, border: `1px solid ${PAL.border}`, borderRadius: 6, cursor: "pointer", background: "none", padding: 2 }} />
                     <span style={{ fontFamily: ff.body, fontSize: 12, color: PAL.cream }}>{theme.customText || "#e8dfd0"}</span>
                   </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══ PROFILE & SHARING ═══ */}
+        {session && (
+          <div style={{ marginTop: 20, padding: "16px", background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 12 }}>
+            <h3 style={{ fontFamily: ff.display, fontSize: 16, fontStyle: "italic", margin: "0 0 14px" }}>Public Profile</h3>
+
+            {/* Username */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 4 }}>Username (your profile URL)</label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", flex: 1, background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 8, overflow: "hidden" }}>
+                  <span style={{ padding: "0 0 0 12px", color: PAL.muted, fontSize: 12, fontFamily: ff.body, whiteSpace: "nowrap" }}>/u/</span>
+                  <input value={usernameInput} onChange={e => setUsernameInput(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
+                    placeholder="your-name"
+                    style={{ flex: 1, background: "transparent", border: "none", padding: "10px 12px 10px 2px", color: PAL.cream, fontFamily: ff.body, fontSize: 13, outline: "none" }} />
+                </div>
+                <button onClick={async () => {
+                  if (!usernameInput.trim() || usernameInput.length < 3) { setUsernameMsg("Min 3 characters"); return; }
+                  setUsernameSaving(true); setUsernameMsg(null);
+                  const { error } = await supabase.from("profiles").update({ username: usernameInput }).eq("id", session.user.id);
+                  if (error) { setUsernameMsg(error.message.includes("unique") ? "Username taken" : error.message); }
+                  else { setUsernameMsg("Saved!"); setProfile(prev => ({ ...prev, username: usernameInput })); }
+                  setUsernameSaving(false);
+                }}
+                  disabled={usernameSaving || usernameInput === profile?.username}
+                  style={{ padding: "0 16px", borderRadius: 8, cursor: "pointer", background: `${PAL.gold}14`, border: `1px solid ${PAL.gold}35`, color: PAL.gold, fontFamily: ff.body, fontSize: 11, opacity: usernameSaving || usernameInput === profile?.username ? 0.4 : 1 }}>
+                  {usernameSaving ? "…" : "Save"}
+                </button>
+              </div>
+              {usernameMsg && <p style={{ fontFamily: ff.body, fontSize: 10, color: usernameMsg === "Saved!" ? PAL.sage : PAL.rose, marginTop: 4 }}>{usernameMsg}</p>}
+            </div>
+
+            {/* Visibility */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 6 }}>Profile Visibility</label>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[{ k: "private", l: "Private" }, { k: "link-only", l: "Link Only" }, { k: "public", l: "Public" }].map(v => (
+                  <button key={v.k} onClick={async () => {
+                    await supabase.from("profiles").update({ visibility: v.k }).eq("id", session.user.id);
+                    setProfile(prev => ({ ...prev, visibility: v.k }));
+                  }}
+                    style={{ flex: 1, padding: "8px", borderRadius: 8, cursor: "pointer", fontFamily: ff.body, fontSize: 11, textAlign: "center", background: profile?.visibility === v.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${profile?.visibility === v.k ? PAL.gold + "44" : PAL.border}`, color: profile?.visibility === v.k ? PAL.gold : PAL.muted }}>{v.l}</button>
+                ))}
+              </div>
+              <p style={{ fontFamily: ff.body, fontSize: 10, color: PAL.muted, marginTop: 4 }}>
+                {profile?.visibility === "private" && "Only you can see your profile."}
+                {profile?.visibility === "link-only" && "Anyone with the link can view your collection."}
+                {profile?.visibility === "public" && "Your profile is discoverable and visible to everyone."}
+              </p>
+            </div>
+
+            {/* What to share */}
+            {profile?.visibility !== "private" && (
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 6 }}>Visible to Visitors</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {[
+                    { key: "collection", label: "My Collection" },
+                    { key: "nose", label: "Fragrance Nose" },
+                    { key: "pairings", label: "Pairings" },
+                    { key: "tested", label: "Tested Scents" },
+                    { key: "vibes", label: "Vibes" },
+                    { key: "costs", label: "Cost Data" },
+                    { key: "thoughts", label: "Thoughts & Notes" },
+                    { key: "wishlist", label: "Wishlist / To Test" },
+                  ].map(opt => {
+                    const sharing = profile?.sharing || {};
+                    const isOn = sharing[opt.key] !== false;
+                    return (
+                      <button key={opt.key} onClick={async () => {
+                        const newSharing = { ...sharing, [opt.key]: !isOn };
+                        await supabase.from("profiles").update({ sharing: newSharing }).eq("id", session.user.id);
+                        setProfile(prev => ({ ...prev, sharing: newSharing }));
+                      }}
+                        style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 8, cursor: "pointer", background: "transparent", border: `1px solid ${PAL.border}`, textAlign: "left" }}>
+                        <span style={{ width: 16, height: 16, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", background: isOn ? `${PAL.sage}20` : "transparent", border: `1.5px solid ${isOn ? PAL.sage : PAL.border}`, color: isOn ? PAL.sage : "transparent", fontSize: 11 }}>✓</span>
+                        <span style={{ fontFamily: ff.body, fontSize: 12, color: isOn ? PAL.cream : PAL.muted }}>{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Share link */}
+            {profile?.username && profile?.visibility !== "private" && (
+              <div>
+                <label style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, display: "block", marginBottom: 4 }}>Share Link</label>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ flex: 1, padding: "10px 14px", background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 8, fontFamily: ff.body, fontSize: 12, color: PAL.cream, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {window.location.origin}/u/{profile.username}
+                  </div>
+                  <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/u/${profile.username}`); setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000); }}
+                    style={{ padding: "0 16px", borderRadius: 8, cursor: "pointer", background: copiedLink ? `${PAL.sage}14` : `${PAL.gold}14`, border: `1px solid ${copiedLink ? PAL.sage + "44" : PAL.gold + "35"}`, color: copiedLink ? PAL.sage : PAL.gold, fontFamily: ff.body, fontSize: 11 }}>
+                    {copiedLink ? "Copied!" : "Copy"}
+                  </button>
                 </div>
               </div>
             )}

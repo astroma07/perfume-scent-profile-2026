@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import ScentDashboard from "./ScentDashboard.jsx";
 import AuthPage from "./components/AuthPage.jsx";
+import PublicProfile from "./components/PublicProfile.jsx";
 import { supabase } from "./supabaseClient.js";
 import { hasLocalData, isMigrated, migrateLocalToSupabase } from "./migrate.js";
 
@@ -50,6 +51,12 @@ function App() {
     localStorage.setItem("scent_migrated", "skipped");
     setMigrationResult(null);
   };
+
+  // Check for public profile route: /u/username
+  const pathMatch = window.location.pathname.match(/^\/u\/([a-z0-9_-]+)\/?$/i);
+  if (pathMatch) {
+    return <PublicProfile username={pathMatch[1]} />;
+  }
 
   // Loading
   if (session === undefined) {
