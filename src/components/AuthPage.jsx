@@ -26,14 +26,20 @@ const AuthPage = ({ onSkip }) => {
         const result = await supabase.auth.signUp({ email, password });
         console.log("Signup result:", JSON.stringify(result));
         if (result.error) {
-          setError(result.error?.message || result.error?.error_description || JSON.stringify(result.error));
+          setError(result.error?.message || JSON.stringify(result.error));
         } else if (result.data?.user?.identities?.length === 0) {
           setError("An account with this email already exists. Try logging in instead.");
-        } else if (result.data?.user && !result.data?.session) {
-          setMessage("Account created! Check your email to confirm, then log in.");
-          setMode("login");
-        } else {
-          setMessage("Account created!");
+        } else if (result.data?.user) {
+          /* Create profile + preferences rows */
+          const userId = result.data.user.id;
+          await supabase.from("profiles").upsert({ id: userId, display_name: email.split("@")[0] });
+          await supabase.from("user_preferences").upsert({ user_id: userId });
+          if (result.data?.session) {
+            setMessage("Account created!");
+          } else {
+            setMessage("Account created! Check your email to confirm, then log in.");
+            setMode("login");
+          }
         }
       } else {
         const result = await supabase.auth.signInWithPassword({ email, password });

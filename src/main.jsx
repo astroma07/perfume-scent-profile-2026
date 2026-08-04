@@ -17,8 +17,16 @@ function App() {
   useEffect(() => {
     if (!supabase) { setSession(null); return; }
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
+      /* Ensure profile exists for new users (Google OAuth or email) */
+      if (session?.user && _event === "SIGNED_IN") {
+        const { data: existing } = await supabase.from("profiles").select("id").eq("id", session.user.id).single();
+        if (!existing) {
+          await supabase.from("profiles").upsert({ id: session.user.id, display_name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User" });
+          await supabase.from("user_preferences").upsert({ user_id: session.user.id });
+        }
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
