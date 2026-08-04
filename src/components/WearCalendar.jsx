@@ -43,11 +43,12 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
 
   const toggleFragrance = (bottleName) => {
     setWearLog(prev => {
-      const current = prev[selectedDay] || [];
-      const exists = current.includes(bottleName);
-      const updated = exists ? current.filter(n => n !== bottleName) : [...current, bottleName];
-      if (updated.length === 0) { const n = { ...prev }; delete n[selectedDay]; return n; }
-      return { ...prev, [selectedDay]: updated };
+      const current = prev[selectedDay];
+      /* If clicking the same fragrance, remove it; otherwise set it */
+      if (current === bottleName) {
+        const n = { ...prev }; delete n[selectedDay]; return n;
+      }
+      return { ...prev, [selectedDay]: bottleName };
     });
   };
 
@@ -60,7 +61,8 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
   for (let i = 0; i < firstDay; i++) cells.push(<div key={`e${i}`} />);
   for (let d = 1; d <= daysInMonth; d++) {
     const key = dateKey(viewYear, viewMonth, d);
-    const worn = wearLog[key] || [];
+    const wornRaw = wearLog[key];
+    const worn = !wornRaw ? [] : typeof wornRaw === "string" ? [wornRaw] : Array.isArray(wornRaw) ? wornRaw : [];
     const isToday = key === todayKey;
     const hasWear = worn.length > 0;
     cells.push(
@@ -117,7 +119,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
       {/* Legend */}
       {(() => {
         const monthEntries = Object.entries(wearLog).filter(([k]) => k.startsWith(`${viewYear}-${String(viewMonth+1).padStart(2,"0")}`));
-        const uniqueNames = [...new Set(monthEntries.flatMap(([,v]) => v))];
+        const uniqueNames = [...new Set(monthEntries.map(([,v]) => typeof v === "string" ? v : Array.isArray(v) ? v[0] : "").filter(Boolean))];
         if (uniqueNames.length === 0) return (
           <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, textAlign: "center", marginTop: 14 }}>
             Tap a day to log what you wore
@@ -152,7 +154,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
               <div>
                 <h4 style={{ fontFamily: ff.display, fontSize: 18, color: PAL.cream, margin: 0 }}>Log Your Wear</h4>
                 <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, margin: "2px 0 0" }}>
-                  {selectedDay} · {(wearLog[selectedDay] || []).length > 0 ? `${(wearLog[selectedDay] || []).length} selected` : "select one or more"}
+                  {selectedDay} · {wearLog[selectedDay] ? "1 selected" : "select a fragrance"}
                 </p>
               </div>
               <button onClick={() => setPickerOpen(false)} style={{ background: "none", border: "none", color: PAL.muted, fontSize: 20, cursor: "pointer" }}>✕</button>
@@ -172,8 +174,8 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
                   const q = pickerSearch.toLowerCase();
                   return b.name.toLowerCase().includes(q) || (b.house || "").toLowerCase().includes(q);
                 }).map((b) => {
-                  const dayArr = wearLog[selectedDay] || [];
-                  const isActive = dayArr.includes(b.name);
+                  const currentWear = wearLog[selectedDay] || "";
+                  const isActive = currentWear === b.name;
                   const color = bottleColor(b.name);
                   return (
                     <button key={b.name} onClick={() => toggleFragrance(b.name)} style={{
@@ -203,7 +205,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
               </div>
             )}
             {/* Daily wear rating */}
-            {(wearLog[selectedDay] || []).length > 0 && (
+            {wearLog[selectedDay] && (
               <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${PAL.border}` }}>
                 <span style={{ fontFamily: ff.display, fontStyle: "italic", fontSize: 12, color: PAL.gold, display: "block", marginBottom: 10 }}>Rate today's wear</span>
                 {RATING_CATEGORIES.map(cat => (
@@ -229,7 +231,7 @@ const WearCalendar = ({ wearLog, setWearLog, bottles, wearRatings, setWearRating
                 color: PAL.gold, fontFamily: ff.body, fontSize: 12, fontWeight: 500, cursor: "pointer",
                 letterSpacing: 1,
               }}>Done</button>
-              {(wearLog[selectedDay] || []).length > 0 && (
+              {wearLog[selectedDay] && (
                 <button onClick={clearDay} style={{
                   padding: "11px 16px",
                   background: "transparent", border: `1px solid ${PAL.rose}44`, borderRadius: 8,

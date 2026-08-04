@@ -776,7 +776,7 @@ export default function ScentDashboard({ session }) {
                             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                               {RATING_CATEGORIES.map(cat => (
                                 <RatingSlider key={cat.key} label={cat.label} color={cat.color}
-                                  value={r[cat.key] || 0}
+                                  value={r?.[cat.key] || 0}
                                   onChange={v => setBottleRatings(prev => ({ ...prev, [b.name]: { ...(prev[b.name] || {}), [cat.key]: v } }))}
                                 />
                               ))}
