@@ -257,14 +257,14 @@ export default function ScentDashboard({ session }) {
     requestAnimationFrame(() => setVis(true));
   }, []);
 
-  /* Derive monthly trends from wearLog (arrays per day) */
+  /* Derive monthly trends from wearLog (string per day: { "2026-07-15": "Nosferatu" }) */
   const calendarTrends = useMemo(() => {
     return MONTHS.map((name, i) => {
       const mk = `2026-${String(i + 1).padStart(2, "0")}`;
-      const monthEntries = Object.entries(wearLog).filter(([k]) => k.startsWith(mk));
+      const monthEntries = Object.entries(wearLog).filter(([k, v]) => k.startsWith(mk) && v);
       const daysWorn = monthEntries.length;
-      const totalApplications = monthEntries.reduce((s, [, arr]) => s + arr.length, 0);
-      const uniqueBottles = new Set(monthEntries.flatMap(([, arr]) => arr)).size;
+      const totalApplications = daysWorn;
+      const uniqueBottles = new Set(monthEntries.map(([, v]) => typeof v === "string" ? v : Array.isArray(v) ? v[0] : "").filter(Boolean)).size;
       return { month: name.slice(0, 3), daysWorn, applications: totalApplications, uniqueBottles };
     });
   }, [wearLog]);
@@ -760,10 +760,10 @@ export default function ScentDashboard({ session }) {
                     <h3 style={{ fontFamily: ff.display, fontSize: 18, fontWeight: 400, color: PAL.cream, margin: "0 0 4px" }}>Bottle Ratings</h3>
                     <p style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "0 0 14px" }}>Rate your owned fragrances · 1–10 with half steps</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {bottles.filter(b => b.status === "owned").map(b => {
-                        const r = bottleRatings[b.name] || {};
-                        const filled = RATING_CATEGORIES.filter(c => (r[c.key] || 0) > 0);
-                        const avg = filled.length > 0 ? filled.reduce((s, c) => s + r[c.key], 0) / filled.length : 0;
+                      {bottles.filter(b => b.status === "owned" && b.name?.trim()).map(b => {
+                        const r = bottleRatings?.[b.name] || {};
+                        const filled = RATING_CATEGORIES.filter(c => (r?.[c.key] || 0) > 0);
+                        const avg = filled.length > 0 ? filled.reduce((s, c) => s + (r?.[c.key] || 0), 0) / filled.length : 0;
                         return (
                           <div key={b.name} style={{ background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 12, padding: "14px 16px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
@@ -789,11 +789,11 @@ export default function ScentDashboard({ session }) {
 
                   {/* Leaderboard */}
                   {(() => {
-                    const rated = bottles.filter(b => b.status === "owned" && bottleRatings[b.name])
+                    const rated = bottles.filter(b => b.status === "owned" && b.name?.trim() && bottleRatings?.[b.name])
                       .map(b => {
-                        const r = bottleRatings[b.name] || {};
-                        const filled = RATING_CATEGORIES.filter(c => (r[c.key] || 0) > 0);
-                        return { ...b, avg: filled.length > 0 ? filled.reduce((s, c) => s + r[c.key], 0) / filled.length : 0 };
+                        const r = bottleRatings?.[b.name] || {};
+                        const filled = RATING_CATEGORIES.filter(c => (r?.[c.key] || 0) > 0);
+                        return { ...b, avg: filled.length > 0 ? filled.reduce((s, c) => s + (r?.[c.key] || 0), 0) / filled.length : 0 };
                       }).filter(b => b.avg > 0).sort((a, b) => b.avg - a.avg);
                     if (rated.length < 2) return null;
                     const medals = ["🥇","🥈","🥉"];
@@ -818,7 +818,7 @@ export default function ScentDashboard({ session }) {
                                 {RATING_CATEGORIES.map(cat => (
                                   <div key={cat.key} style={{ textAlign: "center" }}>
                                     <div style={{ fontFamily: ff.body, fontSize: 7, color: PAL.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 }}>{cat.label.slice(0, 4)}</div>
-                                    <div style={{ fontFamily: ff.display, fontSize: 13, color: (bottleRatings[b.name]?.[cat.key] || 0) > 0 ? cat.color : PAL.muted }}>{(bottleRatings[b.name]?.[cat.key] || 0).toFixed(1)}</div>
+                                    <div style={{ fontFamily: ff.display, fontSize: 13, color: (bottleRatings?.[b.name]?.[cat.key] || 0) > 0 ? cat.color : PAL.muted }}>{((bottleRatings?.[b.name]?.[cat.key]) || 0).toFixed(1)}</div>
                                   </div>
                                 ))}
                               </div>
@@ -832,8 +832,8 @@ export default function ScentDashboard({ session }) {
 
                   {/* Recent Wear Ratings */}
                   {(() => {
-                    const ratedDays = Object.entries(wearRatings)
-                      .filter(([, r]) => r && RATING_CATEGORIES.some(c => (r[c.key] || 0) > 0))
+                    const ratedDays = Object.entries(wearRatings || {})
+                      .filter(([, r]) => r && typeof r === "object" && RATING_CATEGORIES.some(c => (r?.[c.key] || 0) > 0))
                       .sort(([a], [b]) => b.localeCompare(a)).slice(0, 20);
                     if (ratedDays.length === 0) return (
                       <div style={{ textAlign: "center", padding: "20px 0" }}>
@@ -846,9 +846,10 @@ export default function ScentDashboard({ session }) {
                         <p style={{ fontFamily: ff.body, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, margin: "0 0 14px" }}>Your last {ratedDays.length} rated sessions</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           {ratedDays.map(([day, r]) => {
-                            const worn = wearLog[day] || [];
-                            const filled = RATING_CATEGORIES.filter(c => (r[c.key] || 0) > 0);
-                            const avg = filled.length > 0 ? filled.reduce((s, c) => s + r[c.key], 0) / filled.length : 0;
+                            const wornRaw = wearLog[day] || "";
+                            const worn = typeof wornRaw === "string" ? (wornRaw ? [wornRaw] : []) : Array.isArray(wornRaw) ? wornRaw : [];
+                            const filled = RATING_CATEGORIES.filter(c => (r?.[c.key] || 0) > 0);
+                            const avg = filled.length > 0 ? filled.reduce((s, c) => s + (r?.[c.key] || 0), 0) / filled.length : 0;
                             return (
                               <div key={day} style={{
                                 display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
@@ -864,7 +865,7 @@ export default function ScentDashboard({ session }) {
                                   {RATING_CATEGORIES.map(cat => (
                                     <div key={cat.key} style={{ textAlign: "center" }}>
                                       <div style={{ fontFamily: ff.body, fontSize: 7, color: PAL.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 1 }}>{cat.label.slice(0, 4)}</div>
-                                      <div style={{ fontFamily: ff.display, fontSize: 12, color: (r[cat.key] || 0) > 0 ? cat.color : PAL.muted }}>{(r[cat.key] || 0) > 0 ? r[cat.key].toFixed(1) : "—"}</div>
+                                      <div style={{ fontFamily: ff.display, fontSize: 12, color: (r?.[cat.key] || 0) > 0 ? cat.color : PAL.muted }}>{(r?.[cat.key] || 0) > 0 ? Number(r[cat.key]).toFixed(1) : "—"}</div>
                                     </div>
                                   ))}
                                 </div>
