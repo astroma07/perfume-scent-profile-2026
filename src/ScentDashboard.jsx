@@ -173,6 +173,9 @@ export default function ScentDashboard({ session }) {
         if (data.visibleStats && Object.keys(data.visibleStats).length > 0) setVisibleStats(data.visibleStats);
         if (data.visibleTabs && Object.keys(data.visibleTabs).length > 0) setVisibleTabs(data.visibleTabs);
         if (data.theme?.preset) setTheme(data.theme);
+        /* Skip welcome screen — user has cloud data */
+        setShowWelcome(false);
+        try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
       }
       setDataLoaded(true);
     });
@@ -366,6 +369,16 @@ export default function ScentDashboard({ session }) {
 
     setNoteFragrances(results.length > 0 ? results : [`No fragrances with "${noteName}" in your collection yet`]);
   };
+
+  /* ═══ Loading from Supabase ══════════════════════ */
+  if (userId && !dataLoaded) {
+    return (
+      <div style={{ fontFamily: ff.body, background: PAL.bg, minHeight: "100vh", color: PAL.cream, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <link href={FONT_LINK} rel="stylesheet" />
+        <p style={{ fontFamily: ff.display, fontSize: 18, fontStyle: "italic", color: PAL.muted }}>Loading your collection…</p>
+      </div>
+    );
+  }
 
   /* ═══ Welcome Screen ═══════════════════════════ */
   if (showWelcome) {
