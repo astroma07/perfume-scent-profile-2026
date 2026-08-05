@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { PAL, ff, STATUS_COLORS, STATUSES, TESTER_COLOR } from "../constants.js";
 import { RATING_CATEGORIES, RatingSlider, RatingBadge, SectionTitle, FragranceTags, TagIcons } from "./ui.jsx";
+import { syncTestedToBottles } from "../crossSync.js";
 
 const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleRatings, setBottleRatings }) => {
   const [showForm, setShowForm] = useState(false);
@@ -37,6 +38,8 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
     if (Object.keys(ratingData).length > 0) {
       setBottleRatings(prev => ({ ...prev, [form.name.trim()]: { ...(prev[form.name.trim()] || {}), ...ratingData } }));
     }
+    /* Sync notes, thoughts, tags, concentration to matching bottle */
+    setBottles(prev => syncTestedToBottles(entry, prev));
     resetForm();
   };
 

@@ -2,6 +2,7 @@ import { useState, useRef, useMemo } from "react";
 import { PAL, ff, STATUS_COLORS, STATUSES, TESTER_COLOR } from "../constants.js";
 import { FAMILY_ORDER, FAMILY_COLORS, FAMILY_LABELS, getNoteFamily } from "../noteCategories.js";
 import { FragranceTags } from "./ui.jsx";
+import { syncBottleToTested } from "../crossSync.js";
 
 const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNoteOverrides, testedScents, setTestedScents }) => {
   const [selectedIdx, setSelectedIdx] = useState(bottles.length > 0 ? 0 : null);
@@ -39,6 +40,10 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
       a[selectedIdx].fullName = name + (house ? ` — ${house}` : "");
     }
     setBottles(a);
+    /* Sync notes, thoughts, tags, concentration to matching tested entry */
+    if (["userNotes", "thoughts", "tags", "concentration", "hasTester"].includes(field)) {
+      setTestedScents(prev => syncBottleToTested(a[selectedIdx], prev));
+    }
   };
 
   const addNew = () => {
