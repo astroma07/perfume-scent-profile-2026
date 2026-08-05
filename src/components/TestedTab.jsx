@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { PAL, ff, STATUS_COLORS, STATUSES, TESTER_COLOR } from "../constants.js";
 import { RATING_CATEGORIES, RatingSlider, RatingBadge, SectionTitle, FragranceTags, TagIcons } from "./ui.jsx";
 
@@ -7,11 +7,17 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
   const [editIdx, setEditIdx] = useState(null);
   const [sortBy, setSortBy] = useState("date");
   const [collapsedSections, setCollapsedSections] = useState({});
+  const formRef = useRef(null);
   const emptyForm = { name: "", house: "", date: new Date().toISOString().split("T")[0], notes: "", thoughts: "", overall: 0, sillage: 0, longevity: 0, scent: 0, tags: {}, concentration: "", hasTester: false };
   const [form, setForm] = useState(emptyForm);
 
   const saveEntry = () => {
     if (!form.name.trim()) return;
+    /* Check for duplicate (skip if editing existing entry) */
+    if (editIdx === null && testedScents.some(t => t.name.toLowerCase() === form.name.trim().toLowerCase())) {
+      alert(`"${form.name.trim()}" is already in your tested list.`);
+      return;
+    }
     const entry = {
       ...form,
       name: form.name.trim(), house: form.house.trim(), notes: form.notes.trim(),
@@ -42,9 +48,12 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
       overall: e.overall || 0, sillage: e.sillage || 0, longevity: e.longevity || 0, scent: e.scent || 0,
       tags: e.tags || {}, concentration: e.concentration || "", hasTester: e.hasTester || false });
     setEditIdx(origIdx); setShowForm(true);
+    setCollapsedSections(prev => ({ ...prev, tested: false }));
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
 
   const addToCollection = (entry, status) => {
+    if (bottles.some(b => b.name.toLowerCase() === entry.name.toLowerCase())) return;
     setBottles(prev => [...prev, {
       name: entry.name, fullName: entry.house ? `${entry.name} — ${entry.house}` : entry.name,
       house: entry.house || "", cost: 0, ml: 0, freq: 0, status,
@@ -90,7 +99,7 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
       )}
 
       {!collapsedSections.tested && showForm && (
-        <div style={{ background: `${PAL.cream}03`, border: `1px solid ${PAL.gold}22`, borderRadius: 14, padding: "20px 18px", marginBottom: 20, animation: "cardIn .3s both" }}>
+        <div ref={formRef} style={{ background: `${PAL.cream}03`, border: `1px solid ${PAL.gold}22`, borderRadius: 14, padding: "20px 18px", marginBottom: 20, animation: "cardIn .3s both" }}>
 
           {/* Row 1: Name, House, Date */}
           <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
