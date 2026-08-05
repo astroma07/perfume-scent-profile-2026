@@ -4,23 +4,32 @@
  * Merges data when both exist, carries over when only one has it.
  */
 
-/* Merge two comma-separated note strings, deduplicating */
+/* Merge two comma-separated note strings, preserving order, deduplicating */
 function mergeNotes(a, b) {
-  const notesA = (a || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
-  const notesB = (b || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
-  const merged = [...new Set([...notesA, ...notesB])];
-  return merged.join(", ");
+  const notesA = (a || "").split(",").map(n => n.trim()).filter(Boolean);
+  const notesB = (b || "").split(",").map(n => n.trim()).filter(Boolean);
+  const seen = new Set(notesA.map(n => n.toLowerCase()));
+  const newNotes = notesB.filter(n => !seen.has(n.toLowerCase()));
+  return [...notesA, ...newNotes].join(", ");
 }
 
-/* Merge two thought strings — combine if both exist and different */
+/* Merge two thought strings — combine if both exist, avoid duplication */
 function mergeThoughts(a, b) {
   const ta = (a || "").trim();
   const tb = (b || "").trim();
   if (!ta) return tb;
   if (!tb) return ta;
-  if (ta.toLowerCase() === tb.toLowerCase()) return ta;
-  /* Combine both, separated */
-  return `${ta}\n${tb}`;
+  if (ta === tb) return ta;
+  /* If one already contains the other, keep the longer one */
+  if (ta.includes(tb)) return ta;
+  if (tb.includes(ta)) return tb;
+  /* Merge unique lines only */
+  const linesA = ta.split("\n").map(l => l.trim()).filter(Boolean);
+  const linesB = tb.split("\n").map(l => l.trim()).filter(Boolean);
+  const seen = new Set(linesA.map(l => l.toLowerCase()));
+  const newLines = linesB.filter(l => !seen.has(l.toLowerCase()));
+  if (newLines.length === 0) return ta;
+  return [...linesA, ...newLines].join("\n");
 }
 
 /* Merge tags objects */
