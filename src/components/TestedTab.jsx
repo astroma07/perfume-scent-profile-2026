@@ -75,7 +75,14 @@ const TestedTab = ({ testedScents, setTestedScents, bottles, setBottles, bottleR
     const copy = [...testedScents];
     if (sortBy === "rating") copy.sort((a, b) => (b.avg || 0) - (a.avg || 0));
     else if (sortBy === "name") copy.sort((a, b) => a.name.localeCompare(b.name));
-    else copy.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    else {
+      /* Sort by date tested (most recent first), fall back to createdAt */
+      copy.sort((a, b) => {
+        const da = a.date ? new Date(a.date).getTime() : (a.createdAt || 0);
+        const db = b.date ? new Date(b.date).getTime() : (b.createdAt || 0);
+        return db - da;
+      });
+    }
     return copy.map((e) => ({ ...e, _origIdx: testedScents.indexOf(e) }));
   }, [testedScents, sortBy]);
 
