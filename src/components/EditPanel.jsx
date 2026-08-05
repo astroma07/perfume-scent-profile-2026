@@ -114,14 +114,20 @@ const EditPanel = ({ bottles, setBottles, onClose, onReset, noteOverrides, setNo
           {selected ? (
             <div>
               {/* Name + House */}
-              <div style={{ marginBottom: 20 }}>
-                <input value={selected.name} onChange={e => updateField("name", e.target.value)}
-                  style={{ background: "transparent", border: "none", outline: "none", fontFamily: ff.display, fontSize: 28, fontStyle: "italic", color: PAL.cream, width: "100%", padding: 0, marginBottom: 4 }}
-                  placeholder="Fragrance name" />
-                <input value={selected.house || ""} onChange={e => updateField("house", e.target.value)}
-                  style={{ background: "transparent", border: "none", outline: "none", fontFamily: ff.body, fontSize: 15, color: PAL.muted, width: "100%", padding: 0 }}
-                  placeholder="House / brand" />
-              </div>
+              {(() => {
+                const isDupe = selected.name.trim() && bottles.some((b, i) => i !== selectedIdx && b.name.toLowerCase() === selected.name.trim().toLowerCase());
+                return (
+                  <div style={{ marginBottom: 20 }}>
+                    <input value={selected.name} onChange={e => updateField("name", e.target.value)}
+                      style={{ background: "transparent", border: "none", outline: "none", fontFamily: ff.display, fontSize: 28, fontStyle: "italic", color: isDupe ? PAL.rose : PAL.cream, width: "100%", padding: 0, marginBottom: 4 }}
+                      placeholder="Fragrance name" />
+                    <input value={selected.house || ""} onChange={e => updateField("house", e.target.value)}
+                      style={{ background: "transparent", border: "none", outline: "none", fontFamily: ff.body, fontSize: 15, color: PAL.muted, width: "100%", padding: 0 }}
+                      placeholder="House / brand" />
+                    {isDupe && <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.rose, marginTop: 4 }}>⚠ A fragrance with this name already exists in your collection</p>}
+                  </div>
+                );
+              })()}
 
               {/* Status + Type + Tester + Cost row */}
               <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "end" }}>
