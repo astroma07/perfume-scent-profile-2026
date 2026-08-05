@@ -9,6 +9,8 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
   const [showPurchased, setShowPurchased] = useState(false);
   const [dragIdx, setDragIdx] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
+  const [editingRank, setEditingRank] = useState(null);
+  const [rankInput, setRankInput] = useState("");
 
   const inputCss = { background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "8px 10px", color: PAL.cream, fontFamily: ff.body, fontSize: 12, outline: "none", width: "100%", boxSizing: "border-box" };
 
@@ -58,6 +60,19 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
     setPurchaseData(newData);
     setDragIdx(null);
     setDragOverIdx(null);
+  };
+
+  const reorderTo = (fromVisualIdx, toPosition) => {
+    const target = Math.max(1, Math.min(toPosition, list.length)) - 1;
+    if (fromVisualIdx === target) return;
+    const newList = [...list];
+    const [moved] = newList.splice(fromVisualIdx, 1);
+    newList.splice(target, 0, moved);
+    const newData = { ...purchaseData };
+    newList.forEach((item, i) => {
+      newData[item.name] = { ...(newData[item.name] || {}), priority: i + 1 };
+    });
+    setPurchaseData(newData);
   };
 
   if (items.length === 0) return (
@@ -114,9 +129,25 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
                 cursor: "grab",
               }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center", minWidth: 28 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center", minWidth: 32 }}>
                   <button onClick={() => movePriority(item.name, -1)} style={{ background: "none", border: "none", color: PAL.muted, fontSize: 10, cursor: "pointer", padding: 0 }}>▲</button>
-                  <span style={{ fontFamily: ff.display, fontSize: 20, color: PAL.gold, lineHeight: 1 }}>{visualIdx + 1}</span>
+                  {editingRank === visualIdx ? (
+                    <input
+                      autoFocus
+                      value={rankInput}
+                      onChange={e => setRankInput(e.target.value.replace(/[^0-9]/g, ""))}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") { const n = parseInt(rankInput); if (n > 0) reorderTo(visualIdx, n); setEditingRank(null); }
+                        if (e.key === "Escape") setEditingRank(null);
+                      }}
+                      onBlur={() => { const n = parseInt(rankInput); if (n > 0) reorderTo(visualIdx, n); setEditingRank(null); }}
+                      style={{ width: 28, textAlign: "center", background: `${PAL.gold}14`, border: `1px solid ${PAL.gold}44`, borderRadius: 4, padding: "2px 0", color: PAL.gold, fontFamily: ff.display, fontSize: 16, outline: "none" }}
+                    />
+                  ) : (
+                    <span onClick={() => { setEditingRank(visualIdx); setRankInput(String(visualIdx + 1)); }}
+                      style={{ fontFamily: ff.display, fontSize: 20, color: PAL.gold, lineHeight: 1, cursor: "pointer", minWidth: 24, textAlign: "center" }}
+                      title="Click to change position">{visualIdx + 1}</span>
+                  )}
                   <button onClick={() => movePriority(item.name, 1)} style={{ background: "none", border: "none", color: PAL.muted, fontSize: 10, cursor: "pointer", padding: 0 }}>▼</button>
                 </div>
                 <div style={{ flex: 1, cursor: "pointer" }} onClick={() => setEditingId(isEditing ? null : item.id)}>
