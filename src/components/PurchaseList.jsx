@@ -63,16 +63,17 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
   };
 
   const reorderTo = (fromVisualIdx, toPosition) => {
+    const list = [...sorted.active];
     const target = Math.max(1, Math.min(toPosition, list.length)) - 1;
     if (fromVisualIdx === target) return;
-    const newList = [...list];
-    const [moved] = newList.splice(fromVisualIdx, 1);
-    newList.splice(target, 0, moved);
-    const newData = { ...purchaseData };
-    newList.forEach((item, i) => {
+    const [moved] = list.splice(fromVisualIdx, 1);
+    list.splice(target, 0, moved);
+    const newData = { ...(purchaseData || {}) };
+    list.forEach((item, i) => {
       newData[item.name] = { ...(newData[item.name] || {}), priority: i + 1 };
     });
     setPurchaseData(newData);
+    setSortBy("priority");
   };
 
   if (items.length === 0) return (
