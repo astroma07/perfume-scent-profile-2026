@@ -11,7 +11,7 @@ export function useDataPersistence(state, userId, dataLoaded) {
     notes, bottles, wearLog, wearRatings, bottleRatings, testedScents,
     visibleStats, noteOverrides, opposingPairs, visibleTabs, theme,
     pairingNotes, pairingRatings, rejectedPairings, purchaseData,
-    customPairings, vibeMap, likedNotes, dislikedNotes,
+    customPairings, vibeMap, likedNotes, dislikedNotes, customRecs,
   } = state;
 
   /* Track whether initial render is done to avoid syncing on mount */
@@ -29,6 +29,8 @@ export function useDataPersistence(state, userId, dataLoaded) {
     save("bottles", bottles);
     if (!isInitial.current && dataLoaded && userId) syncBottles(userId, bottles);
   }, [bottles]);
+
+  useEffect(() => { save("customRecs", customRecs); }, [customRecs]);
 
   useEffect(() => {
     save("wearLog", wearLog);

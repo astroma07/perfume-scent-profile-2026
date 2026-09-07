@@ -5,8 +5,9 @@ import { FRAGRANCE_DB } from "../fragranceDB.js";
 import { getNoteFamily, FAMILY_COLORS } from "../noteCategories.js";
 import { SectionTitle } from "./ui.jsx";
 import VibeCalculator from "./VibeCalculator.jsx";
+import recommendationsData from "../recommendations.json";
 
-const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap }) => {
+const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap, customRecs, setCustomRecs }) => {
   const [query, setQuery] = useState("");
   const [filterHouse, setFilterHouse] = useState(null);
   const [filterNote, setFilterNote] = useState(null);
@@ -322,7 +323,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap 
 
       {/* Section toggle */}
       <div style={{ display: "flex", gap: 5, marginBottom: 18, flexWrap: "wrap" }}>
-        {[{k:"recs",l:"For You",ic:"✦"},{k:"browse",l:"Browse",ic:"📚"},{k:"similar",l:"Similar",ic:"🔗"},{k:"notes",l:"By Notes",ic:"🎵"},{k:"vibe",l:"Vibe",ic:"✧"}].map(s => (
+        {[{k:"recs",l:"For You",ic:"✦"},{k:"curated",l:"Curated",ic:"💎"},{k:"browse",l:"Browse",ic:"📚"},{k:"similar",l:"Similar",ic:"🔗"},{k:"notes",l:"By Notes",ic:"🎵"},{k:"vibe",l:"Vibe",ic:"✧"}].map(s => (
           <button key={s.k} onClick={() => setActiveSection(s.k)} style={{ background: activeSection === s.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${activeSection === s.k ? PAL.gold + "44" : PAL.border}`, borderRadius: 20, padding: "6px 14px", fontFamily: ff.body, fontSize: 10, color: activeSection === s.k ? PAL.gold : PAL.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><span style={{ fontSize: 12 }}>{s.ic}</span>{s.l}</button>
         ))}
       </div>
@@ -347,6 +348,127 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap 
           )}
         </div>
       )}
+
+      {/* ─── CURATED RECOMMENDATIONS ─── */}
+      {activeSection === "curated" && (() => {
+        const recs = (customRecs && customRecs.length > 0) ? customRecs : (recommendationsData.recommendations || []);
+        const isCustom = customRecs && customRecs.length > 0;
+        const tiers = [
+          { key: "essential", label: "Essential", color: PAL.gold, desc: "Highest priority — core to your scent identity" },
+          { key: "strong", label: "Strong Match", color: PAL.sage, desc: "Excellent fit for your profile" },
+          { key: "good", label: "Worth Exploring", color: "#7bafc4", desc: "Good candidates to sample" },
+          { key: "wildcard", label: "Wildcard", color: "#c49bd4", desc: "Outside your comfort zone — could surprise you" },
+        ];
+        const tierFilter = filterNote;
+        const filtered = tierFilter ? recs.filter(r => r.tier === tierFilter) : recs;
+
+        const handleUpload = () => {
+          const input = document.createElement("input");
+          input.type = "file"; input.accept = ".json";
+          input.onchange = async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            try {
+              const text = await file.text();
+              const data = JSON.parse(text);
+              const list = data.recommendations || data;
+              if (Array.isArray(list) && list.length > 0 && list[0].name) {
+                setCustomRecs(list);
+              } else {
+                alert("Invalid format. Make sure the JSON has a 'recommendations' array with objects containing 'name', 'house', 'notes', 'tier', etc.");
+              }
+            } catch { alert("Couldn't read that file. Make sure it's valid JSON."); }
+          };
+          input.click();
+        };
+
+        return (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, margin: 0 }}>
+                {recs.length} curated recommendations{isCustom ? " (custom upload)" : ""}
+              </p>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button onClick={handleUpload} style={{ padding: "5px 12px", borderRadius: 8, cursor: "pointer", background: `${PAL.gold}10`, border: `1px solid ${PAL.gold}33`, color: PAL.gold, fontFamily: ff.body, fontSize: 10 }}>↑ Upload New</button>
+                {isCustom && (
+                  <button onClick={() => setCustomRecs([])} style={{ padding: "5px 12px", borderRadius: 8, cursor: "pointer", background: "transparent", border: `1px solid ${PAL.border}`, color: PAL.muted, fontFamily: ff.body, fontSize: 10 }}>Reset to Default</button>
+                )}
+              </div>
+            </div>
+            {/* Tier filter pills */}
+            <div style={{ display: "flex", gap: 4, marginBottom: 16, flexWrap: "wrap", justifyContent: "center" }}>
+              <button onClick={() => setFilterNote(null)} style={{ padding: "5px 12px", borderRadius: 14, cursor: "pointer", fontFamily: ff.body, fontSize: 10, background: !tierFilter ? `${PAL.gold}14` : "transparent", border: `1px solid ${!tierFilter ? PAL.gold + "44" : PAL.border}`, color: !tierFilter ? PAL.gold : PAL.muted }}>All ({recs.length})</button>
+              {tiers.map(t => {
+                const count = recs.filter(r => r.tier === t.key).length;
+                return (
+                  <button key={t.key} onClick={() => setFilterNote(tierFilter === t.key ? null : t.key)} style={{ padding: "5px 12px", borderRadius: 14, cursor: "pointer", fontFamily: ff.body, fontSize: 10, background: tierFilter === t.key ? `${t.color}14` : "transparent", border: `1px solid ${tierFilter === t.key ? t.color + "44" : PAL.border}`, color: tierFilter === t.key ? t.color : PAL.muted }}>{t.label} ({count})</button>
+                );
+              })}
+            </div>
+            {/* Grouped by tier */}
+            {(tierFilter ? tiers.filter(t => t.key === tierFilter) : tiers).map(tier => {
+              const tierRecs = filtered.filter(r => r.tier === tier.key);
+              if (tierRecs.length === 0) return null;
+              return (
+                <div key={tier.key} style={{ marginBottom: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    <span style={{ width: 10, height: 10, borderRadius: "50%", background: tier.color }} />
+                    <h3 style={{ fontFamily: ff.display, fontSize: 18, fontStyle: "italic", margin: 0, color: tier.color }}>{tier.label}</h3>
+                    <span style={{ fontFamily: ff.body, fontSize: 10, color: PAL.muted }}>— {tier.desc}</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {tierRecs.map((rec, i) => {
+                      const exists = alreadyInCollection(rec.name);
+                      const justAdded = addedNames.has(rec.name);
+                      const notesList = (rec.notes || "").split(",").map(n => n.trim()).filter(Boolean);
+                      return (
+                        <div key={i} style={{ background: `${PAL.cream}03`, border: `1px solid ${PAL.border}`, borderRadius: 14, padding: "14px 16px" }}>
+                          <div style={{ display: "flex", gap: 14 }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                <span style={{ fontFamily: ff.display, fontSize: 18, fontStyle: "italic", color: PAL.cream }}>{rec.name}</span>
+                                <span style={{ fontFamily: ff.body, fontSize: 12, color: PAL.muted }}>— {rec.house}</span>
+                                {rec.type && <span style={{ fontSize: 8, letterSpacing: 1, textTransform: "uppercase", color: PAL.muted, border: `1px solid ${PAL.border}`, borderRadius: 3, padding: "1px 5px" }}>{rec.type}</span>}
+                              </div>
+                              {rec.profileNote && (
+                                <p style={{ fontFamily: ff.body, fontSize: 12, color: `${PAL.cream}77`, marginTop: 6, lineHeight: 1.5, fontStyle: "italic" }}>"{rec.profileNote}"</p>
+                              )}
+                              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 8 }}>
+                                {notesList.map((n, j) => (
+                                  <span key={j} style={{ fontFamily: ff.body, fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: getNoteColor(n), background: `${getNoteColor(n)}12`, border: `1px solid ${getNoteColor(n)}25`, borderRadius: 4, padding: "2px 8px" }}>{n}</span>
+                                ))}
+                              </div>
+                              <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                                {(rec.season || []).map(s => (
+                                  <span key={s} style={{ fontSize: 9, color: PAL.muted, letterSpacing: 0.5 }}>
+                                    {s === "spring" ? "🌸" : s === "summer" ? "☀" : s === "fall" ? "🍂" : "❄"} {s}
+                                  </span>
+                                ))}
+                                {rec.categories?.map(c => (
+                                  <span key={c} style={{ fontSize: 8, letterSpacing: 1, textTransform: "uppercase", color: tier.color, opacity: 0.5 }}>{c}</span>
+                                ))}
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 100 }}>
+                              {exists || justAdded ? (
+                                <div style={{ padding: "10px 14px", borderRadius: 8, textAlign: "center", background: `${PAL.sage}15`, border: `1px solid ${PAL.sage}40`, fontFamily: ff.body, fontSize: 11, color: PAL.sage }}>✓ {justAdded ? "Added" : "In collection"}</div>
+                              ) : (
+                                [{s:"wishlist",l:"Wishlist",c:STATUS_COLORS["wishlist"]},{s:"to test",l:"To Test",c:STATUS_COLORS["to test"]},{s:"owned",l:"Owned",c:STATUS_COLORS["owned"]}].map(opt => (
+                                  <button key={opt.s} onClick={() => addToCollection({ name: rec.name, house: rec.house, notes: notesList, cost: 0, ml: 0 }, opt.s)} style={{ padding: "6px 12px", borderRadius: 8, cursor: "pointer", background: `${opt.c}12`, border: `1px solid ${opt.c}40`, fontFamily: ff.body, fontSize: 10, color: opt.c, letterSpacing: 1, textTransform: "uppercase", textAlign: "center" }}>{opt.l}</button>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* ─── BROWSE ALL ─── */}
       {activeSection === "browse" && (

@@ -61,6 +61,7 @@ export default function ScentDashboard({ session }) {
   const [purchaseData, setPurchaseData] = useState(() => loadStored("purchaseData", {}));
   const [customPairings, setCustomPairings] = useState(() => loadStored("customPairings", []));
   const [vibeMap, setVibeMap] = useState(() => loadStored("vibeMap", {}));
+  const [customRecs, setCustomRecs] = useState(() => loadStored("customRecs", []));
   const [collectionSubTab, setCollectionSubTab] = useState("collection");
   const [notesSubTab, setNotesSubTab] = useState("doughnut");
   const [likedNotes, setLikedNotes] = useState(() => loadStored("likedNotes", []));
@@ -202,7 +203,7 @@ export default function ScentDashboard({ session }) {
     notes, bottles, wearLog, wearRatings, bottleRatings, testedScents,
     visibleStats, noteOverrides, opposingPairs, visibleTabs, theme,
     pairingNotes, pairingRatings, rejectedPairings, purchaseData,
-    customPairings, vibeMap, likedNotes, dislikedNotes,
+    customPairings, vibeMap, likedNotes, dislikedNotes, customRecs,
   }, userId, dataLoaded);
 
   /* ─── Export / Import ─── */
@@ -968,7 +969,7 @@ export default function ScentDashboard({ session }) {
 
           {/* ═══ DISCOVER ═══════════════════════════════ */}
           {tab === 3 && (
-            <DiscoverTab bottles={bottles} setBottles={setBottles} rankedWishlist={rankedWishlist} vibeMap={vibeMap} setVibeMap={setVibeMap} />
+            <DiscoverTab bottles={bottles} setBottles={setBottles} rankedWishlist={rankedWishlist} vibeMap={vibeMap} setVibeMap={setVibeMap} customRecs={customRecs} setCustomRecs={setCustomRecs} />
           )}
 
           {/* ═══ TESTED ═════════════════════════════════ */}
