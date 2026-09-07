@@ -95,6 +95,7 @@ export async function loadFromSupabase(userId) {
       visibleStats: normalizeObj(prefs.visible_stats, { collection: true, invested: true, daysWorn: true, signature: true }),
       visibleTabs: normalizeObj(prefs.visible_tabs, { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true }),
       theme: normalizeObj(prefs.theme, { preset: "apothecary" }),
+      customRecs: normalizeArr(prefs.custom_recs),
     };
   } catch (err) {
     console.error("Failed to load from Supabase:", err);
@@ -201,6 +202,7 @@ export function syncPreferences(userId, prefs) {
       visible_stats: prefs.visibleStats || {},
       visible_tabs: prefs.visibleTabs || {},
       theme: prefs.theme || { preset: "apothecary" },
+      custom_recs: prefs.customRecs || [],
       updated_at: new Date().toISOString(),
     });
   });

@@ -351,8 +351,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap,
 
       {/* ─── CURATED RECOMMENDATIONS ─── */}
       {activeSection === "curated" && (() => {
-        const recs = (customRecs && customRecs.length > 0) ? customRecs : (recommendationsData.recommendations || []);
-        const isCustom = customRecs && customRecs.length > 0;
+        const recs = (customRecs && customRecs.length > 0) ? customRecs : [];
         const tiers = [
           { key: "essential", label: "Essential", color: PAL.gold, desc: "Highest priority — core to your scent identity" },
           { key: "strong", label: "Strong Match", color: PAL.sage, desc: "Excellent fit for your profile" },
@@ -386,16 +385,17 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap,
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, margin: 0 }}>
-                {recs.length} curated recommendations{isCustom ? " (custom upload)" : ""}
+                {recs.length} curated recommendations
               </p>
               <div style={{ display: "flex", gap: 6 }}>
                 <button onClick={handleUpload} style={{ padding: "5px 12px", borderRadius: 8, cursor: "pointer", background: `${PAL.gold}10`, border: `1px solid ${PAL.gold}33`, color: PAL.gold, fontFamily: ff.body, fontSize: 10 }}>↑ Upload New</button>
-                {isCustom && (
-                  <button onClick={() => setCustomRecs([])} style={{ padding: "5px 12px", borderRadius: 8, cursor: "pointer", background: "transparent", border: `1px solid ${PAL.border}`, color: PAL.muted, fontFamily: ff.body, fontSize: 10 }}>Reset to Default</button>
+                {recs.length > 0 && (
+                  <button onClick={() => setCustomRecs([])} style={{ padding: "5px 12px", borderRadius: 8, cursor: "pointer", background: "transparent", border: `1px solid ${PAL.border}`, color: PAL.muted, fontFamily: ff.body, fontSize: 10 }}>Clear All</button>
                 )}
               </div>
             </div>
             {/* Tier filter pills */}
+            {recs.length > 0 && (
             <div style={{ display: "flex", gap: 4, marginBottom: 16, flexWrap: "wrap", justifyContent: "center" }}>
               <button onClick={() => setFilterNote(null)} style={{ padding: "5px 12px", borderRadius: 14, cursor: "pointer", fontFamily: ff.body, fontSize: 10, background: !tierFilter ? `${PAL.gold}14` : "transparent", border: `1px solid ${!tierFilter ? PAL.gold + "44" : PAL.border}`, color: !tierFilter ? PAL.gold : PAL.muted }}>All ({recs.length})</button>
               {tiers.map(t => {
@@ -405,6 +405,37 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap,
                 );
               })}
             </div>
+            )}
+
+            {/* Empty state */}
+            {recs.length === 0 && (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.3 }}>💎</div>
+                <h3 style={{ fontFamily: ff.display, fontSize: 20, fontStyle: "italic", margin: "0 0 8px" }}>Your Curated Picks</h3>
+                <p style={{ fontFamily: ff.body, fontSize: 13, color: PAL.muted, lineHeight: 1.6, maxWidth: 420, margin: "0 auto 20px" }}>
+                  Upload personalized fragrance recommendations from your scent consultations. Ask your fragrance advisor to export recommendations as a JSON file.
+                </p>
+                <button onClick={handleUpload} style={{ padding: "12px 28px", borderRadius: 10, cursor: "pointer", background: `${PAL.gold}18`, border: `1px solid ${PAL.gold}44`, color: PAL.gold, fontFamily: ff.body, fontSize: 14, fontWeight: 500 }}>↑ Upload Recommendations</button>
+                <details style={{ maxWidth: 480, margin: "20px auto 0", textAlign: "left" }}>
+                  <summary style={{ fontFamily: ff.body, fontSize: 10, color: PAL.muted, cursor: "pointer", letterSpacing: 1 }}>JSON FORMAT GUIDE</summary>
+                  <pre style={{ fontFamily: "monospace", fontSize: 10, color: PAL.muted, background: `${PAL.cream}04`, border: `1px solid ${PAL.border}`, borderRadius: 8, padding: 12, marginTop: 8, overflow: "auto", lineHeight: 1.5 }}>{`{
+  "recommendations": [
+    {
+      "name": "Fragrance Name",
+      "house": "Brand",
+      "notes": "note1, note2, note3",
+      "type": "EDP",
+      "tier": "essential|strong|good|wildcard",
+      "categories": ["green", "earthy"],
+      "season": ["spring", "summer"],
+      "profileNote": "Why this was picked"
+    }
+  ]
+}`}</pre>
+                </details>
+              </div>
+            )}
+
             {/* Grouped by tier */}
             {(tierFilter ? tiers.filter(t => t.key === tierFilter) : tiers).map(tier => {
               const tierRecs = filtered.filter(r => r.tier === tier.key);

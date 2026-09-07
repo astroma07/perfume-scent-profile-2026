@@ -63,7 +63,7 @@ export function useDataPersistence(state, userId, dataLoaded) {
   }, [pairingDeps]);
 
   /* ─── Preferences (9 related states, one sync call) ─── */
-  const prefsDeps = JSON.stringify({ likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme });
+  const prefsDeps = JSON.stringify({ likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme, customRecs });
   useEffect(() => {
     save("visibleStats", visibleStats);
     save("noteOverrides", noteOverrides);
@@ -75,7 +75,7 @@ export function useDataPersistence(state, userId, dataLoaded) {
     save("likedNotes", likedNotes);
     save("dislikedNotes", dislikedNotes);
     if (!isInitial.current && dataLoaded && userId) {
-      syncPreferences(userId, { likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme });
+      syncPreferences(userId, { likedNotes, dislikedNotes, noteOverrides, opposingPairs, vibeMap, purchaseData, visibleStats, visibleTabs, theme, customRecs });
     }
   }, [prefsDeps]);
 }

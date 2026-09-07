@@ -177,6 +177,7 @@ export default function ScentDashboard({ session }) {
         if (data.opposingPairs.length > 0) setOpposingPairs(data.opposingPairs);
         if (Object.keys(data.vibeMap).length > 0) setVibeMap(data.vibeMap);
         if (Object.keys(data.purchaseData).length > 0) setPurchaseData(data.purchaseData);
+        if (data.customRecs?.length > 0) setCustomRecs(data.customRecs);
         if (Object.keys(data.visibleStats).length > 0) setVisibleStats(data.visibleStats);
         if (Object.keys(data.visibleTabs).length > 0) setVisibleTabs(data.visibleTabs);
         if (data.theme?.preset) setTheme(data.theme);
