@@ -13,21 +13,24 @@ function mergeNotes(a, b) {
   return [...notesA, ...newNotes].join(", ");
 }
 
-/* Merge two thought strings — combine if both exist, avoid duplication */
+/* Merge two thought strings — only add lines from b that don't exist in a */
 function mergeThoughts(a, b) {
   const ta = (a || "").trim();
   const tb = (b || "").trim();
   if (!ta) return tb;
   if (!tb) return ta;
   if (ta === tb) return ta;
-  /* If one already contains the other, keep the longer one */
   if (ta.includes(tb)) return ta;
   if (tb.includes(ta)) return tb;
-  /* Merge unique lines only */
+  /* Check each line of b against all of a */
   const linesA = ta.split("\n").map(l => l.trim()).filter(Boolean);
+  const aLower = linesA.map(l => l.toLowerCase());
   const linesB = tb.split("\n").map(l => l.trim()).filter(Boolean);
-  const seen = new Set(linesA.map(l => l.toLowerCase()));
-  const newLines = linesB.filter(l => !seen.has(l.toLowerCase()));
+  const newLines = linesB.filter(l => {
+    const ll = l.toLowerCase();
+    /* Skip if any existing line contains this or vice versa */
+    return !aLower.some(al => al.includes(ll) || ll.includes(al));
+  });
   if (newLines.length === 0) return ta;
   return [...linesA, ...newLines].join("\n");
 }

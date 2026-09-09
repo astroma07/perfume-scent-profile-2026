@@ -26,7 +26,7 @@ import { supabase } from "./supabaseClient.js";
 import { loadFromSupabase, syncBottles, syncTestedScents, syncWearLog, syncBottleRatings, syncPairings, syncPreferences } from "./dataSync.js";
 import { normalizeBottles, normalizeAll, toWearArray } from "./normalizeData.js";
 import { useDataPersistence } from "./useDataPersistence.js";
-import { fullCrossSync, syncTestedToBottles, syncBottleToTested } from "./crossSync.js";
+import { syncTestedToBottles, syncBottleToTested } from "./crossSync.js";
 
 export default function ScentDashboard({ session }) {
   const [tab, setTab] = useState(0);
@@ -187,17 +187,6 @@ export default function ScentDashboard({ session }) {
       setDataLoaded(true);
     });
   }, [userId]);
-
-  /* Cross-sync tested ↔ collection on load */
-  useEffect(() => {
-    if (!dataLoaded) return;
-    if (bottles.length === 0 && testedScents.length === 0) return;
-    const { bottles: syncedB, testedScents: syncedT } = fullCrossSync(bottles, testedScents);
-    const bChanged = JSON.stringify(syncedB) !== JSON.stringify(bottles);
-    const tChanged = JSON.stringify(syncedT) !== JSON.stringify(testedScents);
-    if (bChanged) setBottles(syncedB);
-    if (tChanged) setTestedScents(syncedT);
-  }, [dataLoaded]);
 
   /* ─── Persistence: localStorage + Supabase sync ─── */
   useDataPersistence({
@@ -970,7 +959,7 @@ export default function ScentDashboard({ session }) {
 
           {/* ═══ DISCOVER ═══════════════════════════════ */}
           {tab === 3 && (
-            <DiscoverTab bottles={bottles} setBottles={setBottles} rankedWishlist={rankedWishlist} vibeMap={vibeMap} setVibeMap={setVibeMap} customRecs={customRecs} setCustomRecs={setCustomRecs} />
+            <DiscoverTab bottles={bottles} setBottles={setBottles} rankedWishlist={rankedWishlist} vibeMap={vibeMap} setVibeMap={setVibeMap} customRecs={customRecs} setCustomRecs={setCustomRecs} likedNotes={likedNotes} dislikedNotes={dislikedNotes} testedScents={testedScents} />
           )}
 
           {/* ═══ TESTED ═════════════════════════════════ */}

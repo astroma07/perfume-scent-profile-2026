@@ -5,9 +5,10 @@ import { FRAGRANCE_DB } from "../fragranceDB.js";
 import { getNoteFamily, FAMILY_COLORS } from "../noteCategories.js";
 import { SectionTitle } from "./ui.jsx";
 import VibeCalculator from "./VibeCalculator.jsx";
+import ScentAdvisor from "./ScentAdvisor.jsx";
 import recommendationsData from "../recommendations.json";
 
-const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap, customRecs, setCustomRecs }) => {
+const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap, customRecs, setCustomRecs, likedNotes, dislikedNotes, testedScents }) => {
   const [query, setQuery] = useState("");
   const [filterHouse, setFilterHouse] = useState(null);
   const [filterNote, setFilterNote] = useState(null);
@@ -323,7 +324,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap,
 
       {/* Section toggle */}
       <div style={{ display: "flex", gap: 5, marginBottom: 18, flexWrap: "wrap" }}>
-        {[{k:"recs",l:"For You",ic:"✦"},{k:"curated",l:"Curated",ic:"💎"},{k:"browse",l:"Browse",ic:"📚"},{k:"similar",l:"Similar",ic:"🔗"},{k:"notes",l:"By Notes",ic:"🎵"},{k:"vibe",l:"Vibe",ic:"✧"}].map(s => (
+        {[{k:"recs",l:"For You",ic:"✦"},{k:"curated",l:"Curated",ic:"💎"},{k:"browse",l:"Browse",ic:"📚"},{k:"similar",l:"Similar",ic:"🔗"},{k:"notes",l:"By Notes",ic:"🎵"},{k:"vibe",l:"Vibe",ic:"✧"},{k:"advisor",l:"AI Advisor",ic:"❋"}].map(s => (
           <button key={s.k} onClick={() => setActiveSection(s.k)} style={{ background: activeSection === s.k ? `${PAL.gold}14` : "transparent", border: `1px solid ${activeSection === s.k ? PAL.gold + "44" : PAL.border}`, borderRadius: 20, padding: "6px 14px", fontFamily: ff.body, fontSize: 10, color: activeSection === s.k ? PAL.gold : PAL.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><span style={{ fontSize: 12 }}>{s.ic}</span>{s.l}</button>
         ))}
       </div>
@@ -688,6 +689,11 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap,
       {/* ─── VIBE CALCULATOR ─── */}
       {activeSection === "vibe" && (
         <VibeCalculator bottles={bottles} vibeMap={vibeMap} setVibeMap={setVibeMap} />
+      )}
+
+      {/* ─── AI ADVISOR ─── */}
+      {activeSection === "advisor" && (
+        <ScentAdvisor bottles={bottles} testedScents={testedScents} likedNotes={likedNotes} dislikedNotes={dislikedNotes} />
       )}
     </div>
 
