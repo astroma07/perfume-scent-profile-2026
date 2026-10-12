@@ -49,11 +49,12 @@ Be conversational, warm, and specific. Reference their collection when relevant.
 
     try {
       const history = [...messages, { role: "user", content: userMsg }];
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      /* Goes through /api/advisor so the API key stays server-side.
+         The model is pinned there, not here. */
+      const response = await fetch("/api/advisor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-6",
           max_tokens: 1000,
           system: buildContext(),
           messages: history.map(m => ({ role: m.role, content: m.content })),
@@ -61,10 +62,17 @@ Be conversational, warm, and specific. Reference their collection when relevant.
       });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        setMessages(prev => [...prev, { role: "assistant", content: `Error: ${data?.error || `request failed (${response.status})`}` }]);
+        setLoading(false);
+        return;
+      }
+
       const reply = data.content?.map(c => c.text || "").join("") || "Sorry, I couldn't generate a response.";
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: "assistant", content: `Error: ${err.message}. Make sure the app is configured correctly.` }]);
+      setMessages(prev => [...prev, { role: "assistant", content: `Error: ${err.message}. Check that /api/advisor is deployed and ANTHROPIC_API_KEY is set.` }]);
     }
     setLoading(false);
   };
