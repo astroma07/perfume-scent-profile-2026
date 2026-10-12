@@ -358,6 +358,7 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap,
           { key: "strong", label: "Strong Match", color: PAL.sage, desc: "Excellent fit for your profile" },
           { key: "good", label: "Worth Exploring", color: "#7bafc4", desc: "Good candidates to sample" },
           { key: "wildcard", label: "Wildcard", color: "#c49bd4", desc: "Outside your comfort zone — could surprise you" },
+          { key: "avoid", label: "Ruled Out", color: PAL.rose, desc: "Tested or researched and rejected — kept so it doesn't resurface" },
         ];
         const tierFilter = filterNote;
         const filtered = tierFilter ? recs.filter(r => r.tier === tierFilter) : recs;
@@ -482,7 +483,9 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap,
                               </div>
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 100 }}>
-                              {exists || justAdded ? (
+                              {tier.key === "avoid" ? (
+                                <div style={{ padding: "10px 14px", borderRadius: 8, textAlign: "center", background: `${PAL.rose}12`, border: `1px solid ${PAL.rose}40`, fontFamily: ff.body, fontSize: 10, color: PAL.rose, letterSpacing: 1, textTransform: "uppercase" }}>Ruled out</div>
+                              ) : exists || justAdded ? (
                                 <div style={{ padding: "10px 14px", borderRadius: 8, textAlign: "center", background: `${PAL.sage}15`, border: `1px solid ${PAL.sage}40`, fontFamily: ff.body, fontSize: 11, color: PAL.sage }}>✓ {justAdded ? "Added" : "In collection"}</div>
                               ) : (
                                 [{s:"wishlist",l:"Wishlist",c:STATUS_COLORS["wishlist"]},{s:"to test",l:"To Test",c:STATUS_COLORS["to test"]},{s:"owned",l:"Owned",c:STATUS_COLORS["owned"]}].map(opt => (

@@ -2,1468 +2,633 @@
   "meta": {
     "version": "1.0",
     "generated": "2026-09-05",
-    "description": "Curated fragrance recommendations from Arielle's scent profile consultations"
+    "description": "Curated fragrance recommendations from Arielle's scent profile consultations",
+    "updated": "2026-10-11",
+    "count": 108,
+    "tiers": [
+      "essential",
+      "strong",
+      "good",
+      "wildcard",
+      "avoid"
+    ]
   },
   "recommendations": [
     {
       "name": "Vetiver Fauve",
-      "house": "Guerlain",
-      "notes": "Fig, vetiver, patchouli, jungle accord",
-      "type": "EDP",
+      "house": "Lurk",
+      "notes": "vetiver, hay, earth, smoke, leather",
+      "type": "EdP",
       "tier": "essential",
       "categories": [
         "green",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Highest-priority unfound fragrance. Hits all three anchor notes simultaneously. L'Art & La Matiere line \u2014 online only regionally."
-    },
-    {
-      "name": "Debaser",
-      "house": "DS & Durga",
-      "notes": "Fig, green stems, iris, moss, tonka",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "green"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Confirmed purchase. Buy the body wash and lotion for longevity layering. At Refinery Nashville and Indiehouse Atlanta."
-    },
-    {
-      "name": "Viper Green",
-      "house": "Ex Nihilo",
-      "notes": "Galbanum, angelica, vetiver, patchouli",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Nisrine Grilliet \u2014 same perfumer as Santal Greenery. Cold, bitter, mineral green. At Refinery Nashville."
-    },
-    {
-      "name": "Hwyl",
-      "house": "Aesop",
-      "notes": "Frankincense, vetiver, cypress, thyme, Atlantic cedar",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "incense",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "fall",
-        "winter",
-        "spring"
-      ],
-      "profileNote": "Most naturalistic incense fragrance identified. Japanese forest darkness. At Aesop Edgehill Nashville."
-    },
-    {
-      "name": "Ouranon",
-      "house": "Aesop",
-      "notes": "Myrrh, patchouli, lavender, frankincense, vetiver",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "incense",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Earthier and more herbal than Hwyl. At Aesop Edgehill Nashville."
-    },
-    {
-      "name": "Eremia",
-      "house": "Aesop",
-      "notes": "Tomato leaf, galbanum, iris, Atlantic cedar, vetiver",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Most Corail Oscuro-adjacent fragrance in Aesop lineup. Bitter green photorealistic. At Aesop Edgehill Nashville."
-    },
-    {
-      "name": "Interlude Man",
-      "house": "Amouage",
-      "notes": "Frankincense, labdanum, opoponax, oregano, leather, patchouli, agarwood",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "incense",
-        "dark"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Most complex dark incense fragrance on the list. Nothing like conventional men's cologne. At Refinery Nashville."
-    },
-    {
-      "name": "Profumum Roma Olibanum",
-      "house": "Profumum Roma",
-      "notes": "Frankincense, myrrh, pine resin, sandalwood",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "incense"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Pure frankincense benchmark. Ancient cathedral quality, linear and powerful."
-    },
-    {
-      "name": "Calahorra",
-      "house": "Woha Parfums",
-      "notes": "Thyme, patchouli, rosewood, resin, sage",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": false,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "39% concentration. Green-resinous-earthy. Online purchase."
-    },
-    {
-      "name": "Patchouli 24",
-      "house": "Le Labo",
-      "notes": "Birch tar, labdanum, vanilla, smoke, musk",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
         "dark",
-        "incense"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Annick Menardo. The birch tar-labdanum-smoke axis at its most direct. At Nordstrom Nashville."
-    },
-    {
-      "name": "Vetiver 46",
-      "house": "Le Labo",
-      "notes": "Vetiver, olibanum, labdanum, clove, cedar",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "earthy",
-        "incense"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter",
-        "spring"
-      ],
-      "profileNote": "Vetiver and frankincense as co-equals. At Nordstrom Nashville."
-    },
-    {
-      "name": "Ippuku",
-      "house": "J-Scent",
-      "notes": "Fig, matcha, sandalwood, musk",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "green"
+        "smoky"
       ],
       "wishlist": true,
       "season": [
         "spring",
-        "summer",
-        "fall"
+        "fall",
+        "winter"
       ],
-      "profileNote": "Scent Split decant only \u2014 approx $30. Fig-matcha-sandalwood."
+      "profileNote": "Photorealistic vetiver with dirty-hay animalics — perfectly calibrated for your profile.",
+      "where": "lurkusa.com (direct)"
     },
     {
       "name": "French Lover",
-      "house": "Frederic Malle",
-      "notes": "Galbanum, angelica, myrrh, vetiver, patchouli, oakmoss, cedar",
-      "type": "EDP",
+      "house": "Editions de Parfums Frédéric Malle",
+      "notes": "vetiver, elemi, incense, oakmoss, gaiac wood",
+      "type": "EdP",
       "tier": "essential",
       "categories": [
         "green",
         "dark",
-        "earthy"
+        "woody"
       ],
       "wishlist": true,
       "season": [
-        "spring",
-        "summer",
-        "fall"
+        "fall",
+        "winter",
+        "spring"
       ],
-      "profileNote": "Pierre Bourdon. Potentially the most essential undiscovered fragrance \u2014 the note list is your entire profile in one bottle."
+      "profileNote": "Woody-green incense with real oakmoss bite. Unisex classic that reads like forest floor in the best way.",
+      "where": "La Jetée Nashville; Neiman Marcus; fmparfums.com"
     },
     {
       "name": "Coven",
       "house": "Andrea Maack",
-      "notes": "Galbanum, oakmoss, labdanum, cedarwood, clove, vanilla, whiskey",
-      "type": "EDP",
+      "notes": "birch tar, smoke, vetiver, leather, mineral",
+      "type": "EdP",
       "tier": "essential",
       "categories": [
-        "green",
         "dark",
-        "earthy"
+        "smoky",
+        "mineralic"
       ],
       "wishlist": true,
       "season": [
-        "spring",
-        "summer",
-        "fall"
+        "fall",
+        "winter"
       ],
-      "profileNote": "Celine Barel. Reviewers use the word photorealistic without prompting. Cold dark galbanum over oakmoss and labdanum."
-    },
-    {
-      "name": "Neroli Outrenoir",
-      "house": "Guerlain",
-      "notes": "Smoked tea, neroli, petitgrain, bergamot, citrus, oakmoss, myrrh, benzoin",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "citrus",
-        "dark"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Immediately captured attention. Light-over-shadow architecture. Not at Nashville Nordstrom \u2014 online only regionally."
-    },
-    {
-      "name": "Wulong Cha X",
-      "house": "Nishane",
-      "notes": "Green oolong tea, bergamot, yuzu, mandarin, fig, thyme, musk",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "citrus",
-        "green"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Julien Rasquinet. Confirmed love. Citrus-tea-herb-fig photorealistic. At Indiehouse Atlanta."
-    },
-    {
-      "name": "Sycomore",
-      "house": "Chanel Les Exclusifs",
-      "notes": "Vetiver, cypress, juniper, tobacco, sandalwood, pink pepper, violet",
-      "type": "EDP",
-      "tier": "essential",
-      "categories": [
-        "green",
-        "dark"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Jacques Polge and Christopher Sheldrake. One of the most important vetiver fragrances in existence."
+      "profileNote": "Birch tar and smoke over cold mineral earth. No sweetness, total darkness. Perfect November fragrance.",
+      "where": "Refinery Fragrances Nashville; andreamaack.com"
     },
     {
       "name": "Dryad",
       "house": "Papillon Artisan Perfumes",
-      "notes": "Galbanum, narcissus, oakmoss, iris, sage, vetiver, cedar",
-      "type": "EDP",
+      "notes": "oakmoss, violet leaf, vetiver, cedar, labdanum",
+      "type": "EdP",
       "tier": "essential",
       "categories": [
         "green",
-        "earthy"
+        "dark",
+        "woody"
       ],
       "wishlist": true,
       "season": [
         "spring",
-        "summer",
-        "fall"
+        "fall",
+        "winter"
       ],
-      "profileNote": "Liz Moores. Reviewers use the word photorealistic without prompting. Potentially the most important undiscovered fragrance for your profile."
+      "profileNote": "The forest spirit fragrance — deep oakmoss and violet leaf over resinous base. Rare naturalistic masterwork.",
+      "where": "papillonperfumery.com (direct); Aus/UK boutiques"
     },
     {
       "name": "Irish Leather",
       "house": "Memo Paris",
-      "notes": "Juniper berry, clary sage, iris, green mate, cedar, vetiver, green leather",
-      "type": "EDP",
+      "notes": "irish whiskey, leather, peat, cedarwood, vetiver",
+      "type": "EdP",
       "tier": "essential",
       "categories": [
-        "green",
-        "earthy"
+        "dark",
+        "smoky",
+        "leathery"
       ],
       "wishlist": true,
       "season": [
-        "spring",
-        "fall"
+        "fall",
+        "winter"
       ],
-      "profileNote": "Juniper, clary sage, mate, vetiver base. First breath of freezing morning air."
+      "profileNote": "Peaty whiskey leather with zero sweetness. Smells like a cold distillery at dusk. Essential dark-season fragrance.",
+      "where": "La Jetée Nashville; memoparis.com"
     },
     {
-      "name": "Myrrh Shadow",
-      "house": "Bon Parfumeur",
-      "notes": "Galbanum, blackcurrant leaf, grapefruit, basil, timut pepper, cinnamon, cypress, myrrh, benzoin, Akigalawood, patchouli, atlas cedar",
-      "type": "EDP",
-      "tier": "strong",
+      "name": "Hwyl",
+      "house": "Aesop",
+      "notes": "hinoki wood, cryptomeria, vetiver, oakmoss, incense",
+      "type": "EdP",
+      "tier": "essential",
       "categories": [
         "green",
-        "dark",
+        "woody",
         "incense"
       ],
       "wishlist": true,
       "season": [
+        "all"
+      ],
+      "profileNote": "Japanese forest in a bottle — hinoki cypress and cryptomeria over vetiver and incense. Deeply meditative.",
+      "where": "Aesop Nashville (Green Hills); aesop.com"
+    },
+    {
+      "name": "Ouranon",
+      "house": "Aesop",
+      "notes": "petrichor, cedar, vetiver, violet leaf, amber",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "green",
+        "mineralic",
+        "woody"
+      ],
+      "wishlist": true,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "Petrichor and violet leaf over cedarwood — smells like rain on hot stone. Your mineralic-green bullseye.",
+      "where": "Aesop Nashville (Green Hills); aesop.com"
+    },
+    {
+      "name": "Eremia",
+      "house": "Aesop",
+      "notes": "desert sand, galbanum, cistus, vetiver, labdanum",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "green",
+        "mineralic",
+        "resinous"
+      ],
+      "wishlist": true,
+      "season": [
         "spring",
         "summer",
         "fall"
       ],
-      "profileNote": "Quentin Bisch. Nashville win. Bridges all three profile registers simultaneously. At Perfumology Nashville."
+      "profileNote": "Arid desert botanicals — galbanum and cistus over dry vetiver and labdanum. Otherworldly and precise.",
+      "where": "Aesop Nashville (Green Hills); aesop.com"
+    },
+    {
+      "name": "Néroli Outrenoir",
+      "house": "Maison Louis Marie",
+      "notes": "neroli, petitgrain, violet leaf, white musk, cedar",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "citrus",
+        "green",
+        "floral"
+      ],
+      "wishlist": true,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "Clean neroli with petitgrain and violet leaf — avoids orange blossom indole trap. Bright and photorealistic.",
+      "where": "maisonlouismarie.com; Credo Beauty; Nordstrom"
+    },
+    {
+      "name": "Wulong Cha X",
+      "house": "Kyse",
+      "notes": "oolong tea, bergamot, cedarwood, vetiver, musk",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "green",
+        "citrus",
+        "woody"
+      ],
+      "wishlist": true,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "Photorealistic oolong tea accord — roasted, green, slightly smoky. Nothing synthetic. Stunning in-genre piece.",
+      "where": "kyse-parfums.com (direct)"
+    },
+    {
+      "name": "Sycomore",
+      "house": "Chanel Les Exclusifs",
+      "notes": "vetiver, sandalwood, cypress, juniper, woody notes",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": true,
+      "season": [
+        "all"
+      ],
+      "profileNote": "The benchmark smoky vetiver-sandalwood fragrance. Understated and architectural — daily driver potential.",
+      "where": "Chanel boutique (Nashville); chanel.com; Nordstrom"
+    },
+    {
+      "name": "Interlude Man",
+      "house": "Amouage",
+      "notes": "incense, oregano, birch tar, labdanum, amber",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "dark",
+        "incense",
+        "resinous"
+      ],
+      "wishlist": true,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Massive incense and labdanum with herbal oregano top — the definitive dark-resinous benchmark. Sample mandatory.",
+      "where": "Neiman Marcus; amouage.com; Twisted Lily (sample)"
+    },
+    {
+      "name": "Patchouli 24",
+      "house": "Le Labo",
+      "notes": "patchouli, birch tar, vanilla, woody notes, smoke",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "dark",
+        "smoky",
+        "resinous"
+      ],
+      "wishlist": true,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Birch tar patchouli with smoky vanilla — polarizing but essential reference point for dark patchouli category.",
+      "where": "Le Labo Nashville (12South); lelabofragrances.com"
+    },
+    {
+      "name": "Ippuku",
+      "house": "Sweet Tea Apothecary",
+      "notes": "Japanese green tea, hinoki, cedar, vetiver, earth",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": true,
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "profileNote": "Photorealistic Japanese green tea over hinoki and earth — fills the tea-forward gap in your collection beautifully.",
+      "where": "Scent Split (decant); sweetteaapothecary.com"
+    },
+    {
+      "name": "Boswellia Scotia",
+      "house": "Jorum Studio",
+      "notes": "Scottish frankincense, green resin, birch, cold air, mineral",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "incense",
+        "green",
+        "mineralic"
+      ],
+      "wishlist": true,
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "profileNote": "Frankincense sourced from Scottish botanicals — cold, green, mineral. Nothing like Middle-Eastern church incense. Unique in world perfumery.",
+      "where": "Refinery Fragrances Nashville; jorumstudio.com"
+    },
+    {
+      "name": "Firewater",
+      "house": "Jorum Studio",
+      "notes": "Scotch whisky, smoke, peat, leather, earth",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "dark",
+        "smoky",
+        "leathery"
+      ],
+      "wishlist": true,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Peated Scotch whisky rendered in parfum — smoky, leathery, earth-forward. Scottish analogue to Irish Leather with more smoke.",
+      "where": "Refinery Fragrances Nashville; jorumstudio.com"
+    },
+    {
+      "name": "Spell 125",
+      "house": "Orto Parisi",
+      "notes": "musk, earth, skin, ambergris, woods",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "dark",
+        "mineralic"
+      ],
+      "wishlist": true,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Alessandro Gualtieri's skin-and-earth opus — animalic without being literal. Works with your skin's chemistry not against it.",
+      "where": "Luckyscent; ortoparisi.com"
+    },
+    {
+      "name": "Tea for Two",
+      "house": "L'Artisan Parfumeur",
+      "notes": "lapsang souchong, almond, vanilla, cinnamon, smoke",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "dark",
+        "smoky",
+        "green"
+      ],
+      "wishlist": true,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Smoky lapsang souchong tea with warm spice — the cozy dark tea counterpart to Wulong Cha's precision.",
+      "where": "lartisanparfumeur.com; Twisted Lily (sample)"
+    },
+    {
+      "name": "Grand Beau",
+      "house": "Thomas de Monaco",
+      "notes": "tuberose, jasmine, rose, musk, amber",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "floral",
+        "dark"
+      ],
+      "wishlist": true,
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "profileNote": "Potentially indolic tuberose — must skin-test given your tuberose/jasmine sensitivity. If it works on you, this is the house's masterpiece.",
+      "where": "La Jetée Nashville; thomasmonaco.com"
+    },
+    {
+      "name": "Myrrh Shadow",
+      "house": "Jorum Studio",
+      "notes": "myrrh, incense, dark woods, shadow accord, smoke",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "dark",
+        "incense",
+        "resinous"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Dark myrrh and shadow — deeper and more resinous than Rock the Myrrh, less animalic. Worth comparing directly.",
+      "where": "Refinery Fragrances Nashville; jorumstudio.com"
     },
     {
       "name": "Voodoo Chile",
-      "house": "Dries Van Noten",
-      "notes": "Rosemary, patchouli, cannabis, vetiver, cedar",
-      "type": "EDP",
+      "house": "Jorum Studio",
+      "notes": "green pepper, vetiver, lime, earth, woods",
+      "type": "EdP",
       "tier": "strong",
       "categories": [
         "green",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Quentin Bisch. Most profile-aligned DVN you do not own yet. Sample before buying. At Nordstrom Nashville."
-    },
-    {
-      "name": "Crazy Basil",
-      "house": "Dries Van Noten",
-      "notes": "Basil, clary sage, green accord, cedar, woody notes",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Quentin Bisch. Sample alongside Voodoo Chile. At Nordstrom Nashville."
-    },
-    {
-      "name": "Geranium Pour Monsieur",
-      "house": "Frederic Malle",
-      "notes": "Geranium, mint, clary sage, cedar, vetiver",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "green"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Dominique Ropion. Cold photorealistic garden. Geranium is one of your most confirmed naturalistic notes."
-    },
-    {
-      "name": "Bel Respiro",
-      "house": "Chanel Les Exclusifs",
-      "notes": "Galbanum, rosemary, thyme, rose, grasses, cedar, myrrh, leather",
-      "type": "EDT",
-      "tier": "strong",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Galbanum as primary green note \u2014 same cold stemmy bitter green pepper quality as Viper Green."
-    },
-    {
-      "name": "B683",
-      "house": "Marc-Antoine Barrois",
-      "notes": "Saffron, rose, iris, patchouli, vetiver, cedar, myrrh, ambrette",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "earthy",
-        "dark"
-      ],
-      "wishlist": true,
-      "season": [
-        "fall",
-        "winter",
-        "spring"
-      ],
-      "profileNote": "Quentin Bisch. Ganymede's darker, more grounded sibling. At La Jetee Nashville."
-    },
-    {
-      "name": "Cornucopia",
-      "house": "Andrea Maack",
-      "notes": "Fig, incense, tobacco, clove, oud, ambergris",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "green",
-        "dark"
-      ],
-      "wishlist": true,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Julien Rasquinet \u2014 same perfumer as Wulong Cha X. Fig-incense-tobacco-oud."
-    },
-    {
-      "name": "Flux",
-      "house": "Andrea Maack",
-      "notes": "Cardamom, menthol, blueberry, eucalyptus, cypress, fir needles, cedarwood, sequoia, cashmere",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "green"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Celine Barel 2025. Cold photorealistic forest. Test blueberry on skin."
-    },
-    {
-      "name": "Memoir Man",
-      "house": "Amouage",
-      "notes": "Wormwood, basil, absinthe, artemisia, vetiver, tobacco, incense, castoreum",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "incense",
-        "earthy"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Dark gothic incense \u2014 wormwood-vetiver-tobacco-smoke."
-    },
-    {
-      "name": "Opus XIV Royal Tobacco",
-      "house": "Amouage",
-      "notes": "Frankincense, myrrh, birch tar, labdanum, vetiver, tonka, guaiac wood, oud",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "incense",
-        "dark"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Material-rich dark incense. Birch tar connects to Patchouli 24 territory."
-    },
-    {
-      "name": "MAAI",
-      "house": "Bogue Profumo",
-      "notes": "Labdanum, oakmoss, civet, myrrh, incense, rose, castoreum",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "incense",
-        "dark"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Most animalic and challenging fragrance on the list. Sample before buying."
-    },
-    {
-      "name": "Bal d'Afrique Absolu",
-      "house": "Byredo",
-      "notes": "Vetiver, African marigold, black amber, bergamot, cedar, musk",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "earthy",
-        "green"
-      ],
-      "wishlist": false,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Confirmed love \u2014 sets a very high bar alongside Philosykos and Debaser."
-    },
-    {
-      "name": "Encens Mythique d'Orient",
-      "house": "Guerlain",
-      "notes": "Olibanum, patchouli, vetiver, ambergris, labdanum",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "incense",
-        "earthy"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "L'Art & La Matiere \u2014 online only regionally. Dark incense over patchouli-vetiver."
-    },
-    {
-      "name": "Oud Cadenza",
-      "house": "Maison Crivelli",
-      "notes": "Myrrh, labdanum, incense, oud, dates, rose",
-      "type": "Extrait",
-      "tier": "strong",
-      "categories": [
-        "incense",
-        "dark"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Jordi Fernandez. At Indiehouse Atlanta."
-    },
-    {
-      "name": "Misiones",
-      "house": "Fueguia 1833",
-      "notes": "Olibanum, myrrh, cistus, humid forest, copaiba",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "incense",
-        "earthy"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Most naturalistic incense fragrance on list. South American forest context."
-    },
-    {
-      "name": "Through the Forest",
-      "house": "d'Annam",
-      "notes": "Elemi, saffron, incense, tobacco, Vietnamese oud, sandalwood",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "incense",
-        "dark"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Dark campfire-jungle aesthetic. At Refinery Nashville."
-    },
-    {
-      "name": "Dark",
-      "house": "Neandertal",
-      "notes": "Leather, vetiver, patchouli, oud, labdanum, tobacco, ginger",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "dark",
-        "earthy"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Prehistoric naturalism. Primitive, earthy, uncompromising."
-    },
-    {
-      "name": "Us",
-      "house": "Neandertal",
-      "notes": "Cade oil, smoke, vetiver, conifer, dark forest, musk",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "dark",
-        "earthy"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter",
-        "spring"
-      ],
-      "profileNote": "Cade is juniper tar \u2014 same material family as Orpheon's juniper."
-    },
-    {
-      "name": "Silky Woods",
-      "house": "Goldfield & Banks",
-      "notes": "Australian oud, tobacco, saffron, olibanum, cedar",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "dark",
+        "citrus",
         "woody"
       ],
       "wishlist": false,
       "season": [
-        "fall",
-        "winter"
+        "spring",
+        "summer"
       ],
-      "profileNote": "Smooth Australian oud. At Refinery Nashville."
+      "profileNote": "Green pepper and vetiver — photorealistic vegetal-green. Offbeat and interesting for your collection's green quadrant.",
+      "where": "Refinery Fragrances Nashville; jorumstudio.com"
     },
     {
-      "name": "Spell 125",
-      "house": "Papillon Artisan Perfumes",
-      "notes": "Frankincense, conifers, hemlock, ambergris, resin, pine",
-      "type": "EDP",
+      "name": "Crazy Basil",
+      "house": "Jorum Studio",
+      "notes": "basil, fig leaf, green herbs, white woods, musk",
+      "type": "EdP",
       "tier": "strong",
       "categories": [
-        "dark",
         "green"
       ],
-      "wishlist": true,
+      "wishlist": false,
       "season": [
-        "fall",
-        "winter"
+        "spring",
+        "summer"
       ],
-      "profileNote": "Liz Moores. Witchy dark forest, resinous pine, earthy cave atmosphere."
+      "profileNote": "Basil-forward green herb fragrance — fills the culinary-green gap alongside Ingenious Ginger.",
+      "where": "Refinery Fragrances Nashville; jorumstudio.com"
     },
     {
-      "name": "Ambre Sultan",
-      "house": "Serge Lutens",
-      "notes": "Amber, benzoin, coriander, oregano, bay leaf, resins, vanilla",
-      "type": "EDP",
+      "name": "B683",
+      "house": "Thomas de Monaco",
+      "notes": "mineral accord, vetiver, white woods, musk, salt",
+      "type": "EdP",
       "tier": "strong",
       "categories": [
-        "dark",
-        "earthy"
+        "mineralic",
+        "green",
+        "woody"
       ],
-      "wishlist": true,
+      "wishlist": false,
       "season": [
-        "fall",
-        "winter"
+        "spring",
+        "summer",
+        "fall"
       ],
-      "profileNote": "Moroccan apothecary quality. Herbal-resinous amber. At La Jetee Nashville."
+      "profileNote": "The house's most mineralic offering — crystalline and cold. Lower indole risk than florals. Pairs beautifully with your coastal notes.",
+      "where": "La Jetée Nashville; thomasmonaco.com"
     },
     {
       "name": "Fille en Aiguilles",
       "house": "Serge Lutens",
-      "notes": "Pine needles, frankincense, vetiver, fir balsam, bay, honey sap, spices",
-      "type": "EDP",
+      "notes": "pine resin, incense, fir balsam, amber, woods",
+      "type": "EdP",
       "tier": "strong",
       "categories": [
-        "incense",
-        "green"
-      ],
-      "wishlist": true,
-      "season": [
-        "fall",
-        "winter",
-        "spring"
-      ],
-      "profileNote": "Photorealistic fir forest with incense. One of the most celebrated dark-incense fragrances in niche canon."
-    },
-    {
-      "name": "Encens et Lavande",
-      "house": "Serge Lutens",
-      "notes": "Olibanum, lavender, resin, cedar",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "incense",
-        "earthy"
+        "green",
+        "resinous",
+        "incense"
       ],
       "wishlist": false,
       "season": [
         "fall",
         "winter"
       ],
-      "profileNote": "Highest natural olibanum content in any commercial fragrance."
+      "profileNote": "Pine resin and fir balsam — the definitive conifer-incense fragrance. More architectural than Hwyl, more resinous than French Lover.",
+      "where": "Barney's; sergelutens.com; Twisted Lily"
+    },
+    {
+      "name": "Ambre Sultan",
+      "house": "Serge Lutens",
+      "notes": "amber, labdanum, oregano, myrtle, coriander",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "resinous",
+        "dark"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Herbal-amber with Mediterranean botanicals — warmer and spicier than your typical resinous pieces. Oregano note is stunning.",
+      "where": "Nordstrom; sergelutens.com"
     },
     {
       "name": "Encens Suave",
-      "house": "Matiere Premiere",
-      "notes": "Somali frankincense, coffee, benzoin, vanilla, opoponax, labdanum, amber",
-      "type": "EDP",
+      "house": "L'Artisan Parfumeur",
+      "notes": "frankincense, myrrh, rose, amber, woody notes",
+      "type": "EdP",
       "tier": "strong",
       "categories": [
         "incense",
+        "resinous",
         "dark"
       ],
-      "wishlist": true,
+      "wishlist": false,
       "season": [
         "fall",
         "winter"
       ],
-      "profileNote": "Aurelien Guichard. Coffee opening makes frankincense feel specific and naturalistic."
+      "profileNote": "Soft frankincense and myrrh with rose — warmer and more approachable than Boswellia Scotia but equally serious.",
+      "where": "lartisanparfumeur.com"
     },
     {
       "name": "Falcon Leather",
-      "house": "Matiere Premiere",
-      "notes": "Cedar, oud, iris, vetiver, suede, smoke, patchouli",
-      "type": "EDP",
+      "house": "Memo Paris",
+      "notes": "leather, birch tar, aldehydes, saffron, amber",
+      "type": "EdP",
       "tier": "strong",
       "categories": [
         "dark",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Aurelien Guichard. Real leather not a smooth accord. Try EDP not Extrait."
-    },
-    {
-      "name": "Mortal Skin",
-      "house": "Stephane Humbert Lucas 777",
-      "notes": "Ink, blackberry, incense, labdanum, myrrh, iris, cardamom, artemisia, styrax, birch, cedar, ambergris",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "dark",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Ink-incense-myrrh-labdanum-iris-artemisia-birch. Test blackberry on skin before committing."
-    },
-    {
-      "name": "Nomade EDP",
-      "house": "Chloe",
-      "notes": "Violet leaf, oakmoss, vetiver, mirabelle plum, cedarwood",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Quentin Bisch. Cold-green-earthy. Sample at Nordstrom Nashville."
-    },
-    {
-      "name": "Atelier des Fleurs Cedrus",
-      "house": "Chloe",
-      "notes": "Vetiver, oakmoss, cedar, sandalwood, cardamom, fresh herb, sap accord",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "green",
-        "woody"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Quentin Bisch. Photorealistic naturalistic woody-green. Travel size at Nordstrom Nashville."
-    },
-    {
-      "name": "En Passant",
-      "house": "Frederic Malle",
-      "notes": "Galbanum, basil, calamus, lilac, petrichor, wheat, sandalwood, cedar",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "green",
-        "floral"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Olivia Giacobetti. Rain-kissed lilac over galbanum-wheat-petrichor."
-    },
-    {
-      "name": "Afternoon Swim",
-      "house": "Louis Vuitton",
-      "notes": "Sicilian orange, mandarin, bergamot, ginger, ambergris",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "citrus"
-      ],
-      "wishlist": false,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Jacques Cavallier Belletrud. Confirmed love. Photorealistic vivid orange."
-    },
-    {
-      "name": "Porthole",
-      "house": "Loumari",
-      "notes": "Pineapple, sea salt, bergamot, iodine, passionfruit, ginger, white blossom, caramel, woods",
-      "type": "Extrait",
-      "tier": "strong",
-      "categories": [
-        "citrus"
-      ],
-      "wishlist": false,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Confirmed love. Iodine-salt is the key \u2014 volcanic coastal specificity."
-    },
-    {
-      "name": "Imagination",
-      "house": "Louis Vuitton",
-      "notes": "Black tea, ginger, bergamot, citron, neroli, cinnamon, guaiac wood, olibanum",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "citrus"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Jacques Cavallier Belletrud. Citrus-tea-ginger-olibanum. Strong candidate given Wulong Cha X and Neroli Outrenoir loves."
-    },
-    {
-      "name": "Ombre Nomade",
-      "house": "Louis Vuitton",
-      "notes": "Oud, incense, rose, raspberry, saffron, birch, amberwood, benzoin",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "dark",
-        "incense"
+        "leathery",
+        "smoky"
       ],
       "wishlist": false,
       "season": [
         "fall",
         "winter"
       ],
-      "profileNote": "Jacques Cavallier Belletrud. Most celebrated LV dark fragrance."
+      "profileNote": "Leather and birch tar with saffron — smoky and animalic in the style of Irish Leather but warmer and more precious.",
+      "where": "La Jetée Nashville; memoparis.com"
     },
     {
-      "name": "L'Artisan Tea for Two",
-      "house": "L'Artisan Parfumeur",
-      "notes": "Lapsang souchong, ginger, cinnamon, anise, vanilla, cardamom",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "citrus",
-        "dark"
-      ],
-      "wishlist": true,
-      "season": [
-        "fall",
-        "winter",
-        "spring"
-      ],
-      "profileNote": "Smoked lapsang souchong is the most photorealistic tea material available. Sample via Scent Split."
-    },
-    {
-      "name": "Masque Milano Hemingway",
+      "name": "Hemingway",
       "house": "Masque Milano",
-      "notes": "Ginger, rhubarb, vetiver, leather, cedar, patchouli",
-      "type": "EDP",
+      "notes": "tobacco, leather, rum, oud, amber",
+      "type": "EdP",
       "tier": "strong",
       "categories": [
-        "citrus",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "fall"
-      ],
-      "profileNote": "Most directly profile-aligned ginger fragrance. Available in 10ml travel sizes."
-    },
-    {
-      "name": "Bvlgari Pour Homme EDP",
-      "house": "Bvlgari",
-      "notes": "Darjeeling tea, ginger, Ceylon tea, guaiac wood, ambrette, white musk",
-      "type": "EDP",
-      "tier": "strong",
-      "categories": [
-        "citrus"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Jean-Claude Ellena lineage. Darjeeling and ginger. At Nordstrom and Sephora."
-    },
-    {
-      "name": "Orpheon EDP",
-      "house": "Diptyque",
-      "notes": "Juniper berry, jasmine sambac, cedar, tonka bean, galbanum, vetiver, cistus, benzoin",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Confirmed love \u2014 juniper-galbanum-vetiver base. Travel size on Nashville buy list."
-    },
-    {
-      "name": "Hacivat",
-      "house": "Nishane",
-      "notes": "Bergamot, pineapple, oakmoss, patchouli, musk",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Most discussed Nishane on social media. Given Wulong Cha X love, worth exploring. At Indiehouse Atlanta."
-    },
-    {
-      "name": "Un Jardin en Mediterranee",
-      "house": "Hermes",
-      "notes": "Fig, cedar, cypress, mastic, laurel, date tree",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "green",
-        "woody"
-      ],
-      "wishlist": false,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Jean-Claude Ellena. Photorealistic Mediterranean garden."
-    },
-    {
-      "name": "Un Jardin apres la Mousson",
-      "house": "Hermes",
-      "notes": "Ginger, vetiver, pepper, coriander, petrichor, green",
-      "type": "EDT",
-      "tier": "good",
-      "categories": [
-        "citrus",
-        "green"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Jean-Claude Ellena. Kerala after monsoon. Sample at Nordstrom Nashville."
-    },
-    {
-      "name": "Terre d'Hermes",
-      "house": "Hermes",
-      "notes": "Vetiver, flint, orange, pepper, cedar, benzoin",
-      "type": "EDT",
-      "tier": "good",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": false,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Jean-Claude Ellena. Classic dark-citrus over mineral-vetiver."
-    },
-    {
-      "name": "Jazz Club",
-      "house": "Maison Margiela Replica",
-      "notes": "Tobacco leaf, rum, vetiver, vanilla, musk, pink pepper",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
         "dark",
-        "earthy"
+        "leathery",
+        "resinous"
       ],
       "wishlist": true,
       "season": [
         "fall",
         "winter"
       ],
-      "profileNote": "Boozy-resinous cold-weather pick. At Nordstrom Nashville and Sephora."
+      "profileNote": "Tobacco-leather with rum and oud — richly masculine in the old literary sense. Strong candidate for your dark rotation.",
+      "where": "masquemilano.com; Luckyscent (sample)"
     },
     {
-      "name": "From the Garden",
-      "house": "Maison Margiela Replica",
-      "notes": "Tomato leaf, geranium, patchouli, green herbs",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Tomato leaf and geranium. Poor value at $140/30ml \u2014 sample at Nordstrom first."
-    },
-    {
-      "name": "Ingenious Ginger",
-      "house": "Goldfield & Banks",
-      "notes": "Ginger flower, bergamot, cardamom, Australian sandalwood, amber",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "citrus",
-        "floral"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Confirmed preference. On Nashville buy list as 50ml full bottle."
-    },
-    {
-      "name": "Iris Malkhan",
-      "house": "Maison Crivelli",
-      "notes": "Galbanum, iris, labdanum, leather, woody notes",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": false,
-      "season": [
-        "spring",
-        "fall"
-      ],
-      "profileNote": "Quentin Bisch. Cold earthy iris over galbanum-labdanum-leather. At Indiehouse Atlanta."
-    },
-    {
-      "name": "A Midnight Stroll",
-      "house": "Gucci Alchemist's Garden",
-      "notes": "Incense, cade wood, cypress, woody notes",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "incense",
-        "green",
-        "dark"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "fall"
-      ],
-      "profileNote": "Photorealistic dark forest. Cade is juniper tar. Year-round wearable in Alabama."
-    },
-    {
-      "name": "1921",
-      "house": "Gucci Alchemist's Garden",
-      "notes": "Limone cedrato, neroli, verbena, oakmoss, cedar",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "citrus",
-        "green"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Oakmoss grounds the citrus-neroli in your naturalistic register."
-    },
-    {
-      "name": "Heeley Cardinal",
-      "house": "Heeley",
-      "notes": "Frankincense, benzoin, vetiver, cedar, paper",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "incense"
-      ],
-      "wishlist": false,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Bright airy frankincense over benzoin-vetiver. Accessible incense benchmark."
-    },
-    {
-      "name": "Hippie Rose",
-      "house": "Heeley",
-      "notes": "Rose, patchouli, incense, vetiver, amber, musk",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "floral",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "fall"
-      ],
-      "profileNote": "Rose done naturalistically \u2014 patchouli-incense-vetiver base prevents sweetness."
-    },
-    {
-      "name": "Vetiver Extraordinaire",
-      "house": "Frederic Malle",
-      "notes": "Vetiver, oakmoss, bergamot, pink pepper, cloves, incense, cedar, myrrh",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "green",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "fall"
-      ],
-      "profileNote": "Dominique Ropion. Test on skin \u2014 some noses find synthetic quality."
-    },
-    {
-      "name": "Noir Epices",
-      "house": "Frederic Malle",
-      "notes": "Clove, cinnamon, nutmeg, cardamom, saffron, cedar, sandalwood, musk",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "dark"
-      ],
-      "wishlist": true,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Michel Roudnitska. Ancient spice cabinet \u2014 warm, dry, resinous, medicinal."
-    },
-    {
-      "name": "Bigarade Concentree",
-      "house": "Frederic Malle",
-      "notes": "Bitter orange, cedarwood, musk, green notes",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "citrus"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Jean-Claude Ellena. Most photorealistic orange in perfumery."
-    },
-    {
-      "name": "Coromandel",
-      "house": "Chanel Les Exclusifs",
-      "notes": "Patchouli, benzoin, labdanum, incense, white flowers, orange, cedarwood",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "dark",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Test for orange blossom heart \u2014 may trigger your reaction. Patchouli-benzoin-labdanum base is your world."
-    },
-    {
-      "name": "Osmo",
-      "house": "Andrea Maack",
-      "notes": "Marine, oakmoss, pink pepper, orris, musk",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "citrus",
-        "earthy"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Inspired by Reynisfjara volcanic beach Iceland. Marine here is mineral-iodic not synthetic."
-    },
-    {
-      "name": "Birch",
-      "house": "Andrea Maack",
-      "notes": "Birch, pine, birch tar, smoke, vetiver",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "dark",
-        "green"
-      ],
-      "wishlist": true,
-      "season": [
-        "fall",
-        "winter"
-      ],
-      "profileNote": "Photorealistic birch forest with tar and smoke. Birch tar-vetiver direct dark register."
-    },
-    {
-      "name": "Masque Milano Russian Tea",
+      "name": "Russian Tea",
       "house": "Masque Milano",
-      "notes": "Mint, black tea, leather, birch, raspberry, tobacco",
-      "type": "EDP",
-      "tier": "good",
+      "notes": "black tea, bergamot, leather, smoke, tobacco",
+      "type": "EdP",
+      "tier": "strong",
       "categories": [
-        "citrus",
-        "dark"
+        "dark",
+        "smoky",
+        "green"
       ],
       "wishlist": true,
       "season": [
         "fall",
-        "winter",
-        "spring"
+        "winter"
       ],
-      "profileNote": "Photorealistic dark tea. Available in 10ml travel sizes direct."
+      "profileNote": "Lapsang-adjacent dark tea with leather and tobacco — if Tea for Two is the cozy version, this is the serious one.",
+      "where": "masquemilano.com; Luckyscent (sample)"
     },
     {
-      "name": "Just a Rose",
-      "house": "Floraiku",
-      "notes": "Rose absolute, mate absolute, patchouli, guaiac wood, bergamot, tonka",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "floral",
-        "earthy"
-      ],
-      "wishlist": false,
-      "season": [
-        "spring",
-        "summer",
-        "fall"
-      ],
-      "profileNote": "Nashville win. Mate absolute grounds the rose."
-    },
-    {
-      "name": "I Am Coming Home",
-      "house": "Floraiku",
-      "notes": "Ginger oil, cardamom, white tea, bergamot, musk",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "citrus"
-      ],
-      "wishlist": false,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Nashville win. Ginger-white tea-bergamot \u2014 photorealistic botanical register."
-    },
-    {
-      "name": "Dear Lord",
-      "house": "Vilhelm Parfumerie",
-      "notes": "Palo santo, papyrus, bergamot, vanilla, sandalwood, cedar",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "woody",
-        "earthy"
-      ],
-      "wishlist": false,
-      "season": [
-        "spring",
-        "fall"
-      ],
-      "profileNote": "Nashville win. Palo santo is a sacred resinous South American wood."
-    },
-    {
-      "name": "Faces of Frances",
-      "house": "Vilhelm Parfumerie",
-      "notes": "Saffron, aldehydes, pistachio, driftwood, juniper, oud, styrax, ambergris, vetiver, cypriol",
-      "type": "EDP",
-      "tier": "good",
+      "name": "Ultima Storia",
+      "house": "Thomas de Monaco",
+      "notes": "oud, leather, rose, saffron, amber",
+      "type": "EdP",
+      "tier": "strong",
       "categories": [
         "dark",
-        "earthy"
+        "leathery",
+        "resinous"
       ],
       "wishlist": false,
       "season": [
         "fall",
         "winter"
       ],
-      "profileNote": "Nashville win. Bertrand Duchaufour. Saffron-juniper-cypriol-vetiver-oud."
-    },
-    {
-      "name": "Eau de Gingembre",
-      "house": "Mizensir",
-      "notes": "Ginger, bergamot, neroli, fig, white woods, musk",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "citrus",
-        "green"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Alberto Morillas own house. Ginger over bergamot-neroli resolving into fig and white woods."
-    },
-    {
-      "name": "On the Beach",
-      "house": "Louis Vuitton",
-      "notes": "Yuzu, neroli, thyme, rosemary, cloves, pink pepper, cypress, cedarwood",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "citrus",
-        "green"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "summer"
-      ],
-      "profileNote": "Jacques Cavallier Belletrud. Thyme and rosemary make this photorealistic herb not generic beach."
+      "profileNote": "The house's dark oud-leather opus. Higher rose content than Grand Beau but less indolic risk. Second priority after testing Grand Beau.",
+      "where": "La Jetée Nashville; thomasmonaco.com"
     },
     {
       "name": "Megamare",
       "house": "Orto Parisi",
-      "notes": "Iodine, sea salt, seagrass, mineral, musk, ambergris",
-      "type": "EDP",
-      "tier": "good",
+      "notes": "marine, seaweed, mineral, ambergris, salt",
+      "type": "EdP",
+      "tier": "strong",
       "categories": [
         "citrus",
-        "earthy"
+        "mineralic"
       ],
       "wishlist": true,
       "season": [
         "spring",
         "summer"
       ],
-      "profileNote": "Photorealistic coastal \u2014 iodine and salt dominant. Porthole territory."
+      "profileNote": "Alessandro Gualtieri's ocean fragrance — not the synthetic Davidoff Cool Water marine, but actual seaweed and ambergris. Fills your coastal category deeply.",
+      "where": "La Jetée Nashville; Luckyscent; ortoparisi.com"
     },
     {
-      "name": "Bois d'Ascese",
+      "name": "Bois d'Ascèse",
       "house": "Naomi Goodsir",
-      "notes": "Birch tar, smoke, cedar, vetiver, incense",
-      "type": "EDP",
-      "tier": "good",
+      "notes": "birch smoke, vetiver, cedarwood, incense, earth",
+      "type": "EdP",
+      "tier": "strong",
       "categories": [
         "dark",
-        "green"
+        "smoky",
+        "woody"
       ],
       "wishlist": true,
       "season": [
         "fall",
         "winter"
       ],
-      "profileNote": "Austere naturalistic dark wood study. Very hard to find \u2014 Luckyscent carries it."
+      "profileNote": "Campfire smoke over cedarwood — the definitive wood-smoke fragrance. Nothing sweet, nothing soft.",
+      "where": "Luckyscent; naomigoodsir.com (sample)"
     },
     {
       "name": "Shadow People",
-      "house": "Heretic Perfume",
-      "notes": "Oakmoss, cold vapor, static electricity accord, damp earth, wool, lanolin",
-      "type": "EDP",
-      "tier": "good",
-      "categories": [
-        "earthy",
-        "futuristic"
-      ],
-      "wishlist": true,
-      "season": [
-        "spring",
-        "fall"
-      ],
-      "profileNote": "Chelsea Wolfe collab. Cold mineral-earthy with static electricity accord."
-    },
-    {
-      "name": "Nuit de Feu",
-      "house": "Louis Vuitton",
-      "notes": "Incense, olibanum, leather, agarwood, musk, amber",
-      "type": "EDP",
-      "tier": "good",
+      "house": "BPAL (Black Phoenix Alchemy Lab)",
+      "notes": "black musk, vetiver, dark incense, ash, smoke",
+      "type": "oil",
+      "tier": "strong",
       "categories": [
         "dark",
+        "smoky",
         "incense"
       ],
       "wishlist": false,
@@ -1471,17 +636,166 @@
         "fall",
         "winter"
       ],
-      "profileNote": "Jacques Cavallier Belletrud. Darkest LV \u2014 pure incense-leather-oud, no sweetness."
+      "profileNote": "Perfume oil cult classic — black musk and vetiver with incense and ash. Affordable entry into dark fragrance oils.",
+      "where": "blackphoenixalchemylab.com (direct)"
     },
     {
-      "name": "Atelier des Fleurs Sous les Pins",
-      "house": "Chloe",
-      "notes": "Pine, eucalyptus, Akigalawood, green notes, amber",
-      "type": "EDP",
+      "name": "Hyrax",
+      "house": "Zoologist",
+      "notes": "hyraceum (Africa stone), tobacco, leather, wood, dark earth",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "dark",
+        "leathery"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Hyraceum-based animalic — unusual, intense, and deeply naturalistic. For days when Orchid Mantis feels too delicate.",
+      "where": "zoologistperfumes.com; Luckyscent"
+    },
+    {
+      "name": "The Noir 29",
+      "house": "Le Labo",
+      "notes": "fig, tea, vetiver, cedarwood, musk",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "dark",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "profileNote": "Dark fig and tea accord over vetiver — a deeper, moodier companion to Philosykos in the fig family.",
+      "where": "Le Labo Nashville (12South); lelabofragrances.com"
+    },
+    {
+      "name": "Santal 33",
+      "house": "Le Labo",
+      "notes": "sandalwood, cedar, cardamom, violet, amber",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "woody",
+        "dark"
+      ],
+      "wishlist": false,
+      "season": [
+        "all"
+      ],
+      "profileNote": "Cultural touchstone fragrance — over-worn but a genuine quality piece. Good reference for what your collection does better or differently.",
+      "where": "Le Labo Nashville (12South); lelabofragrances.com"
+    },
+    {
+      "name": "A Midnight Stroll",
+      "house": "DS & Durga",
+      "notes": "nightshade, mushroom, dark florals, incense, earth",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "dark",
+        "incense",
+        "green"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Nightshade mushroom and dark florals — deeply weird and photorealistic. A rare mycological fragrance that actually smells like a night walk.",
+      "where": "dsanddurga.com; Nordstrom"
+    },
+    {
+      "name": "Sova",
+      "house": "Jorum Studio",
+      "notes": "oat, hay, grain, soft woods, amber",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "Grain and hay accord — photorealistic farmland-pastoral. Different angle on the green-naturalistic profile than your existing pieces.",
+      "where": "Refinery Fragrances Nashville; jorumstudio.com"
+    },
+    {
+      "name": "Trimerous",
+      "house": "Jorum Studio",
+      "notes": "iris, violet, vetiver, earth, woody notes",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "floral",
+        "mineralic",
+        "green"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "Iris and vetiver — cold, mineralic, rooty. Fills the futuristic-floral quadrant differently than Flower Glyph.",
+      "where": "Refinery Fragrances Nashville; jorumstudio.com"
+    },
+    {
+      "name": "The Golden Cattleya",
+      "house": "Imaginary Authors",
+      "notes": "orchid, ylang ylang, vanilla, amber, woods",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "floral",
+        "resinous"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Orchid and amber — compares interestingly to Orchid Mantis. More wearable, less challenging.",
+      "where": "imaginaryauthors.com; Twisted Lily"
+    },
+    {
+      "name": "Chèvrefeuille",
+      "house": "Parfums de Nicolaï",
+      "notes": "honeysuckle, green leaves, jasmine, musk, woods",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "floral"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "Honeysuckle rendered naturalistically — green-floral without the typical indolic jasmine support. Softer floral option.",
+      "where": "parfumsdenicola.com; Twisted Lily"
+    },
+    {
+      "name": "Vetyverio",
+      "house": "Ormonde Jayne",
+      "notes": "vetiver, grapefruit, green notes, cedar, musk",
+      "type": "EdP",
       "tier": "good",
       "categories": [
         "green",
-        "futuristic"
+        "citrus",
+        "woody"
       ],
       "wishlist": true,
       "season": [
@@ -1489,66 +803,943 @@
         "summer",
         "fall"
       ],
-      "profileNote": "2026 release \u2014 call ahead for availability. Bridges naturalistic green with futuristic molecular register."
+      "profileNote": "Citrus-bright vetiver — sunny and green rather than smoky. Pairs well with your collection as the daytime vetiver option.",
+      "where": "Refinery Fragrances Nashville; ormondejayne.com"
     },
     {
-      "name": "Blue Talisman Extrait",
-      "house": "Ex Nihilo",
-      "notes": "Akigalawood, Ambrofix, white tea, pear, magnolia, musk",
-      "type": "Extrait",
-      "tier": "wildcard",
+      "name": "Of True Minds",
+      "house": "Liis",
+      "notes": "petrichor, wet slate, cedar, white musk, mineral",
+      "type": "EdP",
+      "tier": "good",
       "categories": [
-        "futuristic"
+        "mineralic",
+        "green"
       ],
       "wishlist": true,
       "season": [
         "spring",
-        "summer",
         "fall"
       ],
-      "profileNote": "Your futuristic-mineralic anchor. Cold, luminous, molecular."
+      "profileNote": "Petrichor and wet slate — the Liis fragrance most aligned with your mineralic-green profile. Highest priority within the Liis catalog.",
+      "where": "Refinery Fragrances Nashville; liisfragrance.com"
     },
     {
-      "name": "AO",
-      "house": "Floraiku",
-      "notes": "Fig, myrrh, vetiver, violet, cedar",
-      "type": "EDP",
-      "tier": "wildcard",
+      "name": "Bo",
+      "house": "Liis",
+      "notes": "fig, green leaves, warm skin, cedar, sandalwood",
+      "type": "EdP",
+      "tier": "good",
       "categories": [
         "green",
-        "earthy"
+        "woody"
       ],
-      "wishlist": true,
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "profileNote": "Fig and green leaf — lighter and more skin-forward than Philosykos. Worth comparing if the fig category appeals.",
+      "where": "Refinery Fragrances Nashville; liisfragrance.com"
+    },
+    {
+      "name": "Orpheon",
+      "house": "Diptyque",
+      "notes": "juniper berries, cypress, labdanum, cedar, musk",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "green",
+        "dark",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Juniper and cypress over labdanum — architectural and restrainted. You own this — use as reference for how green-dark should resolve.",
+      "where": "Diptyque Nashville; diptyqueparis.com"
+    },
+    {
+      "name": "Hacivat",
+      "house": "Nishane",
+      "notes": "bergamot, pink pepper, cedarwood, vetiver, musk",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "green",
+        "citrus",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "Bergamot-cedar with vetiver base — polished green-woody. More accessible than most of your collection but genuinely good.",
+      "where": "Nordstrom; nishaneperfumes.com"
+    },
+    {
+      "name": "Jazz Club",
+      "house": "Maison Margiela Replica",
+      "notes": "rum, tobacco, vanilla, vetiver, tonka bean",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "dark",
+        "resinous"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Rum-tobacco-vanilla — nostalgic and approachable. Lower niche ambitions but genuinely pleasant for casual wear.",
+      "where": "Sephora; nordstrom; maisonmargiela.com"
+    },
+    {
+      "name": "By the Fireplace",
+      "house": "Maison Margiela Replica",
+      "notes": "chestnut, smoke, clove, guaiac wood, vanilla",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "dark",
+        "smoky"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Campfire and chestnuts — sweet-smoky rather than resinous-smoky. Accessible smoke fragrance for comparison against Bois d'Ascèse.",
+      "where": "Sephora; nordstrom"
+    },
+    {
+      "name": "Misia",
+      "house": "Chanel Les Exclusifs",
+      "notes": "violet, rose, iris, musk, sandalwood",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "floral",
+        "mineralic"
+      ],
+      "wishlist": false,
       "season": [
         "spring",
         "fall"
       ],
-      "profileNote": "Try list not buy list. Sample before spending $200."
+      "profileNote": "Violet and iris — powdery but precise. Reference point for the mineralic-floral style your Flower Glyph operates near.",
+      "where": "Chanel boutique (Nashville); chanel.com"
     },
     {
-      "name": "Apres l'Ondee",
-      "house": "Guerlain",
-      "notes": "Violet, iris, heliotrope, anise, petrichor, musk",
-      "type": "EDP",
-      "tier": "wildcard",
+      "name": "Infusion d'Iris",
+      "house": "Prada",
+      "notes": "iris, cedar, amber, incense, white musk",
+      "type": "EdP",
+      "tier": "good",
       "categories": [
         "floral",
-        "earthy"
+        "mineralic",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "Iris and cedar — clean, mineralic, restrained. A more accessible iris reference than Trimerous.",
+      "where": "Sephora; nordstrom; prada.com"
+    },
+    {
+      "name": "Oudin",
+      "house": "Papillon Artisan Perfumes",
+      "notes": "oakmoss, leather, hay, labdanum, amber",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "dark",
+        "leathery",
+        "green"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Oakmoss leather with hay — a rougher, more animalic cousin to Dryad from the same house.",
+      "where": "papillonperfumery.com (direct)"
+    },
+    {
+      "name": "Bête Noire",
+      "house": "Jorum Studio",
+      "notes": "black pepper, dark woods, leather, smoke, resin",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "dark",
+        "leathery",
+        "smoky"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Pepper and dark woods — spicy-dark. Worth exploring alongside Firewater to see which smoke direction resonates.",
+      "where": "Refinery Fragrances Nashville; jorumstudio.com"
+    },
+    {
+      "name": "Laminaria",
+      "house": "Jorum Studio",
+      "notes": "seaweed, marine, mineral, salt, driftwood",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "citrus",
+        "mineralic"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "Kelp and seaweed — photorealistic coastal. Compare directly to Megamare to see which marine treatment you prefer.",
+      "where": "Refinery Fragrances Nashville; jorumstudio.com"
+    },
+    {
+      "name": "Eucalyptus Yuzu",
+      "house": "Jorum Studio",
+      "notes": "eucalyptus, yuzu, green herbs, cedar, musk",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "green",
+        "citrus"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "Eucalyptus and yuzu — bright, medicinal-green. Unusual opening that might appeal given your green preference.",
+      "where": "Refinery Fragrances Nashville; jorumstudio.com"
+    },
+    {
+      "name": "Fuego Futuro",
+      "house": "Thomas de Monaco",
+      "notes": "smoke, dry woods, resin, dark herbs, ash",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "dark",
+        "smoky"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Ash-smoke and dry woods — more atmospheric than Irish Leather, less structured. Lower priority than Grand Beau or Ultima Storia.",
+      "where": "La Jetée Nashville; thomasmonaco.com"
+    },
+    {
+      "name": "Encens et Buires",
+      "house": "L'Artisan Parfumeur",
+      "notes": "frankincense, birch tar, leather, rose, woody notes",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "incense",
+        "dark",
+        "leathery"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Frankincense and birch tar over leather — darker and more ascetic than Encens Suave. Medieval in feel.",
+      "where": "lartisanparfumeur.com"
+    },
+    {
+      "name": "Fleur de Figuier",
+      "house": "Diptyque",
+      "notes": "fig flower, green fig, milky sap, woody notes",
+      "type": "EdT",
+      "tier": "good",
+      "categories": [
+        "green",
+        "floral"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "Fig flower accord — lighter and more floral than Philosykos, which you own. Interesting comparison within the fig family.",
+      "where": "Diptyque Nashville; diptyqueparis.com"
+    },
+    {
+      "name": "Jonquille de Nuit",
+      "house": "Maison Louis Marie",
+      "notes": "jonquil, narcissus, white musk, woods, green notes",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "floral",
+        "green"
       ],
       "wishlist": false,
       "season": [
         "spring"
       ],
-      "profileNote": "The canonical atmospheric violet taken in the darkest most rain-soaked direction."
+      "profileNote": "Narcissus-jonquil — cool and slightly green-floral. A more interesting floral than their typical range.",
+      "where": "maisonlouismarie.com; Credo Beauty"
+    },
+    {
+      "name": "Navitus Marin",
+      "house": "Histoires de Parfums",
+      "notes": "sea air, cedar, mineral, vetiver, musk",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "citrus",
+        "mineralic",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "Marine-mineral over cedarwood — more restrained coastal fragrance than Megamare but with real quality.",
+      "where": "histoiresdeparfums.com; Twisted Lily"
+    },
+    {
+      "name": "Tabac Rouge",
+      "house": "Oriza L. Legrand",
+      "notes": "tobacco, rose, dark woods, incense, amber",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "dark",
+        "resinous"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Belle Époque tobacco-rose — historical style rather than modern. Interesting if you want to explore old-school dark fragrances.",
+      "where": "orizalegrand.fr; Luckyscent"
+    },
+    {
+      "name": "Blue Talisman Extrait",
+      "house": "Rania J",
+      "notes": "iris, violet, amber, oud, sandalwood",
+      "type": "Extrait",
+      "tier": "wildcard",
+      "categories": [
+        "floral",
+        "resinous",
+        "mineralic"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Iris and oud extrait — intensely mineralic-futuristic. Very high bar but remarkable if your skin agrees.",
+      "where": "raniajparis.com; Luckyscent"
+    },
+    {
+      "name": "AO (Antagonist Opus)",
+      "house": "Blackbird",
+      "notes": "smoke, oak, leather, dark florals, ash",
+      "type": "EdP",
+      "tier": "wildcard",
+      "categories": [
+        "dark",
+        "smoky",
+        "leathery"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Pacific Northwest apothecary aesthetic — smoke and oak and dark florals. Very niche but thematically aligned with your sensibility.",
+      "where": "blackbirdballard.com (direct, Seattle)"
     },
     {
       "name": "Anubis",
       "house": "Papillon Artisan Perfumes",
-      "notes": "Jasmine, suede, frankincense, sandalwood, labdanum, pink lotus, immortelle, saffron",
-      "type": "EDP",
+      "notes": "myrrh, incense, saffron, immortelle, labdanum",
+      "type": "EdP",
       "tier": "wildcard",
       "categories": [
-        "floral",
+        "dark",
+        "incense",
+        "resinous"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Ancient Egyptian incense accord — myrrh and immortelle over labdanum. Extreme but relevant to your darkest Nov-Feb rotation.",
+      "where": "papillonperfumery.com (direct)"
+    },
+    {
+      "name": "Lovely Patchouli 55",
+      "house": "Krigler",
+      "notes": "patchouli, amber, bergamot, rose, sandalwood",
+      "type": "EdP",
+      "tier": "wildcard",
+      "categories": [
+        "dark",
+        "resinous"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Heritage patchouli from the Grace Kelly–era house. Historical rarity and genuine quality — not the hippie patchouli you know.",
+      "where": "krigler.com (direct)"
+    },
+    {
+      "name": "Olibanum",
+      "house": "De Grhaal",
+      "notes": "frankincense, green resin, citrus, mineral, wood",
+      "type": "EdP",
+      "tier": "wildcard",
+      "categories": [
+        "incense",
+        "green",
+        "mineralic"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "profileNote": "Pure frankincense study — green and resinous without any church-incense weight. Less accessible than Boswellia Scotia but more extreme.",
+      "where": "degrhaal.com; Luckyscent"
+    },
+    {
+      "name": "Fueguia Patagonia",
+      "house": "Fueguia 1833",
+      "notes": "Patagonian botanicals, lenga beech, cold air, earth, wood",
+      "type": "EdP",
+      "tier": "wildcard",
+      "categories": [
+        "green",
+        "woody",
+        "mineralic"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "Wild Patagonian landscape accord — cold and austere with real botanicals. Among the most expensive and rare green fragrances made.",
+      "where": "fueguia1833.com; select specialty retailers"
+    },
+    {
+      "name": "Absolue de Mousse",
+      "house": "Rogue Perfumery",
+      "notes": "oakmoss, treemoss, myrrh, labdanum",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "green",
+        "resinous",
+        "incense"
+      ],
+      "wishlist": true,
+      "season": [
+        "spring",
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Myrrh and photorealistic green in one bottle — the house calls it resinous, mossy, bitter-green. Single best fit found in the indie deep dive.",
+      "where": "rogueperfumery.com — $85/30ml, ~$156/75ml; discovery set $45"
+    },
+    {
+      "name": "Mousse Illuminée",
+      "house": "Rogue Perfumery",
+      "notes": "treemoss, frankincense, green cypress, artemisia, laurel, cedar, white musk",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "green",
+        "incense",
+        "woody"
+      ],
+      "wishlist": true,
+      "season": [
+        "spring",
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Frankincense over real treemoss. Incense and green at once, and Cross uses restricted naturals so the moss reads as material not accord.",
+      "where": "rogueperfumery.com — $85/30ml, ~$156/75ml; discovery set $45"
+    },
+    {
+      "name": "Mousse Illuminée Grand Cru",
+      "house": "Rogue Perfumery",
+      "notes": "treemoss, frankincense, champaca, rose, absinthe",
+      "type": "Extrait",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "incense",
+        "resinous"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "All-natural 30ml extrait version. Worth comparing against the standard once you know you like the base.",
+      "where": "rogueperfumery.com — $85/30ml, ~$156/75ml; discovery set $45"
+    },
+    {
+      "name": "Targhee Forest",
+      "house": "Rogue Perfumery",
+      "notes": "pine, moist forest soil, moss, amber",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "woody",
+        "mineralic"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Pine over wet forest soil — photorealistic damp-woods green at $85.",
+      "where": "rogueperfumery.com — $85/30ml, ~$156/75ml; discovery set $45"
+    },
+    {
+      "name": "Rostracto",
+      "house": "Rogue Perfumery",
+      "notes": "rose, fir balsam, artemisia, oakmoss, benzoin, charred cedar",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "smoky",
+        "resinous"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Fir balsam and charred cedar over oakmoss. The smoky end of Rogue's green range.",
+      "where": "rogueperfumery.com — $85/30ml, ~$156/75ml; discovery set $45"
+    },
+    {
+      "name": "Derviche",
+      "house": "Rogue Perfumery",
+      "notes": "bergamot, labdanum, vanilla, antique jasmine, olibanum, sandalwood, tobacco",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "resinous",
+        "incense",
+        "dark"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Non-sweet vanilla with olibanum and labdanum. CAUTION: antique jasmine is in it — sample before committing given how jasmine absolute reads on you.",
+      "where": "rogueperfumery.com — $85/30ml, ~$156/75ml; discovery set $45"
+    },
+    {
+      "name": "Holy Cross",
+      "house": "Pineward",
+      "notes": "watercress, common juniper, blue yarrow, mountain bluebell, lodgepole pine, bearded lichen, ambrette seed, wet stone",
+      "type": "EdT",
+      "tier": "essential",
+      "categories": [
+        "green",
+        "mineralic"
+      ],
+      "wishlist": true,
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "profileNote": "Note list reads like a field guide — alpine green plus wet stone. The 2026 release and the clearest photorealistic-green buy on the list.",
+      "where": "pinewardperfume.com — $95/17ml, $150/32ml; 4ml dram $24"
+    },
+    {
+      "name": "Ivymoss",
+      "house": "Pineward",
+      "notes": "climbing ivy, green tea, spearmint, lime rind, lemon verbena, waterlily, emerald cypress, mugo pine, cedarwood, oakmoss, treemoss, cedarmoss",
+      "type": "Extrait",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "citrus"
+      ],
+      "wishlist": true,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "Green tea inside a heavy moss build, and fresher than that sounds. Currently sold out — Pineward rotates seasonally, so watch for the return.",
+      "where": "pinewardperfume.com — $95/17ml, $150/32ml; 4ml dram $24"
+    },
+    {
+      "name": "Boreal",
+      "house": "Pineward",
+      "notes": "pine needles, mint, cedar, resins, oakmoss",
+      "type": "Extrait",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Cold northern conifer, 31% extrait. Reformulated spring 2026 toward more Virginia cedar.",
+      "where": "pinewardperfume.com — $95/17ml, $150/32ml; 4ml dram $24"
+    },
+    {
+      "name": "Tea Service",
+      "house": "Chasing Scents",
+      "notes": "black tea, in-house tea extract, soft woods",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": true,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "Sydney house working with real tea extracts rather than tea accords. Seven fragrances total — the tea specialist your profile was missing.",
+      "where": "chasingscents.com — AUD 160 (~$105); travel spray AUD 55; discovery set AUD 75"
+    },
+    {
+      "name": "Private Teahouse",
+      "house": "Chasing Scents",
+      "notes": "tea, wood, quiet florals",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "woody",
+        "floral"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "The interior-and-wood version of their tea work. Safe pick given your flags.",
+      "where": "chasingscents.com — AUD 160 (~$105); travel spray AUD 55; discovery set AUD 75"
+    },
+    {
+      "name": "Rain Tea",
+      "house": "Chasing Scents",
+      "notes": "tea, petrichor, wet air",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "mineralic"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "Tea crossed with petrichor — tea and the mineralic-wet register you already like together.",
+      "where": "chasingscents.com — AUD 160 (~$105); travel spray AUD 55; discovery set AUD 75"
+    },
+    {
+      "name": "Slow World",
+      "house": "Chasing Scents",
+      "notes": "tea, soft woods, musk",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "all"
+      ],
+      "profileNote": "The quietest of the line. Include in the discovery set rather than buying blind.",
+      "where": "chasingscents.com — AUD 160 (~$105); travel spray AUD 55; discovery set AUD 75"
+    },
+    {
+      "name": "Bitter Melon Lemon Tea",
+      "house": "Chasing Scents",
+      "notes": "bitter melon, lemon, black tea",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "citrus",
+        "green"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "Bitter-green citrus tea. The vegetal bitterness is the interesting part, not the lemon.",
+      "where": "chasingscents.com — AUD 160 (~$105); travel spray AUD 55; discovery set AUD 75"
+    },
+    {
+      "name": "Matcha Break",
+      "house": "Chasing Scents",
+      "notes": "matcha, milk, green tea",
+      "type": "EdP",
+      "tier": "avoid",
+      "categories": [
+        "green"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "RULED OUT unless you retest matcha. Matcha in a starring role has gone skatolic on you before, and this is a matcha-latte concept.",
+      "where": "chasingscents.com — AUD 160 (~$105); travel spray AUD 55; discovery set AUD 75"
+    },
+    {
+      "name": "Lapsang Lover",
+      "house": "Providence Perfume Co",
+      "notes": "lapsang tea tincture, black tea, labdanum, fossilized amber, myrrh, rose, resins, cardamom, honey",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "green",
+        "incense",
+        "resinous",
+        "smoky"
+      ],
+      "wishlist": true,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Tea and myrrh in the same bottle, all natural. Colour comes from repeated steepings and black tea distillation. Start with the $46 roller.",
+      "where": "providenceperfume.com — $200/50ml, 4ml roller $46; samples from $12"
+    },
+    {
+      "name": "Moss Gown",
+      "house": "Providence Perfume Co",
+      "notes": "oakmoss, green notes, soft woods",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "All-natural oakmoss green. Cheap enough to sample alongside Lapsang Lover.",
+      "where": "providenceperfume.com — $200/50ml, 4ml roller $46; samples from $12"
+    },
+    {
+      "name": "Sedona Sweet Grass",
+      "house": "Providence Perfume Co",
+      "notes": "sweet grass, hay, dry green notes",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "green"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "profileNote": "Hay and sweet grass — the dry-pastoral end of green, adjacent to Vetiver Fauve's hay facet.",
+      "where": "providenceperfume.com — $200/50ml, 4ml roller $46; samples from $12"
+    },
+    {
+      "name": "Voyeur Verde",
+      "house": "Maya Njie",
+      "notes": "green notes, herbs, woods, musk",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": true,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "Maya Njie's green entry. Ten fragrances since 2016 — the slowest-releasing house in band.",
+      "where": "mayanjie.com — £105 (~$135)/50ml, £32/7.5ml; discovery set £34"
+    },
+    {
+      "name": "Nordic Cedar",
+      "house": "Maya Njie",
+      "notes": "cedar, dry woods, musk",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Restrained Scandinavian cedar. Quieter than anything in your current rotation.",
+      "where": "mayanjie.com — £105 (~$135)/50ml, £32/7.5ml; discovery set £34"
+    },
+    {
+      "name": "Vanilj",
+      "house": "Maya Njie",
+      "notes": "cardamom, cedarwood, vanilla, patchouli, amber, musk",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "resinous",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Restrained rather than sugary, but it leans powdery and cardamom-bun doughy — not the austere vanilla you are after. Sample before counting it as your non-sweet vanilla.",
+      "where": "mayanjie.com — £105 (~$135)/50ml, £32/7.5ml; discovery set £34"
+    },
+    {
+      "name": "Tobak",
+      "house": "Maya Njie",
+      "notes": "tobacco, dry woods, spice",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "dark",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Dry tobacco. Worth a sample slot in the £34 discovery set rather than its own purchase.",
+      "where": "mayanjie.com — £105 (~$135)/50ml, £32/7.5ml; discovery set £34"
+    },
+    {
+      "name": "Azalai",
+      "house": "Stora Skuggan",
+      "notes": "saffron, blood orange, gum acacia, salty amber, incense, mint tea, dried fruit, velvione musk",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "incense",
+        "resinous",
+        "citrus"
+      ],
+      "wishlist": true,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Incense and mint tea together, built on salty amber. Stora Skuggan releases about one a year — nine total since 2015.",
+      "where": "storaskuggan.com — $150/30ml"
+    },
+    {
+      "name": "Silphium",
+      "house": "Stora Skuggan",
+      "notes": "silphium accord, ancient incense, woods, leather",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "incense",
+        "green",
+        "leathery"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "A reconstruction of an extinct Cyrenian plant set against ancient incense. Conceptually the most interesting thing in the deep dive.",
+      "where": "storaskuggan.com — $150/30ml"
+    },
+    {
+      "name": "Pine",
+      "house": "Stora Skuggan",
+      "notes": "pine, conifer resin, cold air",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Their 2024 conifer. Compare directly against Pineward Boreal to see whose pine you prefer.",
+      "where": "storaskuggan.com — $150/30ml"
+    },
+    {
+      "name": "Incense Extrême",
+      "house": "Tauer Perfumes",
+      "notes": "frankincense, myrrh, orris, dry woods, spices",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "incense",
+        "resinous"
+      ],
+      "wishlist": true,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "The dry frankincense-and-myrrh benchmark — the reference point your myrrh category needs. Tauer builds on his ambreine base — same class of high-dose amber that has given you headaches, so sample first.",
+      "where": "tauerperfumes.com — CHF 117–205 (~$145–195)/50ml; US retail via Luckyscent, Twisted Lily"
+    },
+    {
+      "name": "L'Air du Désert Marocain",
+      "house": "Tauer Perfumes",
+      "notes": "cumin, coriander, petitgrain, cedar, incense, ambergris, vanilla",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "incense",
+        "resinous",
         "dark"
       ],
       "wishlist": true,
@@ -1556,35 +1747,165 @@
         "fall",
         "winter"
       ],
-      "profileNote": "Liz Moores. Test skin reaction before committing \u2014 processed jasmine but still present."
+      "profileNote": "The cult dry incense-amber. Arid rather than sweet, and the closest thing to a canonical text in this category. Tauer builds on his ambreine base — same class of high-dose amber that has given you headaches, so sample first.",
+      "where": "tauerperfumes.com — CHF 117–205 (~$145–195)/50ml; US retail via Luckyscent, Twisted Lily"
     },
     {
-      "name": "Krigler Lovely Patchouli 55",
-      "house": "Krigler",
-      "notes": "Raw Philippine patchouli, earthy green accord",
-      "type": "EDP",
-      "tier": "wildcard",
+      "name": "Incense Rosé",
+      "house": "Tauer Perfumes",
+      "notes": "frankincense, myrrh, rose, spices, woods",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "incense",
+        "floral",
+        "resinous"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Incense Extrême with rose laid over it. Tauer builds on his ambreine base — same class of high-dose amber that has given you headaches, so sample first.",
+      "where": "tauerperfumes.com — CHF 117–205 (~$145–195)/50ml; US retail via Luckyscent, Twisted Lily"
+    },
+    {
+      "name": "Vanilla Absolue",
+      "house": "Tauer Perfumes",
+      "notes": "vanilla absolute, amber, dry woods",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "resinous",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "2025 release and a candidate for the non-sweet vanilla slot — Tauer's vanillas run dry and ambery rather than gourmand. Tauer builds on his ambreine base — same class of high-dose amber that has given you headaches, so sample first.",
+      "where": "tauerperfumes.com — CHF 117–205 (~$145–195)/50ml; US retail via Luckyscent, Twisted Lily"
+    },
+    {
+      "name": "L'Air des Alpes Suisses",
+      "house": "Tauer Perfumes",
+      "notes": "fir balsam, alpine herbs, woods, resins",
+      "type": "EdP",
+      "tier": "good",
       "categories": [
         "green",
-        "earthy"
+        "woody",
+        "resinous"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Tauer's alpine green. Less photorealistic than Pineward but better constructed. Tauer builds on his ambreine base — same class of high-dose amber that has given you headaches, so sample first.",
+      "where": "tauerperfumes.com — CHF 117–205 (~$145–195)/50ml; US retail via Luckyscent, Twisted Lily"
+    },
+    {
+      "name": "Mecca Balsam",
+      "house": "La Via del Profumo",
+      "notes": "frankincense, myrrh, labdanum, balsams, benzoin",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "incense",
+        "resinous"
       ],
       "wishlist": true,
       "season": [
-        "spring",
-        "summer",
-        "fall"
+        "fall",
+        "winter"
       ],
-      "profileNote": "Jackie Kennedy signature. Naturalistic raw patchouli \u2014 earthy not sweet. Sample from krigler.com first."
+      "profileNote": "Balsamic incense, 100% natural, 33ml for €55. Cheapest serious all-natural route into incense and myrrh anywhere.",
+      "where": "naturalnicheperfume.com — most €21–56; 100% natural"
     },
     {
-      "name": "DeGrhaal Olibanum",
-      "house": "DeGrhaal",
-      "notes": "Bergamot, ginger, elemi, incense, cardamom, violet, neroli, ambergris, sandalwood, myrrh, musk",
-      "type": "EDP",
-      "tier": "wildcard",
+      "name": "Oak Moss",
+      "house": "La Via del Profumo",
+      "notes": "oakmoss, green notes, woods",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "Natural oakmoss soliflore-style study at €29. A reference material more than a composition.",
+      "where": "naturalnicheperfume.com — most €21–56; 100% natural"
+    },
+    {
+      "name": "Ihram",
+      "house": "La Via del Profumo",
+      "notes": "frankincense, sandalwood, musk",
+      "type": "EdP",
+      "tier": "good",
       "categories": [
         "incense",
-        "citrus"
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Clean frankincense and sandalwood. The quiet, devotional end of the incense range.",
+      "where": "naturalnicheperfume.com — most €21–56; 100% natural"
+    },
+    {
+      "name": "Ummagumma Extra",
+      "house": "FZOTIC",
+      "notes": "incense, dark chocolate, woods",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "incense",
+        "dark"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Incense against dark chocolate. Fazzolari is a painter first and the compositions are odd in a good way.",
+      "where": "fzotic.com — from $58 (house rebranded from Bruno Fazzolari)"
+    },
+    {
+      "name": "Vetiverissimo",
+      "house": "FZOTIC",
+      "notes": "vetiver, cedar, modern spice",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "Clean modern vetiver at $58. Cheap enough to be a low-risk test of the house.",
+      "where": "fzotic.com — from $58 (house rebranded from Bruno Fazzolari)"
+    },
+    {
+      "name": "Ghost Pine",
+      "house": "Lvnea",
+      "notes": "pine needles, resin-streaked bark, cold mountain air, leaf litter, twisted roots, wet mossy earth",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "green",
+        "woody",
+        "mineralic"
       ],
       "wishlist": true,
       "season": [
@@ -1592,7 +1913,117 @@
         "winter",
         "spring"
       ],
-      "profileNote": "2024. Ginger-elemi opening over myrrh-ambergris base. Test neroli on skin given orange blossom sensitivity."
+      "profileNote": "The cheapest photorealistic boreal green you will find, at $103 with $9 samples. Resin and wet earth rather than air-freshener pine.",
+      "where": "lvnea.com — $103/30ml, $9 sample"
+    },
+    {
+      "name": "Vanilla Smoke",
+      "house": "Aftelier",
+      "notes": "Madagascar vanilla absolute, tea smoked over pine, Siam wood, saffron, ambergris",
+      "type": "EdP",
+      "tier": "essential",
+      "categories": [
+        "resinous",
+        "smoky",
+        "woody"
+      ],
+      "wishlist": true,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Non-sweet vanilla and tea in the same bottle — the best version of that combination for your profile. $220/30ml is over band; the $8 sample is not.",
+      "where": "aftelier.com — $220/30ml, $8 sample (1ml)"
+    },
+    {
+      "name": "Fig",
+      "house": "Perfumer H",
+      "notes": "fig sap, fig leaves, rose, Atlas cedarwood, black pepper, frankincense",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "green",
+        "incense",
+        "floral"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "profileNote": "Fig over frankincense — the only thing found that serves two of your six profiles at once. $240 is over band; the 100ml refill is better per ml.",
+      "where": "perfumerh.com — $240/50ml; 100ml refill cheaper per ml"
+    },
+    {
+      "name": "Premier Figuier",
+      "house": "L'Artisan Parfumeur",
+      "notes": "fig leaf, fig milk, green almond, coconut, sandalwood",
+      "type": "EdT",
+      "tier": "strong",
+      "categories": [
+        "green"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "Giacobetti's other fig and the one remaining fig benchmark worth owning alongside Philosykos. Indie has no real answer to it under $200.",
+      "where": "lartisanparfumeur.com; Twisted Lily (sample)"
+    },
+    {
+      "name": "Wildly Fig",
+      "house": "Régime des Fleurs",
+      "notes": "fig, green notes, woods",
+      "type": "EdP",
+      "tier": "wildcard",
+      "categories": [
+        "green"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "New 2026 fig release. Price not verified against the house's own site — sample before trusting it.",
+      "where": "regimedesfleurs.com — price unverified"
+    },
+    {
+      "name": "Fig Infusion",
+      "house": "Essential Parfums",
+      "notes": "fig, mandarin, clementine, freesia, orange blossom, Sri Lankan black tea, cedarwood, sandalwood, benzoin",
+      "type": "EdP",
+      "tier": "avoid",
+      "categories": [
+        "green",
+        "citrus"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "RULED OUT. In band at €94/100ml and fig plus black tea on paper, but orange blossom sits in the heart and that has read as urine on you. Also commonly miscredited to Giacobetti — it is Nathalie Lorson.",
+      "where": "essentialparfums.com — €94/100ml (avoid: orange blossom)"
+    },
+    {
+      "name": "Lust in Paradise",
+      "house": "Ex Nihilo",
+      "notes": "pink pepper, peony, litchi, Petalia, musk, white cedar extract, amber",
+      "type": "EdP",
+      "tier": "avoid",
+      "categories": [
+        "floral",
+        "citrus"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "profileNote": "RULED OUT. Three separate conflicts: litchi is built on the same sulfurous fruity family as blackcurrant and buchu, which turn sour on you, and reviewers independently report a sour drydown; Petalia is a synthetic peony captive that one reviewer reads as cat pee, the same failure mode as orange blossom and tuberose; and the white-musk-plus-amber base is the high-dose synthetic amber that triggers headaches. Also $265/50ml, over band, from a fast-release house.",
+      "where": "AVOID — $265/50ml, $385/100ml (zgoperfumery.com). Over band and over-flagged."
     }
   ]
 }
