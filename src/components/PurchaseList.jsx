@@ -1,7 +1,12 @@
 import { useState, useMemo } from "react";
 import { PAL, ff } from "../constants.js";
-import { FAMILY_COLORS, getNoteFamily } from "../noteCategories.js";
+import {
+  FAMILY_COLORS, FAMILY_LABELS, FAMILY_ORDER, getNoteFamily,
+  computeFamilyProfile, scoreGapFill, findNearestOwned, gapVerdict,
+} from "../noteCategories.js";
 import { SectionTitle } from "./ui.jsx";
+
+const TONE = { good: PAL.sage, warn: PAL.gold, bad: PAL.rose, neutral: PAL.muted };
 
 const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData }) => {
   const [sortBy, setSortBy] = useState("priority");
@@ -11,16 +16,30 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
   const [dragOverIdx, setDragOverIdx] = useState(null);
   const [editingRank, setEditingRank] = useState(null);
   const [rankInput, setRankInput] = useState("");
+  const [selectedId, setSelectedId] = useState(null);
 
   const inputCss = { background: "rgba(201,186,155,0.06)", border: `1px solid ${PAL.border}`, borderRadius: 6, padding: "8px 10px", color: PAL.cream, fontFamily: ff.body, fontSize: 12, outline: "none", width: "100%", boxSizing: "border-box" };
+
+  /* What the owned collection looks like by family — the yardstick every
+     candidate below is measured against. */
+  const familyProfile = useMemo(() => computeFamilyProfile(bottles, noteOverrides), [bottles, noteOverrides]);
 
   const items = useMemo(() => {
     const wishlist = bottles.filter(b => b.status === "wishlist" && b.name.trim());
     return wishlist.map((b, i) => {
       const saved = (purchaseData || {})[b.name] || {};
-      return { ...b, id: b.name, priority: saved.priority ?? i + 1, whereToBuy: saved.whereToBuy || "", budgetNote: saved.budgetNote || "", purchaseNotes: saved.purchaseNotes || "", purchased: saved.purchased || false, notes: (b.userNotes || "").split(",").map(n => n.trim()).filter(Boolean) };
+      const { gap, fams } = scoreGapFill(b, familyProfile.shares, noteOverrides);
+      const nearest = findNearestOwned(b, bottles, 3, noteOverrides);
+      return {
+        ...b, id: b.name,
+        priority: saved.priority ?? i + 1,
+        whereToBuy: saved.whereToBuy || "", budgetNote: saved.budgetNote || "",
+        purchaseNotes: saved.purchaseNotes || "", purchased: saved.purchased || false,
+        notes: (b.userNotes || "").split(",").map(n => n.trim()).filter(Boolean),
+        gap, fams, nearest, verdict: gapVerdict(gap, nearest, fams),
+      };
     });
-  }, [bottles, purchaseData]);
+  }, [bottles, purchaseData, familyProfile, noteOverrides]);
 
   const sorted = useMemo(() => {
     const active = items.filter(i => !i.purchased), done = items.filter(i => i.purchased);
@@ -29,8 +48,18 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
     else if (sortBy === "cost-low") list.sort((a, b) => (a.cost || 0) - (b.cost || 0));
     else if (sortBy === "cost-high") list.sort((a, b) => (b.cost || 0) - (a.cost || 0));
     else if (sortBy === "name") list.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortBy === "gap") list.sort((a, b) => b.gap - a.gap);
     return { active: list, done };
   }, [items, sortBy]);
+
+  const selected = useMemo(() => items.find(i => i.id === selectedId) || null, [items, selectedId]);
+
+  /* The three families the collection is most saturated in — context for
+     reading any single candidate's meters. */
+  const topFamilies = useMemo(() => FAMILY_ORDER
+    .map(f => ({ family: f, share: familyProfile.shares[f] || 0 }))
+    .sort((a, b) => b.share - a.share)
+    .slice(0, 3), [familyProfile]);
 
   const totalCost = sorted.active.reduce((s, i) => s + (i.cost || 0), 0);
   const updateItem = (name, updates) => setPurchaseData(prev => ({ ...prev, [name]: { ...(prev?.[name] || {}), ...updates } }));
@@ -103,7 +132,7 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
       )}
 
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
-        {[{k:"priority",l:"Priority"},{k:"cost-low",l:"Cost ↑"},{k:"cost-high",l:"Cost ↓"},{k:"name",l:"A-Z"}].map(s => (
+        {[{k:"priority",l:"Priority"},{k:"gap",l:"Fills a Gap"},{k:"cost-low",l:"Cost ↑"},{k:"cost-high",l:"Cost ↓"},{k:"name",l:"A-Z"}].map(s => (
           <button key={s.k} onClick={() => setSortBy(s.k)} style={{
             background: sortBy === s.k ? `${PAL.gold}14` : "transparent",
             border: `1px solid ${sortBy === s.k ? PAL.gold + "44" : PAL.border}`,
@@ -112,7 +141,8 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
         ))}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+      <div style={{ flex: "1 1 440px", minWidth: 290, display: "flex", flexDirection: "column", gap: 8 }}>
         {sorted.active.map((item, visualIdx) => {
           const isEditing = editingId === item.id;
           return (
@@ -155,6 +185,10 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <span style={{ fontFamily: ff.display, fontSize: 18, fontStyle: "italic" }}>{item.name}</span>
                     {item.house && <span style={{ fontSize: 12, color: PAL.muted }}>— {item.house}</span>}
+                    {item.verdict && item.verdict.key !== "unknown" && (
+                      <span title={`Its families make up ${(item.verdict.saturation || 0).toFixed(0)}% of what you own`}
+                        style={{ fontSize: 8, letterSpacing: 1, textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, whiteSpace: "nowrap", color: TONE[item.verdict.tone], background: `${TONE[item.verdict.tone]}12`, border: `1px solid ${TONE[item.verdict.tone]}33` }}>{item.verdict.label}</span>
+                    )}
                   </div>
                   {item.notes.length > 0 && (
                     <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 6 }}>
@@ -169,6 +203,15 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
                   {item.ml > 0 && item.cost > 0 && <div style={{ fontSize: 10, color: PAL.muted }}>{item.ml}mL · ${(item.cost / item.ml).toFixed(2)}/mL</div>}
                   {item.whereToBuy && <div style={{ fontSize: 9, color: PAL.sage, marginTop: 2 }}>📍 {item.whereToBuy}</div>}
                 </div>
+                <button onClick={e => { e.stopPropagation(); setSelectedId(selectedId === item.id ? null : item.id); }}
+                  title="Show how this fits your collection"
+                  style={{
+                    width: 28, height: 28, borderRadius: 8, flexShrink: 0, cursor: "pointer",
+                    background: selectedId === item.id ? `${PAL.gold}1e` : "transparent",
+                    border: `1px solid ${selectedId === item.id ? PAL.gold + "66" : PAL.border}`,
+                    color: selectedId === item.id ? PAL.gold : PAL.muted,
+                    fontFamily: ff.body, fontSize: 13, lineHeight: 1, padding: 0,
+                  }}>◴</button>
                 <div onClick={() => updateItem(item.name, { purchased: true })}
                   style={{ width: 28, height: 28, borderRadius: 14, border: `2px solid ${PAL.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
                   title="Mark purchased" />
@@ -200,6 +243,112 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
             </div>
           );
         })}
+      </div>
+
+      {/* ─── COVERAGE PANEL ─────────────────────────────────────────────
+          What this candidate fills, and what it already resembles. Only the
+          families it actually contains — the full 12-family picture lives in
+          the bubble chart, and a number belongs in one place. */}
+      <div style={{ flex: "0 1 318px", minWidth: 270, position: "sticky", top: 12 }}>
+        {!selected ? (
+          <div style={{ background: `${PAL.cream}03`, border: `1px dashed ${PAL.border}`, borderRadius: 14, padding: "22px 18px", textAlign: "center" }}>
+            <div style={{ fontSize: 20, opacity: .35, marginBottom: 8 }}>◴</div>
+            <p style={{ fontFamily: ff.body, fontSize: 11, color: PAL.muted, margin: 0, lineHeight: 1.6 }}>
+              Pick the ◴ on any row to see which family it fills and what it's closest to in your collection.
+            </p>
+            {familyProfile.ownedCount > 0 && (
+              <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${PAL.border}`, textAlign: "left" }}>
+                <div style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, marginBottom: 8 }}>Your collection leans</div>
+                {topFamilies.map(({ family, share }) => (
+                  <div key={family} style={{ marginBottom: 7 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: PAL.cream, marginBottom: 3 }}>
+                      <span>{FAMILY_LABELS[family] || family}</span>
+                      <span style={{ color: PAL.muted }}>{share.toFixed(0)}%</span>
+                    </div>
+                    <div style={{ height: 5, borderRadius: 3, background: `${FAMILY_COLORS[family]}1e`, overflow: "hidden" }}>
+                      <div style={{ width: `${Math.min(100, (share / (topFamilies[0].share || 1)) * 100)}%`, height: "100%", borderRadius: 3, background: FAMILY_COLORS[family] }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ background: `${PAL.cream}04`, border: `1px solid ${PAL.border}`, borderRadius: 14, padding: "16px 18px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+              <div>
+                <div style={{ fontFamily: ff.display, fontSize: 17, fontStyle: "italic", color: PAL.cream, lineHeight: 1.2 }}>{selected.name}</div>
+                {selected.house && <div style={{ fontSize: 10, color: PAL.muted, marginTop: 2 }}>{selected.house}</div>}
+              </div>
+              <button onClick={() => setSelectedId(null)} style={{ background: "transparent", border: "none", color: PAL.muted, fontSize: 15, cursor: "pointer", lineHeight: 1, padding: 0 }}>×</button>
+            </div>
+
+            {/* Verdict — the headline, with the number behind it */}
+            {selected.verdict && (
+              <div style={{ marginTop: 14, padding: "10px 12px", borderRadius: 10, background: `${TONE[selected.verdict.tone]}0e`, border: `1px solid ${TONE[selected.verdict.tone]}33` }}>
+                <div style={{ fontFamily: ff.display, fontSize: 16, color: TONE[selected.verdict.tone] }}>{selected.verdict.label}</div>
+                <div style={{ fontSize: 10, color: PAL.muted, marginTop: 3, lineHeight: 1.5 }}>
+                  {selected.verdict.key === "duplicate"
+                    ? `${Math.round((selected.nearest[0]?.overlap || 0) * 100)}% note overlap with ${selected.nearest[0]?.name}`
+                    : selected.verdict.key === "unknown"
+                      ? "Add notes to this bottle to score it"
+                      : `Its families are ${(selected.verdict.saturation || 0).toFixed(0)}% of what you own`}
+                </div>
+              </div>
+            )}
+
+            {/* Saturation meters — one per family this candidate contains */}
+            {selected.fams.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, marginBottom: 9 }}>
+                  How full you already are
+                </div>
+                {selected.fams.map(({ family, weight, share }) => {
+                  const scale = topFamilies[0]?.share || 100;
+                  return (
+                    <div key={family} style={{ marginBottom: 11 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, gap: 6 }}>
+                        <span style={{ fontSize: 11, color: PAL.cream }}>{FAMILY_LABELS[family] || family}</span>
+                        <span style={{ fontSize: 9, color: PAL.muted, whiteSpace: "nowrap" }}>
+                          {Math.round(weight * 100)}% of this · you own {share.toFixed(0)}%
+                        </span>
+                      </div>
+                      <div style={{ height: 6, borderRadius: 3, background: `${FAMILY_COLORS[family]}1e`, overflow: "hidden" }}
+                        title={`${FAMILY_LABELS[family] || family} is ${share.toFixed(1)}% of your owned collection`}>
+                        <div style={{ width: `${Math.min(100, (share / scale) * 100)}%`, height: "100%", borderRadius: 3, background: FAMILY_COLORS[family] }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                <div style={{ fontSize: 9, color: PAL.muted, marginTop: -2, lineHeight: 1.5 }}>
+                  Full bar = {(topFamilies[0]?.share || 0).toFixed(0)}%, your most saturated family
+                  {topFamilies[0] ? ` (${FAMILY_LABELS[topFamilies[0].family] || topFamilies[0].family})` : ""}
+                </div>
+              </div>
+            )}
+
+            {/* Nearest owned — a short list, not a chart */}
+            <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${PAL.border}` }}>
+              <div style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, marginBottom: 9 }}>
+                Closest in your collection
+              </div>
+              {selected.nearest.length === 0 ? (
+                <p style={{ fontSize: 10, color: PAL.muted, margin: 0, lineHeight: 1.5 }}>Nothing you own shares a note with this — genuinely new territory.</p>
+              ) : selected.nearest.map(n => (
+                <div key={n.name} style={{ marginBottom: 9 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6 }}>
+                    <span style={{ fontSize: 11, color: PAL.cream, fontStyle: "italic", fontFamily: ff.display }}>{n.name}</span>
+                    <span style={{ fontSize: 11, fontFamily: ff.display, color: n.overlap >= 0.5 ? PAL.rose : PAL.muted, whiteSpace: "nowrap" }}>{Math.round(n.overlap * 100)}%</span>
+                  </div>
+                  {n.shared.length > 0 && (
+                    <div style={{ fontSize: 9, color: PAL.muted, marginTop: 2 }}>shares {n.shared.slice(0, 4).join(", ")}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
       </div>
 
       {sorted.done.length > 0 && (

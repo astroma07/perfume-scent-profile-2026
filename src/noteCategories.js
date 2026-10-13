@@ -146,6 +146,101 @@ export function scoreFragranceFit(bottle, ownedBottles, notesProfile) {
   return { score: Math.min(100, Math.round(score)), matchedNotes: [...new Set(matchedNotes)], reason: reasons.length > 0 ? reasons[0] : "Expand your horizons", isWildcard: score < 20 };
 }
 
+/* ─── Purchase prioritization: family coverage, gaps and neighbours ───
+   These answer two questions about a wishlist candidate: which family it
+   fills, and what it already resembles in the collection. */
+
+const splitNotes = (b) => (b.userNotes || "").split(",").map(n => n.trim().toLowerCase()).filter(Boolean);
+
+/* A bottle's family makeup as fractions summing to 1. */
+export function familyBreakdown(bottle, overrides) {
+  const notes = splitNotes(bottle);
+  if (notes.length === 0) return [];
+  const counts = {};
+  notes.forEach(n => { const f = getNoteFamily(n, overrides); counts[f] = (counts[f] || 0) + 1; });
+  return Object.entries(counts)
+    .map(([family, c]) => ({ family, weight: c / notes.length }))
+    .sort((a, b) => b.weight - a.weight);
+}
+
+/* What the owned collection actually looks like by family, as percentages.
+   Weighted by wear frequency so daily drivers count more than shelf sitters. */
+export function computeFamilyProfile(bottles, overrides) {
+  const owned = (bottles || []).filter(b => isValidBottle(b) && b.status === "owned");
+  const acc = {};
+  let total = 0;
+  owned.forEach(b => {
+    const freqWeight = 1 + Math.min((b.freq || 0) * 0.15, 2);
+    familyBreakdown(b, overrides).forEach(({ family, weight }) => {
+      const add = weight * freqWeight;
+      acc[family] = (acc[family] || 0) + add;
+      total += add;
+    });
+  });
+  const shares = {};
+  FAMILY_ORDER.forEach(f => { shares[f] = total > 0 ? ((acc[f] || 0) / total) * 100 : 0; });
+  return { shares, total, ownedCount: owned.length };
+}
+
+/* Positive when a candidate leans into families the collection is short on,
+   negative when it piles onto saturated ones. Measured against an even
+   spread across the 12 families. */
+export function scoreGapFill(bottle, shares, overrides) {
+  const fams = familyBreakdown(bottle, overrides);
+  if (fams.length === 0) return { gap: 0, fams: [], verdict: "unknown" };
+  const even = 100 / Object.keys(FAMILY_LABELS).length;
+  let gap = 0;
+  const detail = fams.map(({ family, weight }) => {
+    const share = shares?.[family] ?? 0;
+    gap += weight * (even - share);
+    return { family, weight, share };
+  });
+  return { gap, fams: detail };
+}
+
+/* Closest things already owned, by shared-note overlap (Jaccard). */
+export function findNearestOwned(bottle, bottles, limit = 3, overrides) {
+  const candidate = new Set(splitNotes(bottle));
+  if (candidate.size === 0) return [];
+  const owned = (bottles || []).filter(b => isValidBottle(b) && b.status === "owned" && b.name !== bottle.name);
+  return owned
+    .map(o => {
+      const theirs = new Set(splitNotes(o));
+      const shared = [...candidate].filter(n => theirs.has(n));
+      const unionSize = new Set([...candidate, ...theirs]).size;
+      return {
+        name: o.name,
+        house: o.house || "",
+        overlap: unionSize > 0 ? shared.length / unionSize : 0,
+        shared,
+      };
+    })
+    .filter(r => r.overlap > 0)
+    .sort((a, b) => b.overlap - a.overlap)
+    .slice(0, limit);
+}
+
+/* One label for the whole picture.
+
+   The verdict reads off how saturated the candidate's own families already
+   are — a directly interpretable number ("its main family is 26% of what you
+   own") rather than a distance from an even 12-family spread, which no real
+   collection resembles and which labelled three quarters of a wishlist
+   "saturated". A high-overlap neighbour outranks the family maths: a
+   near-duplicate is a near-duplicate however rare its family. */
+export function gapVerdict(gap, nearest, fams) {
+  const top = nearest?.[0]?.overlap ?? 0;
+  if (top >= 0.5) return { key: "duplicate", label: "Near-duplicate", tone: "bad" };
+  if (!fams || fams.length === 0) return { key: "unknown", label: "No notes yet", tone: "neutral" };
+
+  /* Share of the collection already occupied by this candidate's families,
+     weighted by how much of the candidate each one is. */
+  const weighted = fams.reduce((s, f) => s + f.weight * f.share, 0);
+  if (weighted < 7) return { key: "gap", label: "Fills a gap", tone: "good", saturation: weighted };
+  if (weighted > 14) return { key: "saturated", label: "Doubles down", tone: "warn", saturation: weighted };
+  return { key: "balanced", label: "Balanced", tone: "neutral", saturation: weighted };
+}
+
 export const DEFAULT_OPPOSING = [
   ["citrus", "smoky"],
   ["floral", "earthy"],
