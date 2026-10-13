@@ -55,7 +55,7 @@ Be conversational, warm, and specific. Reference their collection when relevant.
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          max_tokens: 1000,
+          max_tokens: 2000,
           system: buildContext(),
           messages: history.map(m => ({ role: m.role, content: m.content })),
         }),
@@ -69,7 +69,20 @@ Be conversational, warm, and specific. Reference their collection when relevant.
         return;
       }
 
-      const reply = data.content?.map(c => c.text || "").join("") || "Sorry, I couldn't generate a response.";
+      /* The proxy normalizes the response to { text, stop_reason, ... }.
+         An empty text means the call succeeded but produced nothing
+         readable — say why rather than apologizing vaguely. */
+      let reply = (data.text || "").trim();
+      if (!reply) {
+        const why = {
+          max_tokens: "The reply hit the length limit before any text came back. Try a shorter question, or raise max_tokens.",
+          refusal: "The model declined to answer that one.",
+          pause_turn: "The response was paused mid-turn. Send the message again.",
+          model_context_window_exceeded: "Your collection is too large to send as context. Trim some entries or shorten the notes.",
+        }[data.stop_reason];
+        reply = why
+          || `No response text came back (stop_reason: ${data.stop_reason || "unknown"}${data.block_types?.length ? `, blocks: ${data.block_types.join(", ")}` : ""}).`;
+      }
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
       setMessages(prev => [...prev, { role: "assistant", content: `Error: ${err.message}. Check that /api/advisor is deployed and ANTHROPIC_API_KEY is set.` }]);
