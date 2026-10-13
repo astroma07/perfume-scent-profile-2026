@@ -255,7 +255,15 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap,
             {/* Find Similar button */}
             {frag._source === "fragrantica" && frag.notes.length === 0 && frag._slug && (
               <button onClick={async () => {
-                const url = `https://www.fragrantica.com/perfume/${frag._slug}.html`;
+                /* Fragrantica perfume pages are /perfume/<Brand>/<Name>-<id>.html.
+                   Search slugs usually omit the trailing id, and without it the
+                   page 404s, so append it when it isn't already there. */
+                const slug = (frag._slug || "").replace(/\.html$/, "");
+                if (!/-\d+$/.test(slug) && !frag._id) {
+                  setApiError(`Can't load notes for "${frag.name}" — the search result didn't include a Fragrantica id, and the page URL needs one.`);
+                  return;
+                }
+                const url = `https://www.fragrantica.com/perfume/${/-\d+$/.test(slug) ? slug : `${slug}-${frag._id}`}.html`;
                 try {
                   const res = await fetch(`/api/fragrantica?endpoint=details&url=${encodeURIComponent(url)}`);
                   const data = await res.json();
@@ -285,7 +293,12 @@ const DiscoverTab = ({ bottles, setBottles, rankedWishlist, vibeMap, setVibeMap,
                       setApiError(`Notes loaded but empty. Raw keys: ${Object.keys(d).join(", ")}`);
                     }
                   } else {
-                    setApiError(`Load Notes failed (${res.status}): ${JSON.stringify(data).slice(0, 200)}`);
+                    const upstream = data?.error?.upstream_status_code;
+                    setApiError(
+                      upstream === 404
+                        ? `Fragrantica has no page at ${url} — the search result's id looks wrong or the perfume was removed.`
+                        : `Load Notes failed (${res.status}): ${data?.error?.message || JSON.stringify(data).slice(0, 200)}`
+                    );
                   }
                 } catch (e) {
                   setApiError(`Load Notes error: ${e.message}`);
