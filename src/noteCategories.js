@@ -241,6 +241,105 @@ export function gapVerdict(gap, nearest, fams) {
   return { key: "balanced", label: "Balanced", tone: "neutral", saturation: weighted };
 }
 
+/* ─── Purchase ranking: value, match and uniqueness ───
+   Three deliberately independent axes. They disagree on purpose — a
+   near-twin of a favourite scores high on match and low on uniqueness —
+   and the UI shows all three rather than collapsing them into one number.
+
+   All of these read userNotes, not the NOTE_TO_FRAGRANCES name lookup that
+   scoreFragranceFit uses: that table holds a few dozen fragrances, so it
+   returns an identical floor score for most of a real wishlist. */
+
+/* Price per millilitre, or null when either figure is missing. */
+export function pricePerMl(bottle) {
+  const cost = Number(bottle?.cost) || 0;
+  const ml = Number(bottle?.ml) || 0;
+  if (cost <= 0 || ml <= 0) return null;
+  return cost / ml;
+}
+
+/* 0–100, cheapest per-mL in the list scoring 100. Relative to the list
+   rather than an absolute price, so it stays meaningful whatever the band. */
+export function scoreValue(bottle, allBottles) {
+  const ppm = pricePerMl(bottle);
+  if (ppm === null) return null;
+  const rates = (allBottles || []).map(pricePerMl).filter(r => r !== null);
+  if (rates.length === 0) return null;
+  const best = Math.min(...rates), worst = Math.max(...rates);
+  if (worst === best) return 100;
+  return Math.round((1 - (ppm - best) / (worst - best)) * 100);
+}
+
+/* 0–100: how much this looks like what she already wears. Blends affinity
+   with her weighted note profile, family-mix similarity, and concrete
+   note overlap with owned bottles. */
+export function scoreCollectionMatch(bottle, bottles, notesProfile, shares, overrides) {
+  const notes = splitNotes(bottle);
+  if (notes.length === 0) return { score: null, reason: "No notes yet" };
+
+  /* 1. Affinity with the top-note profile. */
+  const profile = {};
+  (notesProfile || []).forEach(n => { profile[n.name.toLowerCase()] = n.pct; });
+  const matched = notes.filter(n => profile[n]);
+  const profileHit = matched.reduce((s, n) => s + profile[n], 0);
+  const profileMax = Object.values(profile).slice(0, notes.length).reduce((s, v) => s + v, 0) || 1;
+  const affinity = Math.min(1, profileHit / profileMax);
+
+  /* 2. Family-mix similarity against the collection's distribution. */
+  const fams = familyBreakdown(bottle, overrides);
+  const totalShare = Object.values(shares || {}).reduce((s, v) => s + v, 0) || 1;
+  const famSim = fams.reduce((s, f) => s + f.weight * ((shares?.[f.family] || 0) / totalShare), 0) * Object.keys(FAMILY_LABELS).length;
+
+  /* 3. Strongest concrete overlap with something owned. */
+  const nearest = findNearestOwned(bottle, bottles, 1, overrides);
+  const overlap = nearest[0]?.overlap || 0;
+
+  const score = Math.round(Math.min(100, (0.45 * affinity + 0.35 * Math.min(1, famSim) + 0.20 * Math.min(1, overlap * 2)) * 100));
+  const reason = matched.length
+    ? `Shares ${matched.slice(0, 3).join(", ")} with your profile`
+    : nearest[0]
+      ? `Closest to ${nearest[0].name}`
+      : "Little in common with your collection";
+  return { score, reason, matched, nearest: nearest[0] || null };
+}
+
+/* 0–100: how unlike everything owned. High gap plus nothing close.
+   Gap alone isn't enough — a bottle can fill an empty family and still be
+   a near-twin of something on the shelf. */
+export function scoreUniqueness(bottle, bottles, shares, overrides) {
+  const notes = splitNotes(bottle);
+  if (notes.length === 0) return { score: null, reason: "No notes yet" };
+
+  const { gap, fams } = scoreGapFill(bottle, shares, overrides);
+  const nearest = findNearestOwned(bottle, bottles, 1, overrides);
+  const overlap = nearest[0]?.overlap || 0;
+
+  /* Gap runs roughly -11..+4 on a real collection; map onto 0..1. */
+  const gapNorm = Math.max(0, Math.min(1, (gap + 11) / 15));
+  const distinct = 1 - Math.min(1, overlap * 2);
+
+  const score = Math.round((0.5 * gapNorm + 0.5 * distinct) * 100);
+  /* Name the family driving this bottle's gap — its own weight times how
+     scarce it is — rather than the collection's rarest family overall,
+     which would give every candidate the same sentence. */
+  const even = 100 / Object.keys(FAMILY_LABELS).length;
+  const rarest = fams.length
+    ? fams.slice().sort((a, b) => (b.weight * (even - b.share)) - (a.weight * (even - a.share)))[0]
+    : null;
+  /* The sentence has to agree with the score: naming a scarce family under
+     a low score reads as a pitch for something the number is arguing
+     against. Below the midpoint, say what makes it familiar instead. */
+  const heaviest = fams.length
+    ? fams.slice().sort((a, b) => (b.weight * b.share) - (a.weight * a.share))[0]
+    : null;
+  let reason;
+  if (overlap >= 0.5) reason = `Close twin of ${nearest[0].name}`;
+  else if (score < 45 && heaviest) reason = `Leans ${FAMILY_LABELS[heaviest.family] || heaviest.family}, already ${heaviest.share.toFixed(0)}% of your collection`;
+  else if (rarest) reason = `${FAMILY_LABELS[rarest.family] || rarest.family} is only ${rarest.share.toFixed(0)}% of your collection`;
+  else reason = "Nothing comparable owned";
+  return { score, reason, overlap, nearest: nearest[0] || null };
+}
+
 export const DEFAULT_OPPOSING = [
   ["citrus", "smoky"],
   ["floral", "earthy"],

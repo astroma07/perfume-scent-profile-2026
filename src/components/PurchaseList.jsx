@@ -3,6 +3,7 @@ import { PAL, ff } from "../constants.js";
 import {
   FAMILY_COLORS, FAMILY_LABELS, FAMILY_ORDER, getNoteFamily,
   computeFamilyProfile, scoreGapFill, findNearestOwned, gapVerdict,
+  computeNotesProfile, scoreValue, scoreCollectionMatch, scoreUniqueness, pricePerMl,
 } from "../noteCategories.js";
 import { SectionTitle } from "./ui.jsx";
 
@@ -24,9 +25,12 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
      candidate below is measured against. */
   const familyProfile = useMemo(() => computeFamilyProfile(bottles, noteOverrides), [bottles, noteOverrides]);
 
+  /* Weighted note profile — what the match score measures affinity against. */
+  const notesProfile = useMemo(() => computeNotesProfile(bottles, []), [bottles]);
+
   const items = useMemo(() => {
     const wishlist = bottles.filter(b => b.status === "wishlist" && b.name.trim());
-    return wishlist.map((b, i) => {
+    const base = wishlist.map((b, i) => {
       const saved = (purchaseData || {})[b.name] || {};
       const { gap, fams } = scoreGapFill(b, familyProfile.shares, noteOverrides);
       const nearest = findNearestOwned(b, bottles, 3, noteOverrides);
@@ -37,9 +41,15 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
         purchaseNotes: saved.purchaseNotes || "", purchased: saved.purchased || false,
         notes: (b.userNotes || "").split(",").map(n => n.trim()).filter(Boolean),
         gap, fams, nearest, verdict: gapVerdict(gap, nearest, fams),
+        ppm: pricePerMl(b),
+        match: scoreCollectionMatch(b, bottles, notesProfile, familyProfile.shares, noteOverrides),
+        unique: scoreUniqueness(b, bottles, familyProfile.shares, noteOverrides),
       };
     });
-  }, [bottles, purchaseData, familyProfile, noteOverrides]);
+    /* Value is relative to the rest of the list, so it needs the whole set. */
+    const wishOnly = base.filter(i => !i.purchased);
+    return base.map(i => ({ ...i, value: scoreValue(i, wishOnly) }));
+  }, [bottles, purchaseData, familyProfile, notesProfile, noteOverrides]);
 
   const sorted = useMemo(() => {
     const active = items.filter(i => !i.purchased), done = items.filter(i => i.purchased);
@@ -49,8 +59,31 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
     else if (sortBy === "cost-high") list.sort((a, b) => (b.cost || 0) - (a.cost || 0));
     else if (sortBy === "name") list.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === "gap") list.sort((a, b) => b.gap - a.gap);
+    else if (sortBy === "value") list.sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
+    else if (sortBy === "match") list.sort((a, b) => (b.match.score ?? -1) - (a.match.score ?? -1));
+    else if (sortBy === "unique") list.sort((a, b) => (b.unique.score ?? -1) - (a.unique.score ?? -1));
     return { active: list, done };
   }, [items, sortBy]);
+
+  /* One top pick per axis. They are meant to differ — a near-twin of a
+     favourite wins on match and loses on uniqueness — so each is shown
+     separately rather than folded into a single ranking. */
+  const picks = useMemo(() => {
+    const live = items.filter(i => !i.purchased);
+    const best = (fn) => live.reduce((top, i) => {
+      const v = fn(i);
+      if (v === null || v === undefined) return top;
+      return !top || v > fn(top) ? i : top;
+    }, null);
+    return [
+      { key: "value", label: "Best Value", sort: "value", item: best(i => i.value),
+        detail: (i) => i.ppm ? `$${i.ppm.toFixed(2)}/mL · ${i.ml}mL` : "", color: PAL.sage },
+      { key: "match", label: "Best Match", sort: "match", item: best(i => i.match.score),
+        detail: (i) => i.match.reason, color: PAL.gold },
+      { key: "unique", label: "Most Unique", sort: "unique", item: best(i => i.unique.score),
+        detail: (i) => i.unique.reason, color: "#c49bd4" },
+    ];
+  }, [items]);
 
   const selected = useMemo(() => items.find(i => i.id === selectedId) || null, [items, selectedId]);
 
@@ -131,8 +164,37 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
         </div>
       )}
 
+      {/* ─── TOP PICKS ─────────────────────────────────────────────────
+          Three axes that deliberately disagree. Clicking a tile sorts the
+          list by that axis. */}
+      {picks.some(p => p.item) && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+          {picks.filter(p => p.item).map(p => {
+            const active = sortBy === p.sort;
+            const score = p.key === "value" ? p.item.value : p.item[p.key].score;
+            return (
+              <button key={p.key} onClick={() => setSortBy(active ? "priority" : p.sort)}
+                title={`Sort the list by ${p.label.toLowerCase()}`}
+                style={{
+                  flex: "1 1 190px", minWidth: 180, textAlign: "left", cursor: "pointer",
+                  background: active ? `${p.color}12` : `${PAL.cream}03`,
+                  border: `1px solid ${active ? p.color + "55" : PAL.border}`,
+                  borderRadius: 12, padding: "11px 13px", fontFamily: ff.body,
+                }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: p.color }}>{p.label}</span>
+                  <span style={{ fontFamily: ff.display, fontSize: 13, color: p.color }}>{score}</span>
+                </div>
+                <div style={{ fontFamily: ff.display, fontSize: 16, fontStyle: "italic", color: PAL.cream, margin: "4px 0 2px", lineHeight: 1.2 }}>{p.item.name}</div>
+                <div style={{ fontSize: 9, color: PAL.muted, lineHeight: 1.45 }}>{p.detail(p.item)}</div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
-        {[{k:"priority",l:"Priority"},{k:"gap",l:"Fills a Gap"},{k:"cost-low",l:"Cost ↑"},{k:"cost-high",l:"Cost ↓"},{k:"name",l:"A-Z"}].map(s => (
+        {[{k:"priority",l:"Priority"},{k:"value",l:"Value"},{k:"match",l:"Match"},{k:"unique",l:"Unique"},{k:"gap",l:"Fills a Gap"},{k:"cost-low",l:"Cost ↑"},{k:"cost-high",l:"Cost ↓"},{k:"name",l:"A-Z"}].map(s => (
           <button key={s.k} onClick={() => setSortBy(s.k)} style={{
             background: sortBy === s.k ? `${PAL.gold}14` : "transparent",
             border: `1px solid ${sortBy === s.k ? PAL.gold + "44" : PAL.border}`,
@@ -296,6 +358,34 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
                 </div>
               </div>
             )}
+
+            {/* The three axes side by side. Seeing them disagree is the
+                point — a high match with low uniqueness is a safe repeat,
+                the reverse is a stretch. */}
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted, marginBottom: 9 }}>
+                How it scores
+              </div>
+              {[
+                { label: "Value", score: selected.value, color: PAL.sage,
+                  note: selected.ppm ? `$${selected.ppm.toFixed(2)}/mL` : "No price or size set" },
+                { label: "Match", score: selected.match.score, color: PAL.gold, note: selected.match.reason },
+                { label: "Unique", score: selected.unique.score, color: "#c49bd4", note: selected.unique.reason },
+              ].map(row => (
+                <div key={row.label} style={{ marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, gap: 6 }}>
+                    <span style={{ fontSize: 11, color: PAL.cream }}>{row.label}</span>
+                    <span style={{ fontFamily: ff.display, fontSize: 13, color: row.score === null || row.score === undefined ? PAL.muted : row.color }}>
+                      {row.score === null || row.score === undefined ? "—" : row.score}
+                    </span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 3, background: `${row.color}1e`, overflow: "hidden" }}>
+                    <div style={{ width: `${Math.max(0, Math.min(100, row.score || 0))}%`, height: "100%", borderRadius: 3, background: row.color }} />
+                  </div>
+                  <div style={{ fontSize: 9, color: PAL.muted, marginTop: 3, lineHeight: 1.45 }}>{row.note}</div>
+                </div>
+              ))}
+            </div>
 
             {/* Saturation meters — one per family this candidate contains */}
             {selected.fams.length > 0 && (
