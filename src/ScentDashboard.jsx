@@ -161,8 +161,11 @@ export default function ScentDashboard({ session }) {
       });
     }
     loadFromSupabase(userId).then(data => {
-      if (data && data.bottles.length > 0) {
-        setBottles(data.bottles);
+      /* Each slice restores on its own. Nesting these under a bottles check
+         meant an empty bottles table blocked tested scents, the wear log and
+         everything else from coming back, even when their rows existed. */
+      if (data) {
+        if (data.bottles.length > 0) setBottles(data.bottles);
         if (data.testedScents.length > 0) setTestedScents(data.testedScents);
         if (Object.keys(data.wearLog).length > 0) setWearLog(data.wearLog);
         if (Object.keys(data.wearRatings).length > 0) setWearRatings(data.wearRatings);
@@ -181,8 +184,15 @@ export default function ScentDashboard({ session }) {
         if (Object.keys(data.visibleStats).length > 0) setVisibleStats(data.visibleStats);
         if (Object.keys(data.visibleTabs).length > 0) setVisibleTabs(data.visibleTabs);
         if (data.theme?.preset) setTheme(data.theme);
-        setShowWelcome(false);
-        try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
+
+        /* Only treat this as a returning user if something actually came
+           back — a genuinely new account should still see the welcome. */
+        const restoredSomething = data.bottles.length > 0 || data.testedScents.length > 0
+          || Object.keys(data.wearLog).length > 0 || Object.keys(data.bottleRatings).length > 0;
+        if (restoredSomething) {
+          setShowWelcome(false);
+          try { localStorage.setItem("scent_hasVisited", "true"); } catch {}
+        }
       }
       setDataLoaded(true);
     });
@@ -250,7 +260,10 @@ export default function ScentDashboard({ session }) {
   const calendarTrends = useMemo(() => {
     return MONTHS.map((name, i) => {
       const mk = `2026-${String(i + 1).padStart(2, "0")}`;
-      const monthEntries = Object.entries(wearLog).filter(([k, v]) => k.startsWith(mk) && v);
+      /* Require at least one bottle, so a logged-but-empty date isn't
+         counted as a day worn — otherwise the chart disagrees with the
+         Days Worn stat. */
+      const monthEntries = Object.entries(wearLog).filter(([k, v]) => k.startsWith(mk) && toWearArray(v).length > 0);
       const daysWorn = monthEntries.length;
       const totalApplications = monthEntries.reduce((s, [, v]) => s + toWearArray(v).length, 0);
       const uniqueBottles = new Set(monthEntries.flatMap(([, v]) => toWearArray(v))).size;
@@ -263,7 +276,12 @@ export default function ScentDashboard({ session }) {
   const totalSpent = useMemo(() => sum(bottles.filter(b => b.status === "owned"), "cost"), [bottles]);
   const totalAll = useMemo(() => sum(bottles, "cost"), [bottles]);
   const totalMl = useMemo(() => sum(bottles.filter(b => b.status === "owned"), "ml"), [bottles]);
+  /* Two different numbers that were being conflated: totalWears counts
+     applications (two fragrances on one day = 2), totalDaysWorn counts
+     distinct dates (= 1), which is what the "Days Worn" stat and the
+     monthly chart both mean. */
   const totalWears = Object.values(wearLog).reduce((s, v) => s + toWearArray(v).length, 0);
+  const totalDaysWorn = Object.values(wearLog).filter(v => toWearArray(v).length > 0).length;
   const filteredBottles = useMemo(() => collectionFilter ? bottles.filter(b => b.status === collectionFilter) : bottles, [bottles, collectionFilter]);
 
   /* Rank want/want-to-try bottles by fit score */
@@ -491,7 +509,7 @@ export default function ScentDashboard({ session }) {
               <span style={{ fontFamily: ff.body, fontSize: 9, color: PAL.muted, letterSpacing: 1, marginTop: 1 }}>owned / full collection</span>
             </div>
             )}
-            {visibleStats.daysWorn && <Pill label="Days Worn" value={totalWears} accent={PAL.sage} />}
+            {visibleStats.daysWorn && <Pill label="Days Worn" value={totalDaysWorn} accent={PAL.sage} />}
             {visibleStats.signature && <Pill label="Signature" value={topNote} accent={PAL.rose} />}
           </div>
         </header>

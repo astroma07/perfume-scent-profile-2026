@@ -110,10 +110,28 @@ function debounce(key, fn, ms = 1000) {
   syncTimeout[key] = setTimeout(fn, ms);
 }
 
+/* Replace a table's rows for one user.
+ *
+ * The delete is deliberately skipped when there is nothing to put back.
+ * These syncs fire on every state change, and local state can legitimately
+ * be empty before the cloud load has populated it — clearing site data
+ * resets localStorage, so the app starts empty, signs back in, and would
+ * otherwise push that emptiness up and destroy the stored copy. Refusing to
+ * sync an empty set can at worst leave a stale row behind; the previous
+ * behaviour could erase everything. A genuine "delete it all" goes through
+ * the explicit reset path, not through an incidental sync. */
+async function replaceRows(table, userId, rows) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    console.warn(`sync: refusing to clear ${table} — nothing to write back`);
+    return;
+  }
+  await supabase.from(table).delete().eq("user_id", userId);
+  await supabase.from(table).insert(rows);
+}
+
 export function syncBottles(userId, bottles) {
   if (!supabase || !userId) return;
   debounce("bottles", async () => {
-    await supabase.from("bottles").delete().eq("user_id", userId);
     const rows = bottles.filter(b => b.name?.trim()).map((b, i) => ({
       user_id: userId, name: b.name, full_name: b.fullName || b.name,
       house: b.house || "", status: b.status || "to test",
@@ -123,14 +141,13 @@ export function syncBottles(userId, bottles) {
       concentration: b.concentration || "", vibes: b.vibes || [],
       sort_order: i,
     }));
-    if (rows.length > 0) await supabase.from("bottles").insert(rows);
+    await replaceRows("bottles", userId, rows);
   });
 }
 
 export function syncTestedScents(userId, testedScents) {
   if (!supabase || !userId) return;
   debounce("tested", async () => {
-    await supabase.from("tested_scents").delete().eq("user_id", userId);
     const rows = testedScents.filter(t => t.name?.trim()).map(t => ({
       user_id: userId, name: t.name, house: t.house || "",
       date_tested: t.date || null, notes: t.notes || "", thoughts: t.thoughts || "",
@@ -139,28 +156,26 @@ export function syncTestedScents(userId, testedScents) {
       tags: t.tags || {}, concentration: t.concentration || "",
       has_tester: t.hasTester || false,
     }));
-    if (rows.length > 0) await supabase.from("tested_scents").insert(rows);
+    await replaceRows("tested_scents", userId, rows);
   });
 }
 
 export function syncWearLog(userId, wearLog, wearRatings) {
   if (!supabase || !userId) return;
   debounce("wear", async () => {
-    await supabase.from("wear_log").delete().eq("user_id", userId);
     const rows = [];
     Object.entries(wearLog).forEach(([date, val]) => {
       toWearArray(val).forEach(bottle_name => {
         rows.push({ user_id: userId, date, bottle_name, rating: wearRatings?.[date] || null });
       });
     });
-    if (rows.length > 0) await supabase.from("wear_log").insert(rows);
+    await replaceRows("wear_log", userId, rows);
   });
 }
 
 export function syncBottleRatings(userId, bottleRatings) {
   if (!supabase || !userId) return;
   debounce("ratings", async () => {
-    await supabase.from("bottle_ratings").delete().eq("user_id", userId);
     const rows = Object.entries(bottleRatings)
       .filter(([, r]) => r && Object.keys(r).length > 0)
       .map(([bottle_name, r]) => ({
@@ -168,14 +183,13 @@ export function syncBottleRatings(userId, bottleRatings) {
         overall: r.overall || null, sillage: r.sillage || null,
         longevity: r.longevity || null, scent: r.scent || null,
       }));
-    if (rows.length > 0) await supabase.from("bottle_ratings").insert(rows);
+    await replaceRows("bottle_ratings", userId, rows);
   });
 }
 
 export function syncPairings(userId, { customPairings, pairingNotes, pairingRatings, rejectedPairings }) {
   if (!supabase || !userId) return;
   debounce("pairings", async () => {
-    await supabase.from("pairings").delete().eq("user_id", userId);
     const rows = [];
     (customPairings || []).forEach(p => {
       rows.push({ user_id: userId, type: "custom", fragrances: p.fragrances, pairing_key: p.fragrances.join("+"), rating: p.rating || 0, notes: p.notes || "", rejected: false });
@@ -184,7 +198,7 @@ export function syncPairings(userId, { customPairings, pairingNotes, pairingRati
     autoKeys.forEach(key => {
       rows.push({ user_id: userId, type: "auto", fragrances: key.split("+"), pairing_key: key, rating: pairingRatings?.[key] || 0, notes: pairingNotes?.[key] || "", rejected: (rejectedPairings || []).includes(key) });
     });
-    if (rows.length > 0) await supabase.from("pairings").insert(rows);
+    await replaceRows("pairings", userId, rows);
   });
 }
 
