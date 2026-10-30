@@ -85,10 +85,40 @@ export function normalizeTestedScents(raw) {
  * Canonical format: { "2026-07-15": ["Nosferatu", "Tam Dao"] }
  * Always arrays. Handles: string, array, null, undefined.
  */
-export function toWearArray(val) {
+/* Turn a wear-log value into a flat list of bottle names.
+ *
+ * Values can arrive JSON-encoded — a bad migration wrote whole arrays into
+ * the single-name bottle_name column, so a "name" can literally be the text
+ * ["Velvet Violet"], and each save/load cycle wrapped it again. Treating
+ * such a string as a name is what put those brackets on screen, so unwrap
+ * anything that parses as an array or string and flatten the result. This
+ * repairs existing rows on load; nothing has to be cleaned up by hand. */
+export function toWearArray(val, depth = 0) {
   if (!val) return [];
-  if (typeof val === "string") return [val];
-  if (Array.isArray(val)) return val.filter(v => typeof v === "string" && v);
+  if (depth > 6) return [];
+
+  if (typeof val === "string") {
+    const s = val.trim();
+    if (!s) return [];
+    /* Only attempt a parse when it looks encoded — a real name like
+       "Angel's Share on the Rocks" must never go near JSON.parse. */
+    if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith('"') && s.endsWith('"'))) {
+      try {
+        const parsed = JSON.parse(s);
+        if (Array.isArray(parsed) || typeof parsed === "string") return toWearArray(parsed, depth + 1);
+      } catch { /* not encoded after all — fall through and treat as a name */ }
+    }
+    return [s];
+  }
+
+  if (Array.isArray(val)) {
+    const out = [];
+    val.forEach(v => { toWearArray(v, depth + 1).forEach(n => out.push(n)); });
+    /* De-duplicate: unwrapping often reveals the same name twice, once
+       plain and once from inside its encoded copy. */
+    return [...new Set(out)];
+  }
+
   return [];
 }
 

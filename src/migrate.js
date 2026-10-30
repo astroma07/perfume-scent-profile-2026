@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient.js";
+import { toWearArray } from "./normalizeData.js";
 
 /* Migrate localStorage data to Supabase for a newly logged-in user */
 export async function migrateLocalToSupabase(userId) {
@@ -49,12 +50,18 @@ export async function migrateLocalToSupabase(userId) {
     }
 
     /* Upload wear log */
-    const wearEntries = Object.entries(wearLog).filter(([, name]) => name);
+    /* One row per bottle per date. The value here is an array of names, so
+       writing it straight into the single-name bottle_name column stored
+       the stringified array as if it were a fragrance — the bug that put
+       ["Velvet Violet"] in the log. Flatten it the same way syncWearLog does. */
+    const wearEntries = Object.entries(wearLog).filter(([, val]) => val);
     if (wearEntries.length > 0) {
-      const rows = wearEntries.map(([date, bottle_name]) => ({
-        user_id: userId, date, bottle_name,
-        rating: wearRatings[date] || null,
-      }));
+      const rows = [];
+      wearEntries.forEach(([date, val]) => {
+        toWearArray(val).forEach(bottle_name => {
+          rows.push({ user_id: userId, date, bottle_name, rating: wearRatings[date] || null });
+        });
+      });
       const { data, error } = await supabase.from("wear_log").insert(rows).select();
       if (error) console.error("Wear log migration error:", error);
       else results.wearLog = data.length;
