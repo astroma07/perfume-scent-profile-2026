@@ -3,8 +3,8 @@
     "version": "1.0",
     "generated": "2026-09-05",
     "description": "Curated fragrance recommendations from Arielle's scent profile consultations",
-    "updated": "2026-10-11",
-    "count": 108,
+    "updated": "2026-11-02",
+    "count": 110,
     "tiers": [
       "essential",
       "strong",
@@ -2024,6 +2024,43 @@
       ],
       "profileNote": "RULED OUT. Three separate conflicts: litchi is built on the same sulfurous fruity family as blackcurrant and buchu, which turn sour on you, and reviewers independently report a sour drydown; Petalia is a synthetic peony captive that one reviewer reads as cat pee, the same failure mode as orange blossom and tuberose; and the white-musk-plus-amber base is the high-dose synthetic amber that triggers headaches. Also $265/50ml, over band, from a fast-release house.",
       "where": "AVOID — $265/50ml, $385/100ml (zgoperfumery.com). Over band and over-flagged."
+    },
+    {
+      "name": "Rainy Day In Seoul",
+      "house": "HB;RN",
+      "notes": "paper, carrot seeds, chypre notes, lily of the valley, orris root, rice, damask rose, skin musk, cedar, sandalwood, mineral notes, amber",
+      "type": "EdP",
+      "tier": "strong",
+      "categories": [
+        "floral",
+        "woody",
+        "mineralic"
+      ],
+      "wishlist": false,
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "profileNote": "Register 62 (Bright) — dead centre of your 55-66 win cluster, with a cedar/sandalwood floor. Hits none of your six stated note targets; it fills the register gap instead. Its base is ~80% of Tam Dao's note list, so it's a genuinely new top (paper, rice, carrot seed, lily of the valley) over a floor you've already proven. Closest owned: Orpheon (orris+cedar), Lilyphea (lily+sandalwood). Notes from a TikTok slide, not a primary source — verify before buying.",
+      "where": "hbrn.kr (Korea, direct) — no US stockist found; contact@hbrn.kr for overseas"
+    },
+    {
+      "name": "The Tea",
+      "house": "EARTHORA",
+      "notes": "cardamom, damp soil, pu-erh tea, fig leaf, sugar cane, winter melon, cedarwood, oud, sandalwood, white musk",
+      "type": "EdP",
+      "tier": "good",
+      "categories": [
+        "green",
+        "woody"
+      ],
+      "wishlist": false,
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "profileNote": "Best profile match of the TikTok set — hits green, tea and fig. But register 41 (Deep): pu-erh is a fermented tea and damp soil plus oud pull it into the dark end you're already saturated in, despite the bright packaging. Parfumo reviewers call it peach iced tea with damp earth; one says musty. Indonesian house, perfumer Diah Ayu Lestari. Sample before buying.",
+      "where": "EARTHORA (Indonesia, direct) — no US stockist found"
     }
   ]
 }

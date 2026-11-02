@@ -4,7 +4,16 @@ import {
   FAMILY_COLORS, FAMILY_LABELS, FAMILY_ORDER, getNoteFamily,
   computeFamilyProfile, scoreGapFill, findNearestOwned, gapVerdict,
   computeNotesProfile, scoreValue, scoreCollectionMatch, scoreUniqueness, pricePerMl,
+  computeFamilyRegister, registerGap,
 } from "../noteCategories.js";
+
+/* The clean↔dark track. Smoky brown at the dark end, aquatic blue at the
+   clean end — both already in the family palette, so the strip reads as part
+   of the same system as every other chart. */
+const REG_DARK = FAMILY_COLORS.smoky;
+const REG_CLEAN = FAMILY_COLORS.aquatic;
+const regColor = (s) => s === null || s === undefined ? PAL.muted
+  : s >= 56 ? REG_CLEAN : s >= 42 ? PAL.gold : REG_DARK;
 import { SectionTitle } from "./ui.jsx";
 
 const TONE = { good: PAL.sage, warn: PAL.gold, bad: PAL.rose, neutral: PAL.muted };
@@ -28,6 +37,11 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
   /* Weighted note profile — what the match score measures affinity against. */
   const notesProfile = useMemo(() => computeNotesProfile(bottles, []), [bottles]);
 
+  /* Register of the owned collection, per family. Family share says how much
+     woody she owns; this says whether all of it is dark woody — the thing
+     share alone cannot show. */
+  const familyRegister = useMemo(() => computeFamilyRegister(bottles, noteOverrides), [bottles, noteOverrides]);
+
   const items = useMemo(() => {
     const wishlist = bottles.filter(b => b.status === "wishlist" && b.name.trim());
     const base = wishlist.map((b, i) => {
@@ -44,12 +58,13 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
         ppm: pricePerMl(b),
         match: scoreCollectionMatch(b, bottles, notesProfile, familyProfile.shares, noteOverrides),
         unique: scoreUniqueness(b, bottles, familyProfile.shares, noteOverrides),
+        reg: registerGap(b, familyRegister, noteOverrides),
       };
     });
     /* Value is relative to the rest of the list, so it needs the whole set. */
     const wishOnly = base.filter(i => !i.purchased);
     return base.map(i => ({ ...i, value: scoreValue(i, wishOnly) }));
-  }, [bottles, purchaseData, familyProfile, notesProfile, noteOverrides]);
+  }, [bottles, purchaseData, familyProfile, notesProfile, familyRegister, noteOverrides]);
 
   const sorted = useMemo(() => {
     const active = items.filter(i => !i.purchased), done = items.filter(i => i.purchased);
@@ -62,6 +77,12 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
     else if (sortBy === "value") list.sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
     else if (sortBy === "match") list.sort((a, b) => (b.match.score ?? -1) - (a.match.score ?? -1));
     else if (sortBy === "unique") list.sort((a, b) => (b.unique.score ?? -1) - (a.unique.score ?? -1));
+    else if (sortBy === "cleanest") list.sort((a, b) => (b.reg.register ?? -1) - (a.reg.register ?? -1));
+    else if (sortBy === "darkest") list.sort((a, b) => (a.reg.register ?? 999) - (b.reg.register ?? 999));
+    /* Biggest register departure from what she already owns in that family —
+       the sort that surfaces a clean woody in a collection of dark ones. */
+    else if (sortBy === "register") list.sort((a, b) =>
+      Math.abs(b.reg.delta ?? 0) - Math.abs(a.reg.delta ?? 0));
     return { active: list, done };
   }, [items, sortBy]);
 
@@ -194,7 +215,7 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
       )}
 
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
-        {[{k:"priority",l:"Priority"},{k:"value",l:"Value"},{k:"match",l:"Match"},{k:"unique",l:"Unique"},{k:"gap",l:"Fills a Gap"},{k:"cost-low",l:"Cost ↑"},{k:"cost-high",l:"Cost ↓"},{k:"name",l:"A-Z"}].map(s => (
+        {[{k:"priority",l:"Priority"},{k:"value",l:"Value"},{k:"match",l:"Match"},{k:"unique",l:"Unique"},{k:"gap",l:"Fills a Gap"},{k:"register",l:"Register Shift"},{k:"cleanest",l:"Cleanest"},{k:"darkest",l:"Darkest"},{k:"cost-low",l:"Cost ↑"},{k:"cost-high",l:"Cost ↓"},{k:"name",l:"A-Z"}].map(s => (
           <button key={s.k} onClick={() => setSortBy(s.k)} style={{
             background: sortBy === s.k ? `${PAL.gold}14` : "transparent",
             border: `1px solid ${sortBy === s.k ? PAL.gold + "44" : PAL.border}`,
@@ -250,6 +271,15 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
                     {item.verdict && item.verdict.key !== "unknown" && (
                       <span title={`Its families make up ${(item.verdict.saturation || 0).toFixed(0)}% of what you own`}
                         style={{ fontSize: 8, letterSpacing: 1, textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, whiteSpace: "nowrap", color: TONE[item.verdict.tone], background: `${TONE[item.verdict.tone]}12`, border: `1px solid ${TONE[item.verdict.tone]}33` }}>{item.verdict.label}</span>
+                    )}
+                    {/* Register at a glance, so the list is scannable for
+                        "clean but grounded" without opening each row. The ◆
+                        marks a register she owns nothing in. */}
+                    {item.reg.register !== null && (
+                      <span title={item.reg.reason}
+                        style={{ fontSize: 8, letterSpacing: 1, textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, whiteSpace: "nowrap", color: regColor(item.reg.register), background: `${regColor(item.reg.register)}12`, border: `1px solid ${regColor(item.reg.register)}33` }}>
+                        {item.reg.outsideRange ? "◆ " : ""}{item.reg.label}
+                      </span>
                     )}
                   </div>
                   {item.notes.length > 0 && (
@@ -356,6 +386,59 @@ const PurchaseList = ({ bottles, noteOverrides, purchaseData, setPurchaseData })
                       ? "Add notes to this bottle to score it"
                       : `Its families are ${(selected.verdict.saturation || 0).toFixed(0)}% of what you own`}
                 </div>
+              </div>
+            )}
+
+            {/* ─── REGISTER STRIP ───
+                Family share says how much woody she owns; this says whether
+                all of it is dark. The owned band is the yardstick — a dot
+                sitting outside it is a register she has no bottle for, which
+                is a real hole even in a family she's saturated in. */}
+            {selected.reg.register !== null && (
+              <div style={{ marginTop: 18 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+                  <span style={{ fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: PAL.muted }}>Register</span>
+                  <span style={{ fontFamily: ff.display, fontSize: 13, color: regColor(selected.reg.register) }}>
+                    {selected.reg.label} · {selected.reg.register}
+                  </span>
+                </div>
+
+                <div style={{ position: "relative", height: 26 }}>
+                  {/* the scale */}
+                  <div style={{ position: "absolute", top: 9, left: 0, right: 0, height: 8, borderRadius: 4,
+                    background: `linear-gradient(90deg, ${REG_DARK} 0%, ${REG_DARK}aa 22%, ${PAL.cream}33 50%, ${REG_CLEAN}aa 78%, ${REG_CLEAN} 100%)`,
+                    opacity: .85 }} />
+
+                  {/* what she already owns in this family, as a band */}
+                  {selected.reg.owned && selected.reg.owned.n >= 2 && (
+                    <div title={`Your ${selected.reg.owned.n} ${(FAMILY_LABELS[selected.reg.family] || "").toLowerCase()} bottles span ${selected.reg.owned.min}–${selected.reg.owned.max}`}
+                      style={{ position: "absolute", top: 5, height: 16, borderRadius: 4,
+                        left: `${selected.reg.owned.min}%`,
+                        width: `${Math.max(2, selected.reg.owned.max - selected.reg.owned.min)}%`,
+                        background: `${PAL.cream}14`, border: `1px solid ${PAL.cream}38`, boxSizing: "border-box" }} />
+                  )}
+
+                  {/* the candidate */}
+                  <div title={`${selected.name} sits at ${selected.reg.register}`}
+                    style={{ position: "absolute", top: 2, left: `${selected.reg.register}%`, width: 3, height: 22,
+                      marginLeft: -1.5, borderRadius: 2, background: PAL.cream,
+                      boxShadow: `0 0 0 2px ${PAL.bg || "#17140f"}, 0 0 10px 2px ${regColor(selected.reg.register)}` }} />
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8.5, letterSpacing: 1,
+                  textTransform: "uppercase", color: PAL.muted, marginTop: 2 }}>
+                  <span>Dark</span><span>Mid</span><span>Clean</span>
+                </div>
+
+                <div style={{ fontSize: 9.5, color: selected.reg.outsideRange ? PAL.sage : PAL.muted,
+                  marginTop: 7, lineHeight: 1.5 }}>
+                  {selected.reg.outsideRange ? "◆ " : ""}{selected.reg.reason}
+                </div>
+                {selected.reg.owned && selected.reg.owned.n >= 2 && (
+                  <div style={{ fontSize: 8.5, color: PAL.muted, marginTop: 3, opacity: .8 }}>
+                    Pale band = where your {(FAMILY_LABELS[selected.reg.family] || "").toLowerCase()} already sits
+                  </div>
+                )}
               </div>
             )}
 

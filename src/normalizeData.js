@@ -165,16 +165,58 @@ export function normalizeWearRatings(raw) {
   return out;
 }
 
-/* ─── PAIRINGS ─── */
+/* ─── PAIRINGS ───
+ * Deduplicated like bottles and tested scents, which it previously was not.
+ * A pairing is the same pairing whatever order its fragrances were picked
+ * in, so the identity is the sorted, lowercased name set. Duplicate rows
+ * already in the cloud are collapsed here on load, so an account that
+ * accumulated them repairs itself rather than needing a manual cleanup.
+ *
+ * Ids are made unique too: the old `p.id || Date.now()` gave every
+ * id-less pairing in the same millisecond the same id, and React renders
+ * a list keyed on that, so same-key siblings collapse or repeat.
+ */
 export function normalizeCustomPairings(raw) {
   if (!Array.isArray(raw)) return [];
-  return raw.filter(p => p && Array.isArray(p.fragrances) && p.fragrances.length >= 2).map(p => ({
-    id: p.id || Date.now(),
-    fragrances: p.fragrances,
-    rating: Number(p.rating) || 0,
-    notes: String(p.notes || ""),
-    createdAt: Number(p.createdAt) || (p.created_at ? new Date(p.created_at).getTime() : Date.now()),
-  }));
+  const valid = raw.filter(p => p && Array.isArray(p.fragrances) && p.fragrances.length >= 2);
+
+  const byKey = new Map();
+  valid.forEach((p, i) => {
+    const names = p.fragrances.map(n => String(n || "").trim()).filter(Boolean);
+    if (names.length < 2) return;
+    const key = [...names].map(n => n.toLowerCase()).sort().join("|||");
+    const createdAt = Number(p.createdAt) || (p.created_at ? new Date(p.created_at).getTime() : 0);
+    const cand = {
+      id: p.id ?? p._dbId ?? null,
+      fragrances: names,
+      rating: Number(p.rating) || 0,
+      notes: String(p.notes || ""),
+      createdAt,
+      _ord: i,
+    };
+    const prev = byKey.get(key);
+    if (!prev) { byKey.set(key, cand); return; }
+    /* Keep whichever copy the user actually put something into, so a
+       dedupe never silently drops a rating or a note. */
+    byKey.set(key, {
+      ...prev,
+      rating: Math.max(prev.rating, cand.rating),
+      notes: cand.notes.length > prev.notes.length ? cand.notes : prev.notes,
+      createdAt: prev.createdAt && cand.createdAt
+        ? Math.min(prev.createdAt, cand.createdAt)
+        : (prev.createdAt || cand.createdAt),
+    });
+  });
+
+  const seenIds = new Set();
+  return [...byKey.values()]
+    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0) || a._ord - b._ord)
+    .map(({ _ord, ...p }, i) => {
+      let id = p.id;
+      if (id === null || id === undefined || seenIds.has(id)) id = `pair-${i}-${p.fragrances[0]}`;
+      seenIds.add(id);
+      return { ...p, id, createdAt: p.createdAt || Date.now() };
+    });
 }
 
 /* ─── SIMPLE OBJECTS / ARRAYS ─── */

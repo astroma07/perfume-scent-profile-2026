@@ -120,13 +120,33 @@ function debounce(key, fn, ms = 1000) {
  * sync an empty set can at worst leave a stale row behind; the previous
  * behaviour could erase everything. A genuine "delete it all" goes through
  * the explicit reset path, not through an incidental sync. */
+/* One in-flight replace per table. The debounce only delays *scheduling*;
+   once two replaces are running, their delete/insert pairs can interleave
+   (A deletes, B deletes, A inserts, B inserts) and the table ends up with
+   two copies of everything. That is what made one saved pairing render as
+   the same card several times in a row — pairings sync on every rating
+   click and every keystroke in the notes box, so they overlap far more
+   often than bottles do. Chaining makes each replace wait for the last. */
+const replaceQueue = {};
+
 async function replaceRows(table, userId, rows) {
   if (!Array.isArray(rows) || rows.length === 0) {
     console.warn(`sync: refusing to clear ${table} — nothing to write back`);
     return;
   }
-  await supabase.from(table).delete().eq("user_id", userId);
-  await supabase.from(table).insert(rows);
+  const run = async () => {
+    const { error: delError } = await supabase.from(table).delete().eq("user_id", userId);
+    /* If the delete failed, inserting anyway duplicates every row. */
+    if (delError) {
+      console.error(`sync: delete failed for ${table}, skipping insert`, delError);
+      return;
+    }
+    const { error: insError } = await supabase.from(table).insert(rows);
+    if (insError) console.error(`sync: insert failed for ${table}`, insError);
+  };
+  /* Never let one table's failure break the chain for later writes. */
+  replaceQueue[table] = (replaceQueue[table] || Promise.resolve()).then(run, run);
+  return replaceQueue[table];
 }
 
 export function syncBottles(userId, bottles) {
@@ -191,12 +211,32 @@ export function syncPairings(userId, { customPairings, pairingNotes, pairingRati
   if (!supabase || !userId) return;
   debounce("pairings", async () => {
     const rows = [];
+    /* Write each pairing once. Two custom pairings holding the same
+       fragrances in a different order are the same pairing, so they share
+       an identity key here exactly as they do on load. */
+    const written = new Set();
+    const identity = names => [...names].map(n => String(n).trim().toLowerCase()).sort().join("|||");
+
     (customPairings || []).forEach(p => {
-      rows.push({ user_id: userId, type: "custom", fragrances: p.fragrances, pairing_key: p.fragrances.join("+"), rating: p.rating || 0, notes: p.notes || "", rejected: false });
+      const names = (p.fragrances || []).map(n => String(n || "").trim()).filter(Boolean);
+      if (names.length < 2) return;
+      const id = identity(names);
+      if (written.has(id)) return;
+      written.add(id);
+      rows.push({ user_id: userId, type: "custom", fragrances: names, pairing_key: names.join("+"), rating: p.rating || 0, notes: p.notes || "", rejected: false });
     });
+
     const autoKeys = new Set([...Object.keys(pairingNotes || {}), ...Object.keys(pairingRatings || {}), ...(rejectedPairings || [])]);
     autoKeys.forEach(key => {
-      rows.push({ user_id: userId, type: "auto", fragrances: key.split("+"), pairing_key: key, rating: pairingRatings?.[key] || 0, notes: pairingNotes?.[key] || "", rejected: (rejectedPairings || []).includes(key) });
+      const names = key.split("+").map(n => n.trim()).filter(Boolean);
+      if (names.length < 2) return;
+      /* A pairing the user saved as custom must not also go up as auto —
+         migrate.js has always guarded this; the live sync did not, so the
+         same pairing could exist twice under two types. */
+      const id = identity(names);
+      if (written.has(id)) return;
+      written.add(id);
+      rows.push({ user_id: userId, type: "auto", fragrances: names, pairing_key: key, rating: pairingRatings?.[key] || 0, notes: pairingNotes?.[key] || "", rejected: (rejectedPairings || []).includes(key) });
     });
     await replaceRows("pairings", userId, rows);
   });

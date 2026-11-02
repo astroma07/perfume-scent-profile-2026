@@ -565,7 +565,10 @@ const PairingWheel = ({ bottles, noteOverrides, opposingPairs, pairingNotes, set
                 <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => (
                     <button key={v} onClick={() => setCustomPairings(prev => prev.map((p, i) => i === pIdx ? { ...p, rating: v } : p))}
-                      style={{ width: 28, height: 28, borderRadius: 6, cursor: "pointer", fontFamily: ff.body, fontSize: 11, border: `1px solid ${v <= pairing.rating ? PAL.gold + "55" : PAL.border}`, background: v <= pairing.rating ? `${PAL.gold}${Math.round((v / 10) * 30 + 10).toString(16)}` : "transparent", color: v <= pairing.rating ? PAL.gold : PAL.muted, transition: "all .15s" }}>{v}</button>
+                      style={{ width: 28, height: 28, borderRadius: 6, cursor: "pointer", fontFamily: ff.body, fontSize: 11, border: `1px solid ${v <= pairing.rating ? PAL.gold + "55" : PAL.border}`, /* padStart: a rating of 1 gives 13 -> "d", and `#c5a46dd` is a
+   7-character colour the browser throws away, so the 1 button
+   rendered white while every other value rendered gold. */
+background: v <= pairing.rating ? `${PAL.gold}${Math.round((v / 10) * 30 + 10).toString(16).padStart(2, "0")}` : "transparent", color: v <= pairing.rating ? PAL.gold : PAL.muted, transition: "all .15s" }}>{v}</button>
                   ))}
                   {pairing.rating > 0 && <span style={{ fontFamily: ff.display, fontSize: 18, color: PAL.gold, marginLeft: 8 }}>{pairing.rating}/10</span>}
                 </div>

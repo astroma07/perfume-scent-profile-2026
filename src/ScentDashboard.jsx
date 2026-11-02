@@ -24,7 +24,7 @@ import FragranceNose from "./components/FragranceNose.jsx";
 
 import { supabase } from "./supabaseClient.js";
 import { loadFromSupabase, syncBottles, syncTestedScents, syncWearLog, syncBottleRatings, syncPairings, syncPreferences } from "./dataSync.js";
-import { normalizeBottles, normalizeAll, toWearArray } from "./normalizeData.js";
+import { normalizeBottles, normalizeAll, toWearArray, normalizeCustomPairings } from "./normalizeData.js";
 import { useDataPersistence } from "./useDataPersistence.js";
 import { syncTestedToBottles, syncBottleToTested } from "./crossSync.js";
 
@@ -59,7 +59,10 @@ export default function ScentDashboard({ session }) {
   const [pairingRatings, setPairingRatings] = useState(() => loadStored("pairingRatings", {}));
   const [rejectedPairings, setRejectedPairings] = useState(() => loadStored("rejectedPairings", []));
   const [purchaseData, setPurchaseData] = useState(() => loadStored("purchaseData", {}));
-  const [customPairings, setCustomPairings] = useState(() => loadStored("customPairings", []));
+  /* Normalized on the way in, like bottles — the localStorage path used to
+     skip this, so duplicate pairings cached locally still rendered as
+     repeated cards even once the cloud copy was clean. */
+  const [customPairings, setCustomPairings] = useState(() => normalizeCustomPairings(loadStored("customPairings", [])));
   const [vibeMap, setVibeMap] = useState(() => loadStored("vibeMap", {}));
   const [customRecs, setCustomRecs] = useState(() => loadStored("customRecs", []));
   const [collectionSubTab, setCollectionSubTab] = useState("collection");
